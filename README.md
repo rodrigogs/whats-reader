@@ -17,14 +17,6 @@ A desktop application to read and visualize WhatsApp chat exports (.zip backups)
 - 🌍 **Portuguese support** - Full support for PT-BR date formats and messages
 - 🖥️ **Cross-platform** - Works on macOS, Windows, and Linux
 
-## Tech Stack
-
-- **Framework**: SvelteKit 2.x with Svelte 5 (runes API)
-- **Desktop**: Electron 39.x
-- **Styling**: Tailwind CSS 4.x
-- **Language**: TypeScript 5.x
-- **ZIP Parsing**: JSZip
-
 ## Getting Started
 
 ### Prerequisites
