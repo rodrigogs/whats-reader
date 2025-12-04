@@ -1,0 +1,24 @@
+{
+  "name": "WhatsApp Backup Reader",
+  "short_name": "WhatsReader",
+  "description": "Read and browse your WhatsApp chat exports with media support",
+  "icons": [
+    {
+      "src": "web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "theme_color": "#075e54",
+  "background_color": "#111827",
+  "display": "standalone",
+  "start_url": ".",
+  "scope": "."
+}
