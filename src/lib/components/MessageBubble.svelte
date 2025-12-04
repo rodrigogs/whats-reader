@@ -11,13 +11,18 @@
 		message: MessageWithMedia;
 		isOwn?: boolean;
 		showSender?: boolean;
+		searchQuery?: string;
+		isSearchMatch?: boolean;
+		isCurrentSearchResult?: boolean;
+		triggerHighlight?: boolean;
 	}
 
-	let { message, isOwn = false, showSender = true }: Props = $props();
+	let { message, isOwn = false, showSender = true, searchQuery = '', isSearchMatch = false, isCurrentSearchResult = false, triggerHighlight = false }: Props = $props();
 
 	let mediaUrl = $state<string | null>(null);
 	let mediaLoading = $state(false);
 	let mediaError = $state<string | null>(null);
+	let shouldAnimate = $state(false);
 
 	const bubbleClass = $derived(
 		isOwn
@@ -25,8 +30,73 @@
 			: 'bg-[var(--color-message-in)] mr-auto'
 	);
 
-	// Check if this message has an actual media file attached
-	const hasMediaFile = $derived(message.mediaFile && message.mediaFile._zipEntry);
+	// Highlight class for search results
+	const highlightClass = $derived(
+		isCurrentSearchResult
+			? 'ring-2 ring-[var(--color-whatsapp-teal)] ring-offset-2 shadow-lg shadow-[var(--color-whatsapp-teal)]/30'
+			: isSearchMatch
+				? 'ring-1 ring-yellow-400/60'
+				: ''
+	);
+
+	// Trigger animation when triggerHighlight becomes true
+	$effect(() => {
+		if (triggerHighlight) {
+			// Reset and trigger animation
+			shouldAnimate = false;
+			requestAnimationFrame(() => {
+				shouldAnimate = true;
+				setTimeout(() => {
+					shouldAnimate = false;
+				}, 600);
+			});
+		}
+	});
+
+	// Check if this message has an actual media file that can be loaded
+	const hasMediaFile = $derived(
+		message.mediaFile && 
+		message.mediaFile._zipEntry
+	);
+
+	// Highlight search terms in text (safe from XSS)
+	function highlightText(text: string, query: string): string {
+		if (!query.trim()) return escapeHtml(text);
+		
+		// Search on original text, then escape parts between matches
+		const regex = new RegExp(escapeRegex(query), 'gi');
+		let lastIndex = 0;
+		let result = '';
+		let match;
+		while ((match = regex.exec(text)) !== null) {
+			// Prevent infinite loop if regex matches empty string
+			if (match[0].length === 0) {
+				regex.lastIndex++;
+				continue;
+			}
+			// Add text before the match, escaped
+			result += escapeHtml(text.slice(lastIndex, match.index));
+			// Add the matched text, escaped and wrapped in <mark>
+			result += `<mark class="bg-yellow-300 dark:bg-yellow-600 rounded px-0.5">${escapeHtml(match[0])}</mark>`;
+			lastIndex = match.index + match[0].length;
+		}
+		// Add the rest of the text, escaped
+		result += escapeHtml(text.slice(lastIndex));
+		return result;
+	}
+
+	function escapeHtml(text: string): string {
+		return text
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;');
+	}
+
+	function escapeRegex(str: string): string {
+		return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	}
 
 	async function loadMedia() {
 		if (!message.mediaFile || mediaLoading || mediaUrl) return;
@@ -57,7 +127,7 @@
 	<!-- Regular message -->
 	<div class="flex {isOwn ? 'justify-end' : 'justify-start'} mb-1">
 		<div
-			class="max-w-[75%] rounded-lg px-3 py-2 shadow-sm {bubbleClass} relative"
+			class="max-w-[75%] rounded-lg px-3 py-2 shadow-sm transition-all {bubbleClass} {highlightClass} {shouldAnimate ? 'animate-search-highlight' : ''}"
 		>
 			{#if showSender && !isOwn}
 				<div class="text-xs font-semibold text-[var(--color-whatsapp-teal)] mb-1">
@@ -199,7 +269,11 @@
 			{:else}
 				<!-- Text content -->
 				<p class="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
-					{message.content}
+					{#if searchQuery}
+						{@html highlightText(message.content, searchQuery)}
+					{:else}
+						{message.content}
+					{/if}
 				</p>
 			{/if}
 
@@ -209,17 +283,6 @@
 			>
 				{formatTime(message.timestamp)}
 			</div>
-
-			<!-- Bubble tail -->
-			{#if isOwn}
-				<div
-					class="absolute -right-2 top-0 w-0 h-0 border-t-8 border-t-[var(--color-message-out)] border-r-8 border-r-transparent"
-				></div>
-			{:else}
-				<div
-					class="absolute -left-2 top-0 w-0 h-0 border-t-8 border-t-[var(--color-message-in)] border-l-8 border-l-transparent"
-				></div>
-			{/if}
 		</div>
 	</div>
 {/if}

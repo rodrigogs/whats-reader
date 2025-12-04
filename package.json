@@ -10,7 +10,6 @@
 	"license": "MIT",
 	"scripts": {
 		"dev": "vite dev",
-		"dev:electron": "npm run build && NODE_ENV=development electron .",
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
@@ -18,7 +17,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "eslint .",
 		"format": "prettier --write .",
-		"electron": "electron .",
+		"electron": "npm run build && electron .",
 		"electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && NODE_ENV=development electron .\"",
 		"electron:build": "npm run build && electron-builder",
 		"electron:build:mac": "npm run build && electron-builder --mac",
@@ -39,7 +38,6 @@
 		"eslint": "^9.39.1",
 		"eslint-plugin-svelte": "^3.13.0",
 		"globals": "^16.5.0",
-		"jszip": "^3.10.1",
 		"prettier": "^3.7.4",
 		"prettier-plugin-svelte": "^3.4.0",
 		"svelte": "^5.43.8",
@@ -88,5 +86,8 @@
 			"oneClick": false,
 			"allowToChangeInstallationDirectory": true
 		}
+	},
+	"dependencies": {
+		"jszip": "^3.10.1"
 	}
 }

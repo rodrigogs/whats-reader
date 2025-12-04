@@ -47,25 +47,42 @@ function getMediaType(filename: string): MediaFile['type'] {
 	return 'other';
 }
 
+export interface ParseProgress {
+	stage: 'reading' | 'extracting' | 'parsing';
+	progress: number; // 0-100
+}
+
 /**
  * Parse a WhatsApp ZIP export file
  * Uses lazy loading for media files to handle large backups efficiently
  */
-export async function parseZipFile(file: File | ArrayBuffer): Promise<ParsedZipChat> {
+export async function parseZipFile(
+	file: File | ArrayBuffer,
+	onProgress?: (progress: ParseProgress) => void
+): Promise<ParsedZipChat> {
 	const zip = new JSZip();
+	
+	onProgress?.({ stage: 'extracting', progress: 0 });
+	
+	// Load ZIP (JSZip doesn't support progress callback for loadAsync)
 	const contents = await zip.loadAsync(file);
+	
+	onProgress?.({ stage: 'extracting', progress: 30 });
 
 	let chatContent = '';
 	let chatFilename = 'WhatsApp Chat';
 	const mediaFiles: MediaFile[] = [];
 
-	// First pass: find the chat text file and catalog media files (without loading them)
-	for (const [path, zipEntry] of Object.entries(contents.files)) {
-		if (zipEntry.dir) continue;
+	// Get all file entries for progress tracking
+	const fileEntries = Object.entries(contents.files).filter(([, entry]) => !entry.dir);
+	const totalFiles = fileEntries.length;
+	let processedFiles = 0;
 
+	// First pass: find the chat text file and catalog media files (without loading them)
+	for (const [path, zipEntry] of fileEntries) {
 		const filename = path.split('/').pop() || path;
 
-				if (filename.endsWith('.txt') && !filename.startsWith('.')) {
+		if (filename.endsWith('.txt') && !filename.startsWith('.')) {
 			// This is likely the chat file - load it immediately (it's small)
 			chatContent = await zipEntry.async('string');
 			chatFilename = filename;
@@ -84,17 +101,28 @@ export async function parseZipFile(file: File | ArrayBuffer): Promise<ParsedZipC
 				});
 			}
 		}
+		
+		processedFiles++;
+		// Report progress: 30-80% for file enumeration
+		const enumerationProgress = 30 + (processedFiles / totalFiles) * 50;
+		onProgress?.({ stage: 'extracting', progress: enumerationProgress });
 	}
 
 	if (!chatContent) {
 		throw new Error('No chat file found in ZIP archive');
 	}
 
+	onProgress?.({ stage: 'parsing', progress: 0 });
+	
 	// Parse the chat content
 	const parsedChat = parseChat(chatContent, chatFilename);
+	
+	onProgress?.({ stage: 'parsing', progress: 50 });
 
 	// Try to match media files with messages (just references, no loading)
 	const enhancedMessages = matchMediaToMessages(parsedChat.messages, mediaFiles);
+	
+	onProgress?.({ stage: 'parsing', progress: 100 });
 
 	return {
 		...parsedChat,
@@ -138,13 +166,23 @@ function matchMediaToMessages(messages: ChatMessage[], mediaFiles: MediaFile[]):
 }
 
 /**
- * Read a file as ArrayBuffer
+ * Read a file as ArrayBuffer with progress callback
  */
-export function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
+export function readFileAsArrayBuffer(
+	file: File,
+	onProgress?: (progress: number) => void
+): Promise<ArrayBuffer> {
 	return new Promise((resolve, reject) => {
 		const reader = new FileReader();
 		reader.onload = () => resolve(reader.result as ArrayBuffer);
 		reader.onerror = () => reject(reader.error);
+		if (onProgress) {
+			reader.onprogress = (event) => {
+				if (event.lengthComputable) {
+					onProgress((event.loaded / event.total) * 100);
+				}
+			};
+		}
 		reader.readAsArrayBuffer(file);
 	});
 }

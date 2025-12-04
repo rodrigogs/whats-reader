@@ -9,4 +9,4 @@ export {
 	cleanupMediaUrls,
 	formatFileSize
 } from './zip-parser';
-export type { MediaFile, ParsedZipChat } from './zip-parser';
+export type { MediaFile, ParsedZipChat, ParseProgress } from './zip-parser';

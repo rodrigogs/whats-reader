@@ -10,8 +10,8 @@ if (require('electron-squirrel-startup')) {
 let mainWindow;
 
 const createWindow = () => {
-	// Create the browser window.
-	mainWindow = new BrowserWindow({
+	// Build window options
+	const windowOptions = {
 		width: 1200,
 		height: 800,
 		minWidth: 800,
@@ -22,11 +22,18 @@ const createWindow = () => {
 			nodeIntegration: false,
 			sandbox: false
 		},
-		titleBarStyle: 'hiddenInset',
-		frame: process.platform === 'darwin' ? true : true,
+		titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
 		backgroundColor: '#ECE5DD',
 		icon: path.join(__dirname, '../static/favicon.png')
-	});
+	};
+
+	// Only apply trafficLightPosition on macOS
+	if (process.platform === 'darwin') {
+		windowOptions.trafficLightPosition = { x: 15, y: 12 };
+	}
+
+	// Create the browser window.
+	mainWindow = new BrowserWindow(windowOptions);
 
 	// In development, load from Vite dev server
 	// In production, load from built files

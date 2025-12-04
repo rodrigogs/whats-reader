@@ -9,16 +9,45 @@
 	async function handleFilesSelected(files: FileList) {
 		appState.setLoading(true);
 		appState.clearError();
+		appState.setLoadingProgress(0);
 
 		try {
+			const totalFiles = files.length;
+			let processedFiles = 0;
+
 			for (const file of files) {
 				if (!file.name.endsWith('.zip')) {
 					throw new Error(`Unsupported file type: ${file.name}. Only .zip files are supported.`);
 				}
 
-				const buffer = await readFileAsArrayBuffer(file);
-				const chatData: ChatData = await parseZipFile(buffer);
+				const fileBaseProgress = (processedFiles / totalFiles) * 100;
+				const fileWeight = 100 / totalFiles;
+
+				// Read file (0-10% of file progress)
+				const buffer = await readFileAsArrayBuffer(file, (readProgress) => {
+					const overallProgress = fileBaseProgress + (readProgress / 100) * (fileWeight * 0.1);
+					appState.setLoadingProgress(overallProgress);
+				});
+				
+				// Parse ZIP file using Web Worker (10-100% of file progress)
+				// The worker handles all heavy processing without blocking the UI
+				const chatData: ChatData = await parseZipFile(buffer, async ({ stage, progress }) => {
+					// Progress stages: Reading (0-10%), Extracting (10-60%), Parsing (60-100%)
+					const STAGE_PROGRESS = {
+						reading:    { offset: 0.0, weight: 0.1 },
+						extracting: { offset: 0.1, weight: 0.5 },
+						parsing:    { offset: 0.6, weight: 0.4 }
+					} as const;
+
+					const { offset: stageOffset, weight: stageWeight } = STAGE_PROGRESS[stage] ?? STAGE_PROGRESS['extracting'];
+					
+					const overallProgress = fileBaseProgress + (stageOffset + (progress / 100) * stageWeight) * fileWeight;
+					appState.setLoadingProgress(overallProgress);
+				});
+				
 				appState.addChat(chatData);
+				processedFiles++;
+				appState.setLoadingProgress((processedFiles / totalFiles) * 100);
 			}
 		} catch (error) {
 			console.error('Error parsing file:', error);
@@ -58,6 +87,9 @@
 </script>
 
 <div class="h-screen flex flex-col bg-gray-100 dark:bg-gray-950">
+	<!-- Electron drag region for macOS titlebar -->
+	<div class="electron-drag h-8 flex-shrink-0 bg-[var(--color-whatsapp-dark-green)]"></div>
+
 	{#if !appState.hasChats}
 		<!-- Empty state - show file upload -->
 		<div class="flex-1 flex items-center justify-center p-8">
@@ -76,7 +108,7 @@
 					</p>
 				</div>
 
-				<FileDropZone onFilesSelected={handleFilesSelected} isLoading={appState.isLoading} />
+				<FileDropZone onFilesSelected={handleFilesSelected} isLoading={appState.isLoading} loadingProgress={appState.loadingProgress} />
 
 				{#if appState.error}
 					<div class="mt-4 p-4 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
@@ -201,22 +233,73 @@
 
 					<!-- Search bar -->
 					<div class="p-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-						<SearchBar
-							value={appState.searchQuery}
-							onInput={handleSearchInput}
-							placeholder="Search in chat..."
-						/>
-						{#if appState.searchQuery && appState.filteredMessages.length !== appState.selectedChat.messages.length}
-							<p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-								Found {appState.filteredMessages.length} of {appState.selectedChat.messages.length} messages
-							</p>
-						{/if}
+						<div class="flex items-center gap-2">
+							<div class="flex-1">
+								<SearchBar
+									value={appState.searchQuery}
+									onInput={handleSearchInput}
+									onNextResult={() => appState.nextSearchResult()}
+									onPrevResult={() => appState.prevSearchResult()}
+									placeholder="Search in chat..."
+								/>
+							</div>
+							{#if appState.searchQuery}
+								<!-- Search results count and navigation -->
+								<div class="flex items-center gap-1">
+									{#if appState.isSearching}
+										<div class="flex items-center gap-2 px-2">
+											<svg class="w-4 h-4 animate-spin-slow" viewBox="0 0 36 36">
+												<circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" stroke-width="3" class="text-gray-200 dark:text-gray-700" />
+												<circle cx="18" cy="18" r="16" fill="none" stroke="var(--color-whatsapp-teal)" stroke-width="3" stroke-linecap="round" stroke-dasharray={100.53} stroke-dashoffset={100.53 - (100.53 * appState.searchProgress) / 100} transform="rotate(-90 18 18)" />
+											</svg>
+											<span class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">{appState.searchProgress}%</span>
+										</div>
+									{:else}
+										<span class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap px-2">
+											{#if appState.searchResultIds.length > 0}
+												{appState.currentSearchIndex + 1} of {appState.searchResultIds.length}
+											{:else}
+												No results
+											{/if}
+										</span>
+										<!-- Navigation buttons -->
+										<button
+											type="button"
+											class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+											onclick={() => appState.prevSearchResult()}
+											disabled={appState.searchResultIds.length === 0}
+											title="Previous match (↑)"
+											aria-label="Previous match"
+										>
+											<svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+											</svg>
+										</button>
+										<button
+											type="button"
+											class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+											onclick={() => appState.nextSearchResult()}
+											disabled={appState.searchResultIds.length === 0}
+											title="Next match (↓)"
+											aria-label="Next match"
+										>
+											<svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+											</svg>
+										</button>
+									{/if}
+								</div>
+							{/if}
+						</div>
 					</div>
 
 					<!-- Chat view -->
 					<ChatView
-						messages={appState.filteredMessages}
+						messages={appState.displayMessages}
 						{currentUser}
+						searchQuery={appState.searchQuery}
+						searchResultSet={appState.searchResultSet}
+						currentSearchResultId={appState.currentSearchResultId}
 					/>
 				</div>
 
