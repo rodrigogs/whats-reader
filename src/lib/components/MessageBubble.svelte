@@ -2,6 +2,9 @@
 	import type { ChatMessage } from '$lib/parser';
 	import type { MediaFile } from '$lib/parser/zip-parser';
 	import { formatTime, loadMediaFile } from '$lib/parser';
+	import { bookmarksState } from '$lib/bookmarks.svelte';
+	import BookmarkButton from './BookmarkButton.svelte';
+	import BookmarkModal from './BookmarkModal.svelte';
 
 	interface MessageWithMedia extends ChatMessage {
 		mediaFile?: MediaFile;
@@ -9,6 +12,7 @@
 
 	interface Props {
 		message: MessageWithMedia;
+		chatId: string;
 		isOwn?: boolean;
 		showSender?: boolean;
 		searchQuery?: string;
@@ -17,12 +21,17 @@
 		triggerHighlight?: boolean;
 	}
 
-	let { message, isOwn = false, showSender = true, searchQuery = '', isSearchMatch = false, isCurrentSearchResult = false, triggerHighlight = false }: Props = $props();
+	let { message, chatId, isOwn = false, showSender = true, searchQuery = '', isSearchMatch = false, isCurrentSearchResult = false, triggerHighlight = false }: Props = $props();
 
 	let mediaUrl = $state<string | null>(null);
 	let mediaLoading = $state(false);
 	let mediaError = $state<string | null>(null);
 	let shouldAnimate = $state(false);
+	let showBookmarkModal = $state(false);
+
+	// Get bookmark for this message (reactive)
+	const bookmark = $derived(bookmarksState.getBookmark(message.id));
+	const isBookmarked = $derived(!!bookmark);
 
 	const bubbleClass = $derived(
 		isOwn
@@ -36,8 +45,17 @@
 			? 'ring-2 ring-[var(--color-whatsapp-teal)] ring-offset-2 shadow-lg shadow-[var(--color-whatsapp-teal)]/30'
 			: isSearchMatch
 				? 'ring-1 ring-yellow-400/60'
-				: ''
+				: isBookmarked
+					? 'ring-1 ring-[var(--color-whatsapp-teal)]/40'
+					: ''
 	);
+
+	function handleBookmarkChange(added: boolean) {
+		if (added) {
+			// Open modal to add comment after creating bookmark
+			showBookmarkModal = true;
+		}
+	}
 
 	// Trigger animation when triggerHighlight becomes true
 	$effect(() => {
@@ -125,7 +143,21 @@
 	</div>
 {:else}
 	<!-- Regular message -->
-	<div class="flex {isOwn ? 'justify-end' : 'justify-start'} mb-1">
+	<div class="message-container flex {isOwn ? 'justify-end' : 'justify-start'} mb-1 group">
+		<!-- Bookmark button (left side for own messages) -->
+		{#if isOwn}
+			<div class="flex items-center mr-1 self-center">
+				<BookmarkButton
+					messageId={message.id}
+					{chatId}
+					messageContent={message.content}
+					sender={message.sender}
+					messageTimestamp={message.timestamp}
+					onBookmarkChange={handleBookmarkChange}
+				/>
+			</div>
+		{/if}
+
 		<div
 			class="max-w-[75%] rounded-lg px-3 py-2 shadow-sm transition-all {bubbleClass} {highlightClass} {shouldAnimate ? 'animate-search-highlight' : ''}"
 		>
@@ -284,5 +316,27 @@
 				{formatTime(message.timestamp)}
 			</div>
 		</div>
+
+		<!-- Bookmark button (right side for other's messages) -->
+		{#if !isOwn}
+			<div class="flex items-center ml-1 self-center">
+				<BookmarkButton
+					messageId={message.id}
+					{chatId}
+					messageContent={message.content}
+					sender={message.sender}
+					messageTimestamp={message.timestamp}
+					onBookmarkChange={handleBookmarkChange}
+				/>
+			</div>
+		{/if}
 	</div>
+{/if}
+
+<!-- Bookmark edit modal -->
+{#if showBookmarkModal && bookmark}
+	<BookmarkModal
+		{bookmark}
+		onClose={() => showBookmarkModal = false}
+	/>
 {/if}

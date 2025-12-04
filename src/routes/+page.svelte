@@ -2,9 +2,12 @@
 	import { appState, type ChatData } from '$lib/state.svelte';
 	import { parseZipFile, readFileAsArrayBuffer } from '$lib/parser';
 	import { ChatList, ChatView, ChatStats, FileDropZone, SearchBar } from '$lib/components';
+	import BookmarksPanel from '$lib/components/BookmarksPanel.svelte';
 
 	let showStats = $state(false);
 	let showSidebar = $state(true);
+	let showBookmarks = $state(false);
+	let scrollToMessageId = $state<string | null>(null);
 
 	async function handleFilesSelected(files: FileList) {
 		appState.setLoading(true);
@@ -75,6 +78,25 @@
 
 	function toggleSidebar() {
 		showSidebar = !showSidebar;
+	}
+
+	function toggleBookmarks() {
+		showBookmarks = !showBookmarks;
+	}
+
+	function handleNavigateToBookmark(messageId: string, chatId: string) {
+		// Find and select the chat if different from current
+		const chatIndex = appState.chats.findIndex(c => c.title === chatId);
+		if (chatIndex !== -1 && chatIndex !== appState.selectedChatIndex) {
+			appState.selectChat(chatIndex);
+		}
+		
+		// Clear any previous scroll target, then set new one
+		scrollToMessageId = null;
+		// Use setTimeout to ensure the effect triggers even if same messageId
+		setTimeout(() => {
+			scrollToMessageId = messageId;
+		}, 50);
 	}
 
 	// Determine current user (first participant after the phone number pattern)
@@ -219,6 +241,16 @@
 						<!-- Actions -->
 						<div class="flex items-center gap-2">
 							<button
+								class="p-2 hover:bg-white/10 rounded-full transition-colors {showBookmarks ? 'bg-white/20' : ''}"
+								onclick={toggleBookmarks}
+								title="Bookmarks"
+								aria-label="Toggle bookmarks"
+							>
+								<svg class="w-5 h-5" fill={showBookmarks ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+								</svg>
+							</button>
+							<button
 								class="p-2 hover:bg-white/10 rounded-full transition-colors"
 								onclick={toggleStats}
 								title="View statistics"
@@ -296,12 +328,25 @@
 					<!-- Chat view -->
 					<ChatView
 						messages={appState.displayMessages}
+						chatId={appState.selectedChat.title}
 						{currentUser}
 						searchQuery={appState.searchQuery}
 						searchResultSet={appState.searchResultSet}
 						currentSearchResultId={appState.currentSearchResultId}
+						{scrollToMessageId}
 					/>
 				</div>
+
+				<!-- Bookmarks panel (slide from right) -->
+				{#if showBookmarks}
+					<div class="w-80 flex-shrink-0 border-l border-gray-200 dark:border-gray-700">
+						<BookmarksPanel
+							currentChatId={appState.selectedChat.title}
+							onNavigateToMessage={handleNavigateToBookmark}
+							onClose={() => showBookmarks = false}
+						/>
+					</div>
+				{/if}
 
 				<!-- Stats modal -->
 				{#if showStats}

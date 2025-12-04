@@ -6,13 +6,15 @@
 
 	interface Props {
 		messages: ChatMessage[];
+		chatId: string;
 		currentUser?: string;
 		searchQuery?: string;
 		searchResultSet?: Set<string>;
 		currentSearchResultId?: string | null;
+		scrollToMessageId?: string | null;
 	}
 
-	let { messages, currentUser, searchQuery = '', searchResultSet = new Set(), currentSearchResultId = null }: Props = $props();
+	let { messages, chatId, currentUser, searchQuery = '', searchResultSet = new Set(), currentSearchResultId = null, scrollToMessageId = null }: Props = $props();
 
 	const groupedMessages = $derived(groupMessagesByDate(messages));
 
@@ -53,6 +55,21 @@
 			highlightReady = false;
 			highlightedId = null;
 			pendingHighlightId = currentSearchResultId;
+			
+			// Scroll to the element
+			element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}
+	});
+
+	// Scroll to specific message (from bookmark navigation)
+	$effect(() => {
+		if (scrollToMessageId && messageRefs.has(scrollToMessageId)) {
+			const element = messageRefs.get(scrollToMessageId);
+			
+			// Reset highlight state before scrolling
+			highlightReady = false;
+			highlightedId = null;
+			pendingHighlightId = scrollToMessageId;
 			
 			// Scroll to the element
 			element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -129,6 +146,7 @@
 			>
 				<MessageBubble
 					{message}
+					{chatId}
 					isOwn={currentUser !== undefined && message.sender === currentUser}
 					showSender={true}
 					{searchQuery}
