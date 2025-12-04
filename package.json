@@ -88,6 +88,8 @@
 		}
 	},
 	"dependencies": {
+		"@floating-ui/dom": "^1.7.4",
+		"@huggingface/transformers": "^3.8.1",
 		"jszip": "^3.10.1"
 	}
 }

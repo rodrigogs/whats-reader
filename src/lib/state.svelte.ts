@@ -4,6 +4,7 @@
 
 import type { MediaFile, ParsedZipChat } from './parser/zip-parser';
 import type { ChatMessage } from './parser/chat-parser';
+import { getAllTranscriptions } from './transcription.svelte';
 
 // ChatData is now always a ParsedZipChat since we only support ZIP files
 export type ChatData = ParsedZipChat;
@@ -133,7 +134,10 @@ export function createAppState() {
 			rawLine: m.rawLine
 		}));
 
-		searchWorker.postMessage({ messages: serializedMessages, query });
+		// Include transcriptions for audio message search
+		const transcriptions = getAllTranscriptions();
+
+		searchWorker.postMessage({ messages: serializedMessages, query, transcriptions });
 	}
 
 	return {

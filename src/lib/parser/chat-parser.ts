@@ -269,8 +269,36 @@ function parseLine(
 	return null;
 }
 
-function generateId(): string {
-	return Math.random().toString(36).substring(2, 11);
+/**
+ * Generate a deterministic ID based on message content.
+ * This ensures the same message always gets the same ID across parses,
+ * which is essential for bookmark navigation to work after import.
+ * 
+ * Uses a collision resolution strategy: if two messages would have the same hash,
+ * a counter suffix is added to make them unique while still being deterministic.
+ */
+function generateDeterministicId(timestamp: Date, sender: string | null, content: string, existingIds: Set<string>): string {
+	// Create a string combining timestamp, sender, and full content
+	const baseString = `${timestamp.toISOString()}|${sender ?? ''}|${content}`;
+	
+	// Simple hash function (djb2)
+	let hash = 5381;
+	for (let i = 0; i < baseString.length; i++) {
+		hash = ((hash << 5) + hash) ^ baseString.charCodeAt(i);
+	}
+	
+	// Convert to base36 string and ensure positive
+	let id = Math.abs(hash).toString(36);
+	
+	// Handle collisions by adding a suffix
+	let counter = 0;
+	let uniqueId = id;
+	while (existingIds.has(uniqueId)) {
+		counter++;
+		uniqueId = `${id}_${counter}`;
+	}
+	
+	return uniqueId;
 }
 
 /**
@@ -280,8 +308,24 @@ export function parseChat(content: string, filename: string = 'WhatsApp Chat'): 
 	const lines = content.split(/\r?\n/);
 	const messages: ChatMessage[] = [];
 	const participantsSet = new Set<string>();
+	const usedIds = new Set<string>(); // Track used IDs to handle collisions
 
 	let currentMessage: ChatMessage | null = null;
+
+	// Helper to finalize and push current message with deterministic ID
+	const pushCurrentMessage = () => {
+		if (currentMessage) {
+			// Generate deterministic ID based on final content
+			currentMessage.id = generateDeterministicId(
+				currentMessage.timestamp,
+				currentMessage.sender,
+				currentMessage.content,
+				usedIds
+			);
+			usedIds.add(currentMessage.id);
+			messages.push(currentMessage);
+		}
+	};
 
 	for (const line of lines) {
 		if (!line.trim()) continue;
@@ -289,16 +333,14 @@ export function parseChat(content: string, filename: string = 'WhatsApp Chat'): 
 		const parsed = parseLine(line);
 
 		if (parsed) {
-			// This is a new message
-			if (currentMessage) {
-				messages.push(currentMessage);
-			}
+			// This is a new message - push previous one first
+			pushCurrentMessage();
 
 			const isMedia = isMediaMessage(parsed.content);
 			const isSystem = !parsed.sender || isSystemMessage(parsed.content);
 
 			currentMessage = {
-				id: generateId(),
+				id: '', // Will be set when pushed
 				timestamp: parsed.timestamp,
 				sender: parsed.sender,
 				content: parsed.content,
@@ -319,9 +361,7 @@ export function parseChat(content: string, filename: string = 'WhatsApp Chat'): 
 	}
 
 	// Don't forget the last message
-	if (currentMessage) {
-		messages.push(currentMessage);
-	}
+	pushCurrentMessage();
 
 	const participants = Array.from(participantsSet).sort();
 	const mediaCount = messages.filter((m) => m.isMediaMessage).length;

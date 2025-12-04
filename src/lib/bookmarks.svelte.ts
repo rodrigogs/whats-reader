@@ -1,9 +1,10 @@
 /**
  * Bookmarks state management using Svelte 5 runes
  * Allows users to bookmark messages with optional comments
+ * 
+ * NOTE: Bookmarks are NOT persisted automatically.
+ * Users must export/import bookmarks manually each session.
  */
-
-const STORAGE_KEY = 'whats-reader-bookmarks';
 
 export interface Bookmark {
 	id: string;
@@ -33,39 +34,10 @@ function truncateText(text: string, maxLength: number = 100): string {
 	return text.substring(0, maxLength).trim() + '...';
 }
 
-// Load bookmarks from localStorage
-function loadFromStorage(): Bookmark[] {
-	if (typeof window === 'undefined') return [];
-	
-	try {
-		const stored = localStorage.getItem(STORAGE_KEY);
-		if (!stored) return [];
-		
-		const data = JSON.parse(stored);
-		// Validate that it's an array
-		if (!Array.isArray(data)) return [];
-		
-		return data;
-	} catch (e) {
-		console.error('Failed to load bookmarks from storage:', e);
-		return [];
-	}
-}
-
-// Save bookmarks to localStorage
-function saveToStorage(bookmarks: Bookmark[]): void {
-	if (typeof window === 'undefined') return;
-	
-	try {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(bookmarks));
-	} catch (e) {
-		console.error('Failed to save bookmarks to storage:', e);
-	}
-}
-
 // Create reactive bookmarks state
 function createBookmarksState() {
-	let bookmarks = $state<Bookmark[]>(loadFromStorage());
+	// Start with empty bookmarks - no persistence
+	let bookmarks = $state<Bookmark[]>([]);
 
 	// Derived: Map of messageId -> Bookmark for fast lookup
 	const bookmarksByMessageId = $derived(
@@ -81,11 +53,6 @@ function createBookmarksState() {
 			grouped.set(bookmark.chatId, existing);
 		}
 		return grouped;
-	});
-
-	// Save to storage whenever bookmarks change
-	$effect(() => {
-		saveToStorage(bookmarks);
 	});
 
 	return {
@@ -135,7 +102,7 @@ function createBookmarksState() {
 		},
 
 		// Update bookmark comment
-		updateBookmark(messageId: string, comment: string): void {
+		updateBookmarkComment(messageId: string, comment: string): void {
 			bookmarks = bookmarks.map(b =>
 				b.messageId === messageId
 					? { ...b, comment }
@@ -144,8 +111,16 @@ function createBookmarksState() {
 		},
 
 		// Remove a bookmark
-		removeBookmark(messageId: string): void {
-			bookmarks = bookmarks.filter(b => b.messageId !== messageId);
+		removeBookmark(messageId: string): boolean {
+			const initialLength = bookmarks.length;
+			const filtered = bookmarks.filter(b => b.messageId !== messageId);
+			
+			if (filtered.length === initialLength) {
+				return false;
+			}
+			
+			bookmarks = filtered;
+			return true;
 		},
 
 		// Toggle bookmark (add if not exists, remove if exists)
@@ -192,45 +167,21 @@ function createBookmarksState() {
 			URL.revokeObjectURL(url);
 		},
 
-		// Import bookmarks from JSON
-		importBookmarks(data: BookmarkExport, mode: 'merge' | 'replace' = 'merge'): { imported: number; skipped: number } {
+		// Import bookmarks from JSON (always replaces current bookmarks)
+		importBookmarks(data: BookmarkExport): { imported: number } {
 			if (!data || data.version !== 1 || !Array.isArray(data.bookmarks)) {
 				throw new Error('Invalid bookmark export format');
 			}
 
-			let imported = 0;
-			let skipped = 0;
-
-			if (mode === 'replace') {
-				bookmarks = data.bookmarks;
-				imported = data.bookmarks.length;
-			} else {
-				// Merge: add only bookmarks that don't exist (by messageId)
-				const existingIds = new Set(bookmarks.map(b => b.messageId));
-				const newBookmarks: Bookmark[] = [];
-				
-				for (const bookmark of data.bookmarks) {
-					if (!existingIds.has(bookmark.messageId)) {
-						newBookmarks.push(bookmark);
-						imported++;
-					} else {
-						skipped++;
-					}
-				}
-
-				if (newBookmarks.length > 0) {
-					bookmarks = [...bookmarks, ...newBookmarks];
-				}
-			}
-
-			return { imported, skipped };
+			bookmarks = data.bookmarks;
+			return { imported: data.bookmarks.length };
 		},
 
 		// Import from file
-		async importFromFile(file: File): Promise<{ imported: number; skipped: number }> {
+		async importFromFile(file: File): Promise<{ imported: number }> {
 			const text = await file.text();
 			const data = JSON.parse(text) as BookmarkExport;
-			return this.importBookmarks(data, 'merge');
+			return this.importBookmarks(data);
 		},
 
 		// Clear all bookmarks

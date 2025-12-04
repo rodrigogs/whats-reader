@@ -20,6 +20,7 @@ interface SearchMessage {
 interface SearchWorkerInput {
 	messages: SearchMessage[];
 	query: string;
+	transcriptions?: Record<string, string>; // messageId -> transcription text
 }
 
 interface SearchWorkerOutput {
@@ -30,7 +31,11 @@ interface SearchWorkerOutput {
 }
 
 // Process search in chunks to allow progress updates to be sent
-async function processSearch(messages: SearchMessage[], query: string) {
+async function processSearch(
+	messages: SearchMessage[], 
+	query: string, 
+	transcriptions: Record<string, string> = {}
+) {
 	const lowerQuery = query.toLowerCase();
 	const matchingIds: string[] = [];
 	const total = messages.length;
@@ -53,10 +58,19 @@ async function processSearch(messages: SearchMessage[], query: string) {
 		// Process this chunk
 		for (let j = i; j < chunkEnd; j++) {
 			const message = messages[j];
+			
+			// Check message content and sender
 			if (
 				message.content.toLowerCase().includes(lowerQuery) ||
 				message.sender.toLowerCase().includes(lowerQuery)
 			) {
+				matchingIds.push(message.id);
+				continue;
+			}
+			
+			// Check transcription for audio messages
+			const transcription = transcriptions[message.id];
+			if (transcription && transcription.toLowerCase().includes(lowerQuery)) {
 				matchingIds.push(message.id);
 			}
 		}
@@ -77,7 +91,7 @@ async function processSearch(messages: SearchMessage[], query: string) {
 }
 
 self.onmessage = async (event: MessageEvent<SearchWorkerInput>) => {
-	const { messages, query } = event.data;
+	const { messages, query, transcriptions = {} } = event.data;
 
 	if (!query.trim()) {
 		// Empty query - return empty results (don't highlight anything)
@@ -90,7 +104,7 @@ self.onmessage = async (event: MessageEvent<SearchWorkerInput>) => {
 		return;
 	}
 
-	const matchingIds = await processSearch(messages, query);
+	const matchingIds = await processSearch(messages, query, transcriptions);
 
 	const result: SearchWorkerOutput = {
 		type: 'complete',

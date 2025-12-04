@@ -1,25 +1,58 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { bookmarksState, type Bookmark } from '$lib/bookmarks.svelte';
 
+	// Data needed to create a new bookmark
+	interface NewBookmarkData {
+		messageId: string;
+		chatId: string;
+		messageContent: string;
+		sender: string;
+		messageTimestamp: Date;
+	}
+
 	interface Props {
-		bookmark: Bookmark;
+		// Either an existing bookmark (edit mode) or data to create new (create mode)
+		bookmark?: Bookmark;
+		newBookmarkData?: NewBookmarkData;
 		onClose: () => void;
 		onSave?: () => void;
 	}
 
-	let { bookmark, onClose, onSave }: Props = $props();
+	let { bookmark, newBookmarkData, onClose, onSave }: Props = $props();
 
-	let comment = $state(bookmark.comment);
+	// Determine if we're in create mode or edit mode
+	const isCreateMode = $derived(!bookmark && !!newBookmarkData);
+
+	// Initialize with current bookmark comment, using untrack to avoid warning
+	// The $effect below ensures this stays in sync if bookmark changes
+	let comment = $state(untrack(() => bookmark?.comment ?? ''));
 	let textarea: HTMLTextAreaElement;
 
+	// Sync comment when bookmark prop changes
+	$effect(() => {
+		comment = bookmark?.comment ?? '';
+	});
+
 	function handleSave() {
-		bookmarksState.updateBookmark(bookmark.messageId, comment);
+		if (isCreateMode && newBookmarkData) {
+			// Create mode: add the bookmark now
+			bookmarksState.addBookmark({
+				...newBookmarkData,
+				comment
+			});
+		} else if (bookmark) {
+			// Edit mode: update the comment
+			bookmarksState.updateBookmarkComment(bookmark.messageId, comment);
+		}
 		onSave?.();
 		onClose();
 	}
 
 	function handleDelete() {
-		bookmarksState.removeBookmark(bookmark.messageId);
+		if (bookmark) {
+			bookmarksState.removeBookmark(bookmark.messageId);
+		}
 		onClose();
 	}
 
@@ -46,8 +79,8 @@
 	});
 
 	// Format date for display
-	function formatDate(isoString: string): string {
-		const date = new Date(isoString);
+	function formatDate(dateOrIsoString: Date | string): string {
+		const date = typeof dateOrIsoString === 'string' ? new Date(dateOrIsoString) : dateOrIsoString;
 		return date.toLocaleDateString(undefined, {
 			day: 'numeric',
 			month: 'short',
@@ -56,14 +89,20 @@
 			minute: '2-digit'
 		});
 	}
+
+	// Get display data from either bookmark or newBookmarkData
+	const displaySender = $derived(bookmark?.sender ?? newBookmarkData?.sender ?? '');
+	const displayTimestamp = $derived(bookmark?.messageTimestamp ?? newBookmarkData?.messageTimestamp ?? new Date());
+	const displayPreview = $derived(bookmark?.messagePreview ?? newBookmarkData?.messageContent ?? '');
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
 
-<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 <div
 	class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
 	onclick={handleBackdropClick}
+	onkeydown={(e) => e.key === 'Escape' && onClose()}
+	role="presentation"
 >
 	<div
 		class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
@@ -75,11 +114,11 @@
 		<div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
 			<div class="flex items-center justify-between">
 				<h2 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-					Edit Bookmark
+					{isCreateMode ? 'Add Bookmark' : 'Edit Bookmark'}
 				</h2>
 				<button
 					type="button"
-					class="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+					class="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer"
 					onclick={onClose}
 					aria-label="Close"
 				>
@@ -95,12 +134,12 @@
 			<!-- Message preview -->
 			<div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
 				<div class="flex items-center gap-2 mb-1">
-					<span class="text-xs font-medium text-[var(--color-whatsapp-teal)]">{bookmark.sender}</span>
+					<span class="text-xs font-medium text-[var(--color-whatsapp-teal)]">{displaySender}</span>
 					<span class="text-xs text-gray-400">•</span>
-					<span class="text-xs text-gray-400">{formatDate(bookmark.messageTimestamp)}</span>
+					<span class="text-xs text-gray-400">{formatDate(displayTimestamp)}</span>
 				</div>
 				<p class="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
-					{bookmark.messagePreview}
+					{displayPreview}
 				</p>
 			</div>
 
@@ -125,24 +164,28 @@
 
 		<!-- Footer -->
 		<div class="px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 flex items-center justify-between">
-			<button
-				type="button"
-				class="px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-				onclick={handleDelete}
-			>
-				Delete bookmark
-			</button>
+			{#if !isCreateMode}
+				<button
+					type="button"
+					class="px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
+					onclick={handleDelete}
+				>
+					Delete bookmark
+				</button>
+			{:else}
+				<div></div>
+			{/if}
 			<div class="flex gap-2">
 				<button
 					type="button"
-					class="px-4 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+					class="px-4 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
 					onclick={onClose}
 				>
 					Cancel
 				</button>
 				<button
 					type="button"
-					class="px-4 py-1.5 text-sm bg-[var(--color-whatsapp-teal)] hover:bg-[var(--color-whatsapp-dark)] text-white rounded-lg transition-colors"
+					class="px-4 py-1.5 text-sm bg-[var(--color-whatsapp-teal)] hover:brightness-110 hover:shadow-md text-white rounded-lg transition-all cursor-pointer"
 					onclick={handleSave}
 				>
 					Save

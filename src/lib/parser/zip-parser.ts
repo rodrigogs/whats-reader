@@ -34,10 +34,10 @@ const MAX_CACHED_MEDIA = 50; // Maximum number of media files to keep in memory
 function getMediaType(filename: string): MediaFile['type'] {
 	const ext = filename.toLowerCase().split('.').pop() || '';
 
-	const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+	const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
 	const videoExts = ['mp4', 'mov', 'avi', 'mkv', '3gp', 'webm'];
 	const audioExts = ['opus', 'mp3', 'wav', 'aac', 'm4a', 'ogg'];
-	const docExts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'vcf', 'xml', 'svg'];
+	const docExts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'vcf', 'xml'];
 
 	if (imageExts.includes(ext)) return 'image';
 	if (videoExts.includes(ext)) return 'video';
@@ -188,6 +188,43 @@ export function readFileAsArrayBuffer(
 }
 
 /**
+ * Get MIME type from filename extension
+ */
+function getMimeType(filename: string): string {
+	const ext = filename.toLowerCase().split('.').pop() || '';
+	const mimeTypes: Record<string, string> = {
+		// Images
+		'jpg': 'image/jpeg',
+		'jpeg': 'image/jpeg',
+		'png': 'image/png',
+		'gif': 'image/gif',
+		'webp': 'image/webp',
+		'bmp': 'image/bmp',
+		'svg': 'image/svg+xml',
+		// Videos
+		'mp4': 'video/mp4',
+		'mov': 'video/quicktime',
+		'avi': 'video/x-msvideo',
+		'mkv': 'video/x-matroska',
+		'3gp': 'video/3gpp',
+		'webm': 'video/webm',
+		// Audio
+		'opus': 'audio/opus',
+		'mp3': 'audio/mpeg',
+		'wav': 'audio/wav',
+		'aac': 'audio/aac',
+		'm4a': 'audio/mp4',
+		'ogg': 'audio/ogg',
+		// Documents
+		'pdf': 'application/pdf',
+		'txt': 'text/plain',
+		'xml': 'application/xml',
+		'vcf': 'text/vcard',
+	};
+	return mimeTypes[ext] || 'application/octet-stream';
+}
+
+/**
  * Load a media file on demand (lazy loading)
  * Returns the blob URL for the media file
  */
@@ -216,8 +253,10 @@ export async function loadMediaFile(media: MediaFile): Promise<string> {
 		evictOldestFromCache();
 	}
 
-	// Load the blob
-	const blob = await media._zipEntry.async('blob');
+	// Load the blob with correct MIME type
+	const arrayBuffer = await media._zipEntry.async('arraybuffer');
+	const mimeType = getMimeType(media.name);
+	const blob = new Blob([arrayBuffer], { type: mimeType });
 	const url = URL.createObjectURL(blob);
 
 	// Cache it

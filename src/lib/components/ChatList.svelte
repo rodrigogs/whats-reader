@@ -1,14 +1,94 @@
 <script lang="ts">
 	import type { ChatData } from '$lib/state.svelte';
+	import { getAvailableLanguages } from '$lib/transcription.svelte';
+	import { floating } from '$lib/actions/floating';
 
 	interface Props {
 		chats: ChatData[];
 		selectedIndex: number | null;
 		onSelect: (index: number) => void;
 		onRemove: (index: number) => void;
+		languageByChat?: Map<string, string>;
+		onLanguageChange?: (chatTitle: string, language: string) => void;
+		autoLoadMediaByChat?: Map<string, boolean>;
+		onAutoLoadMediaChange?: (chatTitle: string, enabled: boolean) => void;
 	}
 
-	let { chats, selectedIndex, onSelect, onRemove }: Props = $props();
+	let { chats, selectedIndex, onSelect, onRemove, languageByChat = new Map(), onLanguageChange, autoLoadMediaByChat = new Map(), onAutoLoadMediaChange }: Props = $props();
+
+	// Context menu state
+	let contextMenuIndex = $state<number | null>(null);
+	let menuButtonRef = $state<HTMLButtonElement | null>(null);
+	let showLanguageSubmenu = $state(false);
+	let languageTriggerRef = $state<HTMLButtonElement | null>(null);
+	let submenuHideTimeout: ReturnType<typeof setTimeout> | null = null;
+	
+	const availableLanguages = getAvailableLanguages();
+
+	function openContextMenu(e: MouseEvent, index: number, buttonEl: HTMLButtonElement) {
+		e.preventDefault();
+		e.stopPropagation();
+		contextMenuIndex = index;
+		menuButtonRef = buttonEl;
+		showLanguageSubmenu = false;
+	}
+
+	function closeContextMenu() {
+		contextMenuIndex = null;
+		showLanguageSubmenu = false;
+		menuButtonRef = null;
+		languageTriggerRef = null;
+	}
+
+	function handleLanguageSelect(language: string) {
+		if (contextMenuIndex !== null && onLanguageChange) {
+			const chat = chats[contextMenuIndex];
+			onLanguageChange(chat.title, language);
+		}
+		closeContextMenu();
+	}
+
+	function showSubmenu() {
+		if (submenuHideTimeout) {
+			clearTimeout(submenuHideTimeout);
+			submenuHideTimeout = null;
+		}
+		showLanguageSubmenu = true;
+	}
+
+	function hideSubmenuDelayed() {
+		submenuHideTimeout = setTimeout(() => {
+			showLanguageSubmenu = false;
+		}, 150); // Small delay to allow mouse to move between elements
+	}
+
+	function cancelHideSubmenu() {
+		if (submenuHideTimeout) {
+			clearTimeout(submenuHideTimeout);
+			submenuHideTimeout = null;
+		}
+	}
+
+	function getLanguageForChat(chatTitle: string): string {
+		return languageByChat.get(chatTitle) || 'portuguese';
+	}
+
+	function getLanguageName(code: string): string {
+		return availableLanguages.find(l => l.code === code)?.name || code;
+	}
+
+	function isAutoLoadEnabled(chatTitle: string): boolean {
+		return autoLoadMediaByChat.get(chatTitle) || false;
+	}
+
+	function handleAutoLoadToggle() {
+		if (contextMenuIndex !== null && onAutoLoadMediaChange) {
+			const chat = chats[contextMenuIndex];
+			const currentEnabled = isAutoLoadEnabled(chat.title);
+			onAutoLoadMediaChange(chat.title, !currentEnabled);
+		}
+		closeContextMenu();
+	}
 
 	function formatDate(date: Date | null): string {
 		if (!date) return '';
@@ -91,22 +171,155 @@
 						</div>
 					</div>
 
-					<!-- Remove button -->
-					<button
-						class="p-1 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
-						onclick={(e) => {
-							e.stopPropagation();
-							onRemove(index);
-						}}
-						title="Remove chat"
-						aria-label="Remove chat"
-					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-						</svg>
-					</button>
+					<!-- Action buttons -->
+					<div class="flex flex-col gap-1 flex-shrink-0">
+						<!-- Remove button -->
+						<button
+							class="p-1 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+							onclick={(e) => {
+								e.stopPropagation();
+								onRemove(index);
+							}}
+							title="Remove chat"
+							aria-label="Remove chat"
+						>
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+							</svg>
+						</button>
+						<!-- Menu button -->
+						<button
+							class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
+							onclick={(e) => {
+								e.stopPropagation();
+								openContextMenu(e, index, e.currentTarget as HTMLButtonElement);
+							}}
+							title="Chat options"
+							aria-label="Chat options"
+						>
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+							</svg>
+						</button>
+					</div>
 				</div>
 			{/each}
 		{/if}
 	</div>
+
+	<!-- Context Menu -->
+	{#if contextMenuIndex !== null && menuButtonRef}
+		<!-- Backdrop -->
+		<button
+			type="button"
+			class="fixed inset-0 z-40 cursor-default"
+			onclick={closeContextMenu}
+			aria-label="Close context menu"
+		></button>
+		
+		<!-- Menu -->
+		<div
+			class="fixed z-50 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-1 w-[200px]"
+			use:floating={{ 
+				reference: menuButtonRef, 
+				placement: 'bottom-end', 
+				fallbackPlacements: ['bottom-start', 'top-end', 'top-start', 'left-start', 'right-start'],
+				offsetDistance: 4 
+			}}
+		>
+			<!-- Auto-load media toggle -->
+			{#if chats[contextMenuIndex]?.mediaCount > 0}
+				<button
+					type="button"
+					class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300"
+					onclick={handleAutoLoadToggle}
+				>
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+					</svg>
+					<span class="flex-1">Auto-load Media</span>
+					{#if isAutoLoadEnabled(chats[contextMenuIndex]?.title || '')}
+						<svg class="w-4 h-4 text-[var(--color-whatsapp-teal)]" fill="currentColor" viewBox="0 0 20 20">
+							<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+						</svg>
+					{/if}
+				</button>
+			{/if}
+			
+			<!-- Language submenu trigger -->
+			<div class="relative">
+				<button
+					bind:this={languageTriggerRef}
+					type="button"
+					class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center justify-between gap-2 text-gray-700 dark:text-gray-300"
+					onmouseenter={showSubmenu}
+					onmouseleave={hideSubmenuDelayed}
+					onclick={() => showLanguageSubmenu = !showLanguageSubmenu}
+				>
+					<span class="flex items-center gap-2">
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+						</svg>
+						Transcription Language
+					</span>
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+					</svg>
+				</button>
+				
+				<!-- Language submenu -->
+				{#if showLanguageSubmenu && languageTriggerRef}
+					<!-- svelte-ignore a11y_interactive_supports_focus -->
+					<div
+						class="fixed z-[60] bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-1 w-[160px] overflow-y-auto"
+						use:floating={{ 
+							reference: languageTriggerRef, 
+							placement: 'left-start', 
+							fallbackPlacements: ['right-start', 'bottom-start', 'bottom-end', 'top-start'],
+							offsetDistance: 4,
+							enableSizeConstraint: true
+						}}
+						onmouseenter={cancelHideSubmenu}
+						onmouseleave={hideSubmenuDelayed}
+						role="menu"
+					>
+						<div class="px-3 py-2 border-b border-gray-200 dark:border-gray-700">
+							<span class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Select Language</span>
+						</div>
+						{#each availableLanguages as lang}
+							{@const currentLang = getLanguageForChat(chats[contextMenuIndex]?.title || '')}
+							<button
+								type="button"
+								class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2 {currentLang === lang.code ? 'text-[var(--color-whatsapp-teal)] font-medium bg-gray-50 dark:bg-gray-700/50' : 'text-gray-700 dark:text-gray-300'}"
+								onclick={() => handleLanguageSelect(lang.code)}
+							>
+								<span class="w-5 text-center">{currentLang === lang.code ? '✓' : ''}</span>
+								<span>{lang.name}</span>
+							</button>
+						{/each}
+					</div>
+				{/if}
+			</div>
+			
+			<!-- Divider -->
+			<div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+			
+			<!-- Remove chat -->
+			<button
+				type="button"
+				class="w-full px-3 py-2 text-left text-sm hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer flex items-center gap-2 text-red-600 dark:text-red-400"
+				onclick={() => {
+					if (contextMenuIndex !== null) {
+						onRemove(contextMenuIndex);
+					}
+					closeContextMenu();
+				}}
+			>
+				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+				</svg>
+				Remove Chat
+			</button>
+		</div>
+	{/if}
 </div>
