@@ -1,20 +1,51 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
+
 	interface Props {
 		value: string;
 		onInput: (value: string) => void;
 		placeholder?: string;
+		debounceMs?: number;
 	}
 
-	let { value, onInput, placeholder = 'Search messages...' }: Props = $props();
+	let { value, onInput, placeholder = 'Search messages...', debounceMs = 300 }: Props = $props();
+
+	let localValue = $state('');
+	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+	// Sync external value changes (including initial value)
+	$effect(() => {
+		localValue = value;
+	});
 
 	function handleInput(e: Event) {
 		const input = e.target as HTMLInputElement;
-		onInput(input.value);
+		localValue = input.value;
+
+		// Clear existing timer
+		if (debounceTimer) {
+			clearTimeout(debounceTimer);
+		}
+
+		// Set new debounced call
+		debounceTimer = setTimeout(() => {
+			onInput(localValue);
+		}, debounceMs);
 	}
 
 	function handleClear() {
+		localValue = '';
+		if (debounceTimer) {
+			clearTimeout(debounceTimer);
+		}
 		onInput('');
 	}
+
+	onDestroy(() => {
+		if (debounceTimer) {
+			clearTimeout(debounceTimer);
+		}
+	});
 </script>
 
 <div class="relative">
@@ -26,13 +57,13 @@
 
 	<input
 		type="text"
-		{value}
+		value={localValue}
 		{placeholder}
 		class="w-full pl-10 pr-10 py-2 bg-gray-100 dark:bg-gray-800 border-0 rounded-lg text-gray-800 dark:text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-[var(--color-whatsapp-teal)] focus:outline-none transition-all"
 		oninput={handleInput}
 	/>
 
-	{#if value}
+	{#if localValue}
 		<button
 			class="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
 			onclick={handleClear}

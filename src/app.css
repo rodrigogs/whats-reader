@@ -20,6 +20,15 @@
 	}
 }
 
+/* Electron window dragging support */
+.electron-drag {
+	-webkit-app-region: drag;
+}
+
+.electron-no-drag {
+	-webkit-app-region: no-drag;
+}
+
 /* Base styles */
 html,
 body {
@@ -39,4 +48,38 @@ body {
 ::-webkit-scrollbar-thumb {
 	background-color: rgba(0, 0, 0, 0.2);
 	border-radius: 3px;
+}
+
+/* Search highlight animation */
+@keyframes search-highlight {
+	0% {
+		transform: scale(1);
+		box-shadow: 0 0 0 0 rgba(18, 140, 126, 0.7);
+	}
+	50% {
+		transform: scale(1.02);
+		box-shadow: 0 0 0 8px rgba(18, 140, 126, 0);
+	}
+	100% {
+		transform: scale(1);
+		box-shadow: 0 0 0 0 rgba(18, 140, 126, 0);
+	}
+}
+
+.animate-search-highlight {
+	animation: search-highlight 0.6s ease-out;
+}
+
+/* Slow spin animation for search progress */
+@keyframes spin-slow {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.animate-spin-slow {
+	animation: spin-slow 1.5s linear infinite;
 }

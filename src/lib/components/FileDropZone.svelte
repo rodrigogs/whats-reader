@@ -3,9 +3,10 @@
 		onFilesSelected: (files: FileList) => void;
 		accept?: string;
 		isLoading?: boolean;
+		loadingProgress?: number;
 	}
 
-	let { onFilesSelected, accept = '.zip', isLoading = false }: Props = $props();
+	let { onFilesSelected, accept = '.zip', isLoading = false, loadingProgress = 0 }: Props = $props();
 
 	let isDragOver = $state(false);
 	let fileInput: HTMLInputElement;
@@ -85,10 +86,37 @@
 	/>
 
 	{#if isLoading}
-		<!-- Loading state -->
+		<!-- Loading state with progress -->
 		<div class="flex flex-col items-center gap-4">
-			<div class="animate-spin rounded-full h-12 w-12 border-4 border-[var(--color-whatsapp-teal)] border-t-transparent"></div>
-			<p class="text-gray-600 dark:text-gray-300">Processing file...</p>
+			<svg class="w-16 h-16 animate-spin-slow" viewBox="0 0 36 36">
+				<!-- Background circle -->
+				<circle
+					cx="18"
+					cy="18"
+					r="16"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					class="text-gray-200 dark:text-gray-700"
+				/>
+				<!-- Progress circle -->
+				<circle
+					cx="18"
+					cy="18"
+					r="16"
+					fill="none"
+					stroke="var(--color-whatsapp-teal)"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-dasharray={100.53}
+					stroke-dashoffset={100.53 - (100.53 * loadingProgress) / 100}
+					transform="rotate(-90 18 18)"
+				/>
+			</svg>
+			<div class="text-center">
+				<p class="text-gray-600 dark:text-gray-300 font-medium">Processing file...</p>
+				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{Math.round(loadingProgress)}%</p>
+			</div>
 		</div>
 	{:else}
 		<!-- Default state -->

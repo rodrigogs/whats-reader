@@ -1,15 +1,66 @@
 <script lang="ts">
 	import type { ChatData } from '$lib/state.svelte';
-	import { getChatStats } from '$lib/parser';
+	import { onMount } from 'svelte';
 
 	interface Props {
 		chat: ChatData;
 		onClose: () => void;
 	}
 
+	interface StatsResult {
+		messagesByParticipant: Record<string, number>;
+		messagesByDate: Record<string, number>;
+		messagesByHour: number[];
+		mostActiveParticipant: string;
+		mostActiveHour: number;
+		avgMessagesPerDay: number;
+		totalDays: number;
+	}
+
 	let { chat, onClose }: Props = $props();
 
-	const stats = $derived(getChatStats(chat));
+	let stats = $state<StatsResult | null>(null);
+	let isLoading = $state(true);
+	let error = $state<string | null>(null);
+
+	onMount(() => {
+		// Create worker using Vite's recommended syntax for ES module workers
+		const worker = new Worker(
+			new URL('../workers/stats-worker.ts', import.meta.url),
+			{ type: 'module' }
+		);
+
+		worker.onmessage = (event: MessageEvent<StatsResult>) => {
+			stats = event.data;
+			isLoading = false;
+			worker.terminate();
+		};
+
+		worker.onerror = (err) => {
+			console.error('Stats worker error:', err);
+			error = 'Failed to compute statistics';
+			isLoading = false;
+			worker.terminate();
+		};
+
+		// Serialize messages for the worker (Date objects don't survive postMessage)
+		const serializedMessages = chat.messages.map((m) => ({
+			timestamp: m.timestamp.toISOString(),
+			sender: m.sender,
+			isSystemMessage: m.isSystemMessage
+		}));
+
+		worker.postMessage({
+			messages: serializedMessages,
+			messageCount: chat.messageCount,
+			startDate: chat.startDate?.toISOString() ?? null,
+			endDate: chat.endDate?.toISOString() ?? null
+		});
+
+		return () => {
+			worker.terminate();
+		};
+	});
 
 	function formatDuration(startDate: Date | null, endDate: Date | null): string {
 		if (!startDate || !endDate) return 'Unknown';
@@ -35,11 +86,15 @@
 	}
 
 	const participantEntries = $derived(
-		Object.entries(stats.messagesByParticipant).sort((a, b) => b[1] - a[1])
+		stats ? Object.entries(stats.messagesByParticipant).sort((a, b) => b[1] - a[1]) : []
 	);
 
 	const maxMessages = $derived(
-		Math.max(...Object.values(stats.messagesByParticipant))
+		stats ? Math.max(...Object.values(stats.messagesByParticipant)) : 0
+	);
+
+	const maxHourCount = $derived(
+		stats ? Math.max(...stats.messagesByHour) : 0
 	);
 </script>
 
@@ -75,100 +130,117 @@
 
 		<!-- Content -->
 		<div class="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
-			<!-- Overview cards -->
-			<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-				<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
-					<div class="text-2xl font-bold text-[var(--color-whatsapp-teal)]">
-						{chat.messageCount.toLocaleString()}
-					</div>
-					<div class="text-sm text-gray-500 dark:text-gray-400">Messages</div>
+			{#if isLoading}
+				<!-- Loading state -->
+				<div class="flex flex-col items-center justify-center py-16">
+					<div class="w-12 h-12 border-4 border-gray-200 dark:border-gray-700 border-t-[var(--color-whatsapp-teal)] rounded-full animate-spin mb-4"></div>
+					<p class="text-gray-500 dark:text-gray-400">Computing statistics...</p>
 				</div>
-				<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
-					<div class="text-2xl font-bold text-[var(--color-whatsapp-teal)]">
-						{chat.participants.length}
-					</div>
-					<div class="text-sm text-gray-500 dark:text-gray-400">Participants</div>
+			{:else if error}
+				<!-- Error state -->
+				<div class="flex flex-col items-center justify-center py-16">
+					<svg class="w-12 h-12 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+					</svg>
+					<p class="text-red-500">{error}</p>
 				</div>
-				<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
-					<div class="text-2xl font-bold text-[var(--color-whatsapp-teal)]">
-						{stats.avgMessagesPerDay}
-					</div>
-					<div class="text-sm text-gray-500 dark:text-gray-400">Avg/Day</div>
-				</div>
-				<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
-					<div class="text-2xl font-bold text-[var(--color-whatsapp-teal)]">
-						{chat.mediaCount}
-					</div>
-					<div class="text-sm text-gray-500 dark:text-gray-400">Media</div>
-				</div>
-			</div>
-
-			<!-- Duration -->
-			<div class="mb-8">
-				<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Duration</h3>
-				<p class="text-gray-600 dark:text-gray-300">
-					{formatDuration(chat.startDate, chat.endDate)}
-				</p>
-				<p class="text-sm text-gray-500 dark:text-gray-400">
-					{chat.startDate?.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-					→
-					{chat.endDate?.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-				</p>
-			</div>
-
-			<!-- Messages by participant -->
-			<div class="mb-8">
-				<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Messages by Participant</h3>
-				<div class="space-y-3">
-					{#each participantEntries as [name, count]}
-						<div>
-							<div class="flex justify-between items-center mb-1">
-								<span class="text-sm text-gray-700 dark:text-gray-300 truncate">{name}</span>
-								<span class="text-sm text-gray-500 dark:text-gray-400">{count.toLocaleString()}</span>
-							</div>
-							<div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-								<div
-									class="h-full bg-[var(--color-whatsapp-teal)] rounded-full transition-all"
-									style="width: {(count / maxMessages) * 100}%"
-								></div>
-							</div>
+			{:else if stats}
+				<!-- Overview cards -->
+				<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+					<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+						<div class="text-2xl font-bold text-[var(--color-whatsapp-teal)]">
+							{chat.messageCount.toLocaleString()}
 						</div>
-					{/each}
+						<div class="text-sm text-gray-500 dark:text-gray-400">Messages</div>
+					</div>
+					<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+						<div class="text-2xl font-bold text-[var(--color-whatsapp-teal)]">
+							{chat.participants.length}
+						</div>
+						<div class="text-sm text-gray-500 dark:text-gray-400">Participants</div>
+					</div>
+					<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+						<div class="text-2xl font-bold text-[var(--color-whatsapp-teal)]">
+							{stats.avgMessagesPerDay}
+						</div>
+						<div class="text-sm text-gray-500 dark:text-gray-400">Avg/Day</div>
+					</div>
+					<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+						<div class="text-2xl font-bold text-[var(--color-whatsapp-teal)]">
+							{chat.mediaCount}
+						</div>
+						<div class="text-sm text-gray-500 dark:text-gray-400">Media</div>
+					</div>
 				</div>
-			</div>
 
-			<!-- Most active hour -->
-			<div class="mb-8">
-				<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Most Active Hour</h3>
-				<p class="text-gray-600 dark:text-gray-300">
-					{formatHour(stats.mostActiveHour)}
-				</p>
-			</div>
+				<!-- Duration -->
+				<div class="mb-8">
+					<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Duration</h3>
+					<p class="text-gray-600 dark:text-gray-300">
+						{formatDuration(chat.startDate, chat.endDate)}
+					</p>
+					<p class="text-sm text-gray-500 dark:text-gray-400">
+						{chat.startDate?.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+						→
+						{chat.endDate?.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+					</p>
+				</div>
 
-			<!-- Activity by hour -->
-			<div>
-				<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Activity by Hour</h3>
-				<div class="flex items-end gap-1 h-24">
-					{#each stats.messagesByHour as count, hour}
-						{@const maxHourCount = Math.max(...stats.messagesByHour)}
-						{@const height = maxHourCount > 0 ? (count / maxHourCount) * 100 : 0}
-						<div class="flex-1 flex flex-col items-center">
+				<!-- Messages by participant -->
+				<div class="mb-8">
+					<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Messages by Participant</h3>
+					<div class="space-y-3">
+						{#each participantEntries as [name, count] (name)}
+							<div>
+								<div class="flex justify-between items-center mb-1">
+									<span class="text-sm text-gray-700 dark:text-gray-300 truncate">{name}</span>
+									<span class="text-sm text-gray-500 dark:text-gray-400">{count.toLocaleString()}</span>
+								</div>
+								<div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+									<div
+										class="h-full bg-[var(--color-whatsapp-teal)] rounded-full transition-all"
+										style="width: {(count / maxMessages) * 100}%"
+									></div>
+								</div>
+							</div>
+						{/each}
+					</div>
+				</div>
+
+				<!-- Most active hour -->
+				<div class="mb-8">
+					<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Most Active Hour</h3>
+					<p class="text-gray-600 dark:text-gray-300">
+						{formatHour(stats.mostActiveHour)}
+					</p>
+				</div>
+
+				<!-- Activity by hour -->
+				<div>
+					<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Activity by Hour</h3>
+					<div class="flex items-end gap-[2px] h-24">
+						{#each stats.messagesByHour as count, hour (hour)}
+							{@const height = maxHourCount > 0 ? (count / maxHourCount) * 100 : 0}
 							<div
-								class="w-full bg-[var(--color-whatsapp-teal)]/70 rounded-t transition-all"
+								class="flex-1 bg-[var(--color-whatsapp-teal)] hover:bg-[var(--color-whatsapp-dark-green)] rounded-t transition-all cursor-pointer group relative min-h-[2px]"
 								style="height: {height}%"
-								title="{hour}:00 - {count} messages"
-							></div>
-						</div>
-					{/each}
+							>
+								<!-- Tooltip -->
+								<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
+									{hour}:00 - {count.toLocaleString()} messages
+								</div>
+							</div>
+						{/each}
+					</div>
+					<div class="flex justify-between mt-1 text-xs text-gray-400 dark:text-gray-500">
+						<span>12AM</span>
+						<span>6AM</span>
+						<span>12PM</span>
+						<span>6PM</span>
+						<span>11PM</span>
+					</div>
 				</div>
-				<div class="flex justify-between mt-1 text-xs text-gray-400 dark:text-gray-500">
-					<span>12AM</span>
-					<span>6AM</span>
-					<span>12PM</span>
-					<span>6PM</span>
-					<span>11PM</span>
-				</div>
-			</div>
+			{/if}
 		</div>
 	</div>
 </div>

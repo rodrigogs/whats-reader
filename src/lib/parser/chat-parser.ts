@@ -89,11 +89,14 @@ const SYSTEM_INDICATORS = [
 /**
  * Date format patterns for WhatsApp exports
  * Different locales use different formats
+ * 
+ * IMPORTANT: The order matters! More specific patterns should come first.
+ * US format (with AM/PM) is checked first, then European/Brazilian (24h).
  */
 const DATE_PATTERNS = [
-	// MM/DD/YY, HH:MM - US format (12h)
+	// MM/DD/YY, HH:MM AM/PM - US format (12h) - MUST have AM/PM to be identified as US
 	{
-		regex: /^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)?\s*-\s*/i,
+		regex: /^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)\s*-\s*/i,
 		parse: (match: RegExpMatchArray) => {
 			const [, month, day, year, hours, minutes, seconds, ampm] = match;
 			return parseDateTime(
@@ -107,7 +110,7 @@ const DATE_PATTERNS = [
 			);
 		}
 	},
-	// DD/MM/YY, HH:MM - European format (24h)
+	// DD/MM/YY, HH:MM - European/Brazilian format (24h) - No AM/PM means it's not US format
 	{
 		regex: /^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*-\s*/,
 		parse: (match: RegExpMatchArray) => {
@@ -373,10 +376,13 @@ export function groupMessagesByDate(messages: ChatMessage[]): Map<string, ChatMe
 }
 
 /**
- * Format timestamp for display
+ * Format timestamp for display (full date and time)
  */
 export function formatTime(date: Date): string {
-	return date.toLocaleTimeString('en-US', {
+	return date.toLocaleString('en-US', {
+		month: 'short',
+		day: 'numeric',
+		year: 'numeric',
 		hour: '2-digit',
 		minute: '2-digit',
 		hour12: true

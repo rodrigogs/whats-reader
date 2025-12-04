@@ -22,8 +22,8 @@ const createWindow = () => {
 			nodeIntegration: false,
 			sandbox: false
 		},
-		titleBarStyle: 'hiddenInset',
-		frame: process.platform === 'darwin' ? true : true,
+		titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
+		trafficLightPosition: { x: 15, y: 12 },
 		backgroundColor: '#ECE5DD',
 		icon: path.join(__dirname, '../static/favicon.png')
 	});
