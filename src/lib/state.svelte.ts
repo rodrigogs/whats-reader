@@ -31,6 +31,7 @@ export function createAppState() {
 	let searchResultIds = $state<string[]>([]); // Ordered list of matching message IDs
 	let currentSearchIndex = $state(0); // Current position in search results
 	let searchWorker: Worker | null = null;
+	let searchTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
 	// Derived values
 	const selectedChat = $derived(
@@ -52,8 +53,12 @@ export function createAppState() {
 
 	const hasChats = $derived(chats.length > 0);
 
-	// Cleanup worker
+	// Cleanup worker and pending timeouts
 	function cleanupSearchWorker() {
+		if (searchTimeoutId) {
+			clearTimeout(searchTimeoutId);
+			searchTimeoutId = null;
+		}
 		if (searchWorker) {
 			searchWorker.terminate();
 			searchWorker = null;
@@ -96,13 +101,14 @@ export function createAppState() {
 				const remainingTime = Math.max(0, MIN_SEARCH_DISPLAY_TIME - elapsed);
 				
 				// Ensure progress indicator is visible for at least MIN_SEARCH_DISPLAY_TIME
-				setTimeout(() => {
+				searchTimeoutId = setTimeout(() => {
 					searchResultIds = data.matchingIds ?? [];
 					currentSearchIndex = 0;
 					isSearching = false;
 					searchProgress = 100;
 					searchWorker?.terminate();
 					searchWorker = null;
+					searchTimeoutId = null;
 				}, remainingTime);
 			}
 		};

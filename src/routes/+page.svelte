@@ -32,17 +32,14 @@
 				// Parse ZIP file using Web Worker (10-100% of file progress)
 				// The worker handles all heavy processing without blocking the UI
 				const chatData: ChatData = await parseZipFile(buffer, async ({ stage, progress }) => {
-					// Reading phase: 0-10%, Extracting: 10-60%, Parsing: 60-100%
-					let stageOffset = 0.1;
-					let stageWeight = 0.5;
-					
-					if (stage === 'extracting') {
-						stageOffset = 0.1;
-						stageWeight = 0.5;
-					} else if (stage === 'parsing') {
-						stageOffset = 0.6;
-						stageWeight = 0.4;
-					}
+					// Progress stages: Reading (0-10%), Extracting (10-60%), Parsing (60-100%)
+					const STAGE_PROGRESS = {
+						reading:    { offset: 0.0, weight: 0.1 },
+						extracting: { offset: 0.1, weight: 0.5 },
+						parsing:    { offset: 0.6, weight: 0.4 }
+					} as const;
+
+					const { offset: stageOffset, weight: stageWeight } = STAGE_PROGRESS[stage] ?? STAGE_PROGRESS['extracting'];
 					
 					const overallProgress = fileBaseProgress + (stageOffset + (progress / 100) * stageWeight) * fileWeight;
 					appState.setLoadingProgress(overallProgress);
@@ -241,6 +238,8 @@
 								<SearchBar
 									value={appState.searchQuery}
 									onInput={handleSearchInput}
+									onNextResult={() => appState.nextSearchResult()}
+									onPrevResult={() => appState.prevSearchResult()}
 									placeholder="Search in chat..."
 								/>
 							</div>
@@ -265,6 +264,7 @@
 										</span>
 										<!-- Navigation buttons -->
 										<button
+											type="button"
 											class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
 											onclick={() => appState.prevSearchResult()}
 											disabled={appState.searchResultIds.length === 0}
@@ -276,6 +276,7 @@
 											</svg>
 										</button>
 										<button
+											type="button"
 											class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
 											onclick={() => appState.nextSearchResult()}
 											disabled={appState.searchResultIds.length === 0}

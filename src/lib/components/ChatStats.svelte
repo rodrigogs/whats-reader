@@ -218,7 +218,7 @@
 				<!-- Activity by hour -->
 				<div>
 					<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Activity by Hour</h3>
-					<div class="flex items-end gap-[2px] h-24">
+					<div class="flex items-end gap-0.5 h-24">
 						{#each stats.messagesByHour as count, hour (hour)}
 							{@const height = maxHourCount > 0 ? (count / maxHourCount) * 100 : 0}
 							<div

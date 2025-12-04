@@ -56,17 +56,33 @@
 	// Check if this message has an actual media file that can be loaded
 	const hasMediaFile = $derived(
 		message.mediaFile && 
-		(message.mediaFile._loaded || message.mediaFile._zipEntry)
+		message.mediaFile._zipEntry
 	);
 
-	// Highlight search terms in text
+	// Highlight search terms in text (safe from XSS)
 	function highlightText(text: string, query: string): string {
 		if (!query.trim()) return escapeHtml(text);
 		
-		const escaped = escapeHtml(text);
-		const escapedQuery = escapeHtml(query);
-		const regex = new RegExp(`(${escapeRegex(escapedQuery)})`, 'gi');
-		return escaped.replace(regex, '<mark class="bg-yellow-300 dark:bg-yellow-600 rounded px-0.5">$1</mark>');
+		// Search on original text, then escape parts between matches
+		const regex = new RegExp(escapeRegex(query), 'gi');
+		let lastIndex = 0;
+		let result = '';
+		let match;
+		while ((match = regex.exec(text)) !== null) {
+			// Prevent infinite loop if regex matches empty string
+			if (match[0].length === 0) {
+				regex.lastIndex++;
+				continue;
+			}
+			// Add text before the match, escaped
+			result += escapeHtml(text.slice(lastIndex, match.index));
+			// Add the matched text, escaped and wrapped in <mark>
+			result += `<mark class="bg-yellow-300 dark:bg-yellow-600 rounded px-0.5">${escapeHtml(match[0])}</mark>`;
+			lastIndex = match.index + match[0].length;
+		}
+		// Add the rest of the text, escaped
+		result += escapeHtml(text.slice(lastIndex));
+		return result;
 	}
 
 	function escapeHtml(text: string): string {
