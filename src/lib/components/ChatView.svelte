@@ -268,7 +268,7 @@
 
 <div
 	bind:this={chatContainer}
-	class="flex-1 overflow-y-auto bg-[var(--color-chat-bg)] p-4 bg-[url('/chat-bg.svg')] dark:bg-[url('/chat-bg-dark.svg')] bg-repeat"
+	class="flex-1 overflow-y-auto p-4 chat-bg"
 	onscrollend={handleScrollEnd}
 	onscroll={handleScroll}
 >

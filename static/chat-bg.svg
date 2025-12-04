@@ -1,105 +1,70 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
-  <g opacity="0.06" fill="none" stroke="#075E54" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Speech bubble -->
-    <g transform="translate(15, 15)">
-      <path d="M2 12c0-5.5 4.5-10 10-10h8c5.5 0 10 4.5 10 10v4c0 5.5-4.5 10-10 10h-4l-6 5v-5h-2c-3.3 0-6-2.7-6-6v-8z"/>
-    </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <g opacity="0.055" fill="none" stroke="#075E54" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Row 1 - scattered -->
+    <g transform="translate(8, 12) rotate(-8)"><path d="M0 0h12v16H0z"/><circle cx="6" cy="14" r="1"/></g>
+    <g transform="translate(45, 5) rotate(12)"><circle cx="8" cy="8" r="7"/><path d="M8 4v4l3 1.5"/></g>
+    <g transform="translate(82, 18) rotate(-5) scale(0.9)"><path d="M8 2L10 7l5.5.8-4 3.9.9 5.5L8 15l-4.4 2.2.9-5.5-4-3.9L6 7z"/></g>
+    <g transform="translate(118, 8) rotate(15)"><path d="M2 8a6 6 0 0112 0c0 5-6 10-6 10s-6-5-6-10z"/><circle cx="8" cy="8" r="2"/></g>
+    <g transform="translate(158, 22) rotate(-12) scale(0.85)"><rect x="0" y="4" width="16" height="11" rx="1.5"/><circle cx="8" cy="9.5" r="3"/><path d="M5 4l1.5-2.5h5L13 4"/></g>
+    <g transform="translate(200, 6) rotate(8)"><circle cx="7" cy="7" r="6"/><path d="M5 9s1 1.5 2 1.5 2-1.5 2-1.5"/><circle cx="5" cy="6" r=".8" fill="#075E54"/><circle cx="9" cy="6" r=".8" fill="#075E54"/></g>
+    <g transform="translate(238, 15) rotate(-18) scale(0.8)"><path d="M0 6c0-3 2.5-5 5.5-5h5c3 0 5.5 2 5.5 5v2.5c0 3-2.5 5-5.5 5H8l-4 3.5v-3.5c-2.2 0-4-1.8-4-4V6z"/></g>
+    <g transform="translate(275, 4) rotate(5)"><path d="M7 3c-1.2-1.2-3-1.2-4.2 0s-1.2 3 0 4.2l4.2 4.2 4.2-4.2c1.2-1.2 1.2-3 0-4.2s-3-1.2-4.2 0z" fill="#075E54" stroke="none" opacity="0.7"/></g>
     
-    <!-- Phone/smartphone -->
-    <g transform="translate(70, 20)">
-      <rect x="2" y="2" width="14" height="22" rx="2"/>
-      <line x1="9" y1="20" x2="9" y2="20.5"/>
-    </g>
+    <!-- Row 2 -->
+    <g transform="translate(15, 52) rotate(10) scale(0.75)"><rect x="2" y="2" width="10" height="16" rx="1.5"/><line x1="7" y1="15" x2="7" y2="15.5"/></g>
+    <g transform="translate(50, 58) rotate(-15)"><path d="M1 10l4 4 7-8"/><path d="M5 10l4 4 7-8"/></g>
+    <g transform="translate(95, 48) rotate(6) scale(0.9)"><rect x="0" y="0" width="14" height="10" rx="1.5"/><path d="M14 2l5-2v10l-5-2"/></g>
+    <g transform="translate(140, 62) rotate(-10)"><circle cx="5" cy="12" r="3"/><path d="M8 12V2l9-1.5v9"/></g>
+    <g transform="translate(178, 45) rotate(20) scale(0.85)"><path d="M2 1h8l4 4v11c0 .6-.4 1-1 1H2c-.6 0-1-.4-1-1V2c0-.6.4-1 1-1z"/><path d="M10 1v4h4"/></g>
+    <g transform="translate(218, 55) rotate(-8)"><rect x="1" y="6" width="12" height="9" rx="1.5"/><path d="M3 6V4a4 4 0 018 0v2"/><circle cx="7" cy="10.5" r="1.5" fill="#075E54"/></g>
+    <g transform="translate(260, 48) rotate(12) scale(0.9)"><path d="M8 14H4a3 3 0 010-6h4"/><path d="M10 8h4a3 3 0 010 6h-4"/><line x1="6" y1="11" x2="12" y2="11"/></g>
     
-    <!-- Clock -->
-    <g transform="translate(130, 15)">
-      <circle cx="12" cy="12" r="10"/>
-      <path d="M12 6v6l4 2"/>
-    </g>
+    <!-- Row 3 -->
+    <g transform="translate(5, 95) rotate(-6)"><path d="M8 2L10 7l5.5.8-4 3.9.9 5.5L8 15l-4.4 2.2.9-5.5-4-3.9L6 7z"/></g>
+    <g transform="translate(48, 102) rotate(18) scale(0.8)"><circle cx="8" cy="8" r="7"/><path d="M8 4v4l3 1.5"/></g>
+    <g transform="translate(88, 88) rotate(-12)"><path d="M7 3c-1.2-1.2-3-1.2-4.2 0s-1.2 3 0 4.2l4.2 4.2 4.2-4.2c1.2-1.2 1.2-3 0-4.2s-3-1.2-4.2 0z"/></g>
+    <g transform="translate(125, 98) rotate(8) scale(0.95)"><rect x="0" y="4" width="16" height="11" rx="1.5"/><circle cx="8" cy="9.5" r="3"/><path d="M5 4l1.5-2.5h5L13 4"/></g>
+    <g transform="translate(168, 85) rotate(-20)"><circle cx="7" cy="7" r="6"/><path d="M5 9s1 1.5 2 1.5 2-1.5 2-1.5"/><circle cx="5" cy="6" r=".8" fill="#075E54"/><circle cx="9" cy="6" r=".8" fill="#075E54"/></g>
+    <g transform="translate(205, 95) rotate(5)"><path d="M2 8a6 6 0 0112 0c0 5-6 10-6 10s-6-5-6-10z"/><circle cx="8" cy="8" r="2"/></g>
+    <g transform="translate(248, 90) rotate(-14) scale(0.85)"><path d="M0 6c0-3 2.5-5 5.5-5h5c3 0 5.5 2 5.5 5v2.5c0 3-2.5 5-5.5 5H8l-4 3.5v-3.5c-2.2 0-4-1.8-4-4V6z"/></g>
+    <g transform="translate(285, 100) rotate(10)"><rect x="2" y="2" width="10" height="16" rx="1.5"/><line x1="7" y1="15" x2="7" y2="15.5"/></g>
     
-    <!-- Heart -->
-    <g transform="translate(170, 25)">
-      <path d="M12 5c-2-2-5-2-7 0s-2 5 0 7l7 7 7-7c2-2 2-5 0-7s-5-2-7 0z"/>
-    </g>
+    <!-- Row 4 -->
+    <g transform="translate(22, 138) rotate(14)"><path d="M1 10l4 4 7-8"/><path d="M5 10l4 4 7-8"/></g>
+    <g transform="translate(62, 145) rotate(-9) scale(0.9)"><rect x="0" y="0" width="14" height="10" rx="1.5"/><path d="M14 2l5-2v10l-5-2"/></g>
+    <g transform="translate(108, 132) rotate(22)"><circle cx="5" cy="12" r="3"/><path d="M8 12V2l9-1.5v9"/></g>
+    <g transform="translate(148, 142) rotate(-5) scale(0.8)"><path d="M2 1h8l4 4v11c0 .6-.4 1-1 1H2c-.6 0-1-.4-1-1V2c0-.6.4-1 1-1z"/><path d="M10 1v4h4"/><line x1="4" y1="9" x2="9" y2="9"/><line x1="4" y1="12" x2="9" y2="12"/></g>
+    <g transform="translate(188, 135) rotate(16)"><rect x="1" y="6" width="12" height="9" rx="1.5"/><path d="M3 6V4a4 4 0 018 0v2"/></g>
+    <g transform="translate(228, 148) rotate(-12) scale(0.85)"><path d="M8 14H4a3 3 0 010-6h4"/><path d="M10 8h4a3 3 0 010 6h-4"/><line x1="6" y1="11" x2="12" y2="11"/></g>
+    <g transform="translate(270, 138) rotate(7)"><path d="M8 2L10 7l5.5.8-4 3.9.9 5.5L8 15l-4.4 2.2.9-5.5-4-3.9L6 7z"/></g>
     
-    <!-- Camera -->
-    <g transform="translate(20, 70)">
-      <rect x="2" y="6" width="20" height="14" rx="2"/>
-      <circle cx="12" cy="13" r="4"/>
-      <path d="M7 6l2-3h6l2 3"/>
-    </g>
+    <!-- Row 5 -->
+    <g transform="translate(10, 178) rotate(-16) scale(0.9)"><circle cx="8" cy="8" r="7"/><path d="M8 4v4l3 1.5"/></g>
+    <g transform="translate(55, 185) rotate(10)"><path d="M7 3c-1.2-1.2-3-1.2-4.2 0s-1.2 3 0 4.2l4.2 4.2 4.2-4.2c1.2-1.2 1.2-3 0-4.2s-3-1.2-4.2 0z" fill="#075E54" stroke="none" opacity="0.6"/></g>
+    <g transform="translate(92, 175) rotate(-8)"><rect x="0" y="4" width="16" height="11" rx="1.5"/><circle cx="8" cy="9.5" r="3"/><path d="M5 4l1.5-2.5h5L13 4"/></g>
+    <g transform="translate(138, 188) rotate(15) scale(0.85)"><circle cx="7" cy="7" r="6"/><path d="M5 9s1 1.5 2 1.5 2-1.5 2-1.5"/><circle cx="5" cy="6" r=".8" fill="#075E54"/><circle cx="9" cy="6" r=".8" fill="#075E54"/></g>
+    <g transform="translate(175, 172) rotate(-22)"><path d="M2 8a6 6 0 0112 0c0 5-6 10-6 10s-6-5-6-10z"/><circle cx="8" cy="8" r="2"/></g>
+    <g transform="translate(218, 182) rotate(6) scale(0.9)"><path d="M0 6c0-3 2.5-5 5.5-5h5c3 0 5.5 2 5.5 5v2.5c0 3-2.5 5-5.5 5H8l-4 3.5v-3.5c-2.2 0-4-1.8-4-4V6z"/></g>
+    <g transform="translate(255, 178) rotate(-10) scale(0.85)"><rect x="2" y="2" width="10" height="16" rx="1.5"/><line x1="7" y1="15" x2="7" y2="15.5"/></g>
+    <g transform="translate(288, 185) rotate(18)"><path d="M1 10l4 4 7-8"/><path d="M5 10l4 4 7-8"/></g>
     
-    <!-- Smile emoji -->
-    <g transform="translate(75, 75)">
-      <circle cx="12" cy="12" r="10"/>
-      <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-      <circle cx="9" cy="10" r="1" fill="#075E54"/>
-      <circle cx="15" cy="10" r="1" fill="#075E54"/>
-    </g>
+    <!-- Row 6 -->
+    <g transform="translate(18, 225) rotate(12) scale(0.85)"><rect x="0" y="0" width="14" height="10" rx="1.5"/><path d="M14 2l5-2v10l-5-2"/></g>
+    <g transform="translate(65, 218) rotate(-18)"><circle cx="5" cy="12" r="3"/><path d="M8 12V2l9-1.5v9"/></g>
+    <g transform="translate(105, 228) rotate(8)"><path d="M2 1h8l4 4v11c0 .6-.4 1-1 1H2c-.6 0-1-.4-1-1V2c0-.6.4-1 1-1z"/><path d="M10 1v4h4"/></g>
+    <g transform="translate(145, 215) rotate(-14)"><rect x="1" y="6" width="12" height="9" rx="1.5"/><path d="M3 6V4a4 4 0 018 0v2"/><circle cx="7" cy="10.5" r="1.5" fill="#075E54"/></g>
+    <g transform="translate(188, 225) rotate(20) scale(0.9)"><path d="M8 14H4a3 3 0 010-6h4"/><path d="M10 8h4a3 3 0 010 6h-4"/><line x1="6" y1="11" x2="12" y2="11"/></g>
+    <g transform="translate(228, 220) rotate(-6)"><path d="M8 2L10 7l5.5.8-4 3.9.9 5.5L8 15l-4.4 2.2.9-5.5-4-3.9L6 7z"/></g>
+    <g transform="translate(268, 228) rotate(15) scale(0.8)"><circle cx="8" cy="8" r="7"/><path d="M8 4v4l3 1.5"/></g>
     
-    <!-- Microphone -->
-    <g transform="translate(130, 70)">
-      <rect x="8" y="2" width="8" height="12" rx="4"/>
-      <path d="M4 10v2c0 4.4 3.6 8 8 8s8-3.6 8-8v-2"/>
-      <line x1="12" y1="20" x2="12" y2="24"/>
-    </g>
-    
-    <!-- Image/photo -->
-    <g transform="translate(170, 70)">
-      <rect x="2" y="4" width="20" height="16" rx="2"/>
-      <circle cx="8" cy="10" r="2"/>
-      <path d="M22 16l-5-5-8 8"/>
-    </g>
-    
-    <!-- Document -->
-    <g transform="translate(25, 130)">
-      <path d="M4 2h10l6 6v14c0 1-1 2-2 2H4c-1 0-2-1-2-2V4c0-1 1-2 2-2z"/>
-      <path d="M14 2v6h6"/>
-      <line x1="6" y1="12" x2="14" y2="12"/>
-      <line x1="6" y1="16" x2="14" y2="16"/>
-    </g>
-    
-    <!-- Location pin -->
-    <g transform="translate(80, 130)">
-      <path d="M12 2c-4.4 0-8 3.6-8 8 0 6 8 14 8 14s8-8 8-14c0-4.4-3.6-8-8-8z"/>
-      <circle cx="12" cy="10" r="3"/>
-    </g>
-    
-    <!-- Star -->
-    <g transform="translate(135, 130)">
-      <path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/>
-    </g>
-    
-    <!-- Music note -->
-    <g transform="translate(175, 135)">
-      <circle cx="6" cy="18" r="4"/>
-      <circle cx="18" cy="14" r="4"/>
-      <path d="M10 18V4l12-2v12"/>
-    </g>
-    
-    <!-- Video camera -->
-    <g transform="translate(15, 175)">
-      <rect x="2" y="6" width="14" height="12" rx="2"/>
-      <path d="M16 9l6-3v12l-6-3"/>
-    </g>
-    
-    <!-- Link/chain -->
-    <g transform="translate(75, 175)">
-      <path d="M10 14H6a4 4 0 010-8h4"/>
-      <path d="M14 6h4a4 4 0 010 8h-4"/>
-      <line x1="8" y1="10" x2="16" y2="10"/>
-    </g>
-    
-    <!-- Double check marks -->
-    <g transform="translate(135, 180)">
-      <path d="M2 12l5 5 9-10"/>
-      <path d="M8 12l5 5 9-10"/>
-    </g>
-    
-    <!-- Lock -->
-    <g transform="translate(180, 175)">
-      <rect x="4" y="10" width="16" height="12" rx="2"/>
-      <path d="M8 10V6a4 4 0 018 0v4"/>
-    </g>
+    <!-- Row 7 -->
+    <g transform="translate(8, 268) rotate(-10)"><path d="M7 3c-1.2-1.2-3-1.2-4.2 0s-1.2 3 0 4.2l4.2 4.2 4.2-4.2c1.2-1.2 1.2-3 0-4.2s-3-1.2-4.2 0z"/></g>
+    <g transform="translate(48, 275) rotate(16) scale(0.9)"><rect x="0" y="4" width="16" height="11" rx="1.5"/><circle cx="8" cy="9.5" r="3"/><path d="M5 4l1.5-2.5h5L13 4"/></g>
+    <g transform="translate(95, 262) rotate(-20)"><circle cx="7" cy="7" r="6"/><path d="M5 9s1 1.5 2 1.5 2-1.5 2-1.5"/><circle cx="5" cy="6" r=".8" fill="#075E54"/><circle cx="9" cy="6" r=".8" fill="#075E54"/></g>
+    <g transform="translate(135, 272) rotate(5)"><path d="M2 8a6 6 0 0112 0c0 5-6 10-6 10s-6-5-6-10z"/><circle cx="8" cy="8" r="2"/></g>
+    <g transform="translate(178, 265) rotate(-15) scale(0.85)"><path d="M0 6c0-3 2.5-5 5.5-5h5c3 0 5.5 2 5.5 5v2.5c0 3-2.5 5-5.5 5H8l-4 3.5v-3.5c-2.2 0-4-1.8-4-4V6z"/></g>
+    <g transform="translate(215, 275) rotate(12)"><rect x="2" y="2" width="10" height="16" rx="1.5"/><line x1="7" y1="15" x2="7" y2="15.5"/></g>
+    <g transform="translate(252, 268) rotate(-8)"><path d="M1 10l4 4 7-8"/><path d="M5 10l4 4 7-8"/></g>
+    <g transform="translate(285, 272) rotate(22) scale(0.85)"><rect x="0" y="0" width="14" height="10" rx="1.5"/><path d="M14 2l5-2v10l-5-2"/></g>
   </g>
 </svg>
