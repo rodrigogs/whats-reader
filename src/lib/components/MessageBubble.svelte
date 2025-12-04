@@ -53,8 +53,11 @@
 		}
 	});
 
-	// Check if this message has an actual media file attached
-	const hasMediaFile = $derived(message.mediaFile && message.mediaFile._zipEntry);
+	// Check if this message has an actual media file that can be loaded
+	const hasMediaFile = $derived(
+		message.mediaFile && 
+		(message.mediaFile._loaded || message.mediaFile._zipEntry)
+	);
 
 	// Highlight search terms in text
 	function highlightText(text: string, query: string): string {

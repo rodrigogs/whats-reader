@@ -38,7 +38,6 @@
 		"eslint": "^9.39.1",
 		"eslint-plugin-svelte": "^3.13.0",
 		"globals": "^16.5.0",
-		"jszip": "^3.10.1",
 		"prettier": "^3.7.4",
 		"prettier-plugin-svelte": "^3.4.0",
 		"svelte": "^5.43.8",
@@ -87,5 +86,8 @@
 			"oneClick": false,
 			"allowToChangeInstallationDirectory": true
 		}
+	},
+	"dependencies": {
+		"jszip": "^3.10.1"
 	}
 }

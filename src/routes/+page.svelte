@@ -11,9 +11,6 @@
 		appState.clearError();
 		appState.setLoadingProgress(0);
 
-		// Helper to yield to UI thread for progress updates
-		const yieldToUI = () => new Promise(resolve => setTimeout(resolve, 0));
-
 		try {
 			const totalFiles = files.length;
 			let processedFiles = 0;
@@ -25,48 +22,30 @@
 
 				const fileBaseProgress = (processedFiles / totalFiles) * 100;
 				const fileWeight = 100 / totalFiles;
-				let lastReportedProgress = -1;
 
-				// Read file (0-20% of file progress)
+				// Read file (0-10% of file progress)
 				const buffer = await readFileAsArrayBuffer(file, (readProgress) => {
-					const overallProgress = fileBaseProgress + (readProgress / 100) * (fileWeight * 0.2);
-					if (Math.floor(overallProgress) !== lastReportedProgress) {
-						lastReportedProgress = Math.floor(overallProgress);
-						appState.setLoadingProgress(overallProgress);
-					}
+					const overallProgress = fileBaseProgress + (readProgress / 100) * (fileWeight * 0.1);
+					appState.setLoadingProgress(overallProgress);
 				});
 				
-				await yieldToUI();
-				
-				// Parse ZIP file (20-100% of file progress)
-				let progressUpdateCount = 0;
+				// Parse ZIP file using Web Worker (10-100% of file progress)
+				// The worker handles all heavy processing without blocking the UI
 				const chatData: ChatData = await parseZipFile(buffer, async ({ stage, progress }) => {
-					let stageOffset = 0.2; // Reading is 0-20%
-					let stageWeight = 0.7; // ZIP extracting is 20-90%
+					// Reading phase: 0-10%, Extracting: 10-60%, Parsing: 60-100%
+					let stageOffset = 0.1;
+					let stageWeight = 0.5;
 					
 					if (stage === 'extracting') {
-						// ZIP extracting: 20-90%
-						stageOffset = 0.2;
-						stageWeight = 0.7;
+						stageOffset = 0.1;
+						stageWeight = 0.5;
 					} else if (stage === 'parsing') {
-						// Chat parsing: 90-100%
-						stageOffset = 0.9;
-						stageWeight = 0.1;
+						stageOffset = 0.6;
+						stageWeight = 0.4;
 					}
 					
 					const overallProgress = fileBaseProgress + (stageOffset + (progress / 100) * stageWeight) * fileWeight;
-					
-					// Only update if progress changed by at least 1%
-					if (Math.floor(overallProgress) !== lastReportedProgress) {
-						lastReportedProgress = Math.floor(overallProgress);
-						appState.setLoadingProgress(overallProgress);
-						
-						// Yield to UI periodically to show progress
-						progressUpdateCount++;
-						if (progressUpdateCount % 5 === 0) {
-							await yieldToUI();
-						}
-					}
+					appState.setLoadingProgress(overallProgress);
 				});
 				
 				appState.addChat(chatData);
