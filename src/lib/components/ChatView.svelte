@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import type { ChatMessage } from '$lib/parser';
 	import { groupMessagesByDate } from '$lib/parser';
 	import MessageBubble from './MessageBubble.svelte';
@@ -40,9 +41,7 @@
 	$effect(() => {
 		// Track messages array reference to detect new chat
 		const _ = messages;
-		return () => {
-			hasScrolledToBottom = false;
-		};
+		hasScrolledToBottom = false;
 	});
 
 	// Scroll to current search result when it changes
@@ -62,6 +61,11 @@
 
 	// Handle scroll end to trigger highlight
 	function handleScrollEnd() {
+		// Clear any pending debounced scroll handler since scrollend fired
+		if (scrollTimeout) {
+			clearTimeout(scrollTimeout);
+			scrollTimeout = null;
+		}
 		if (pendingHighlightId) {
 			highlightReady = true;
 			highlightedId = pendingHighlightId;
@@ -71,7 +75,13 @@
 
 	// Debounced scroll handler as fallback for browsers without scrollend
 	let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
+	// Track if browser supports scrollend
+	let supportsScrollEnd = typeof window !== 'undefined' && 'onscrollend' in window;
+	
 	function handleScroll() {
+		// Only use debounced fallback if scrollend is not supported
+		if (supportsScrollEnd) return;
+		
 		if (scrollTimeout) {
 			clearTimeout(scrollTimeout);
 		}
@@ -79,6 +89,13 @@
 			handleScrollEnd();
 		}, 150);
 	}
+
+	// Cleanup timeout on component destroy
+	onDestroy(() => {
+		if (scrollTimeout) {
+			clearTimeout(scrollTimeout);
+		}
+	});
 </script>
 
 <div

@@ -38,6 +38,8 @@
 		if (debounceTimer) {
 			clearTimeout(debounceTimer);
 		}
+		// Intentionally call onInput('') immediately for instant feedback when clearing,
+		// rather than debouncing, to provide a more responsive user experience.
 		onInput('');
 	}
 

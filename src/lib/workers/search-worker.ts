@@ -3,6 +3,9 @@
  * This runs in a separate thread to prevent UI blocking on large chats
  */
 
+// Time to yield to main thread between chunks (~1 frame at 60fps)
+const FRAME_TIME_MS = 16;
+
 interface SearchMessage {
 	id: string;
 	timestamp: string;
@@ -66,8 +69,8 @@ async function processSearch(messages: SearchMessage[], query: string) {
 			progress: currentProgress
 		} as SearchWorkerOutput);
 		
-		// Give main thread time to process and render (16ms ≈ 1 frame at 60fps)
-		await new Promise(resolve => setTimeout(resolve, 16));
+		// Give main thread time to process and render
+		await new Promise(resolve => setTimeout(resolve, FRAME_TIME_MS));
 	}
 
 	return matchingIds;
