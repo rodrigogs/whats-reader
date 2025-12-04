@@ -1,0 +1,42 @@
+@import 'tailwindcss';
+
+/* Custom theme colors - WhatsApp-inspired */
+@theme {
+	--color-whatsapp-green: #25D366;
+	--color-whatsapp-dark-green: #075E54;
+	--color-whatsapp-light-green: #DCF8C6;
+	--color-whatsapp-teal: #128C7E;
+	--color-chat-bg: #ECE5DD;
+	--color-message-out: #DCF8C6;
+	--color-message-in: #FFFFFF;
+}
+
+/* Dark mode theme overrides */
+@media (prefers-color-scheme: dark) {
+	:root {
+		--color-chat-bg: #0B141A;
+		--color-message-out: #005C4B;
+		--color-message-in: #202C33;
+	}
+}
+
+/* Base styles */
+html,
+body {
+	height: 100%;
+	margin: 0;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+	width: 6px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background-color: rgba(0, 0, 0, 0.2);
+	border-radius: 3px;
+}
