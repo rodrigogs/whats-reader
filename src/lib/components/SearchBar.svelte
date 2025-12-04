@@ -4,11 +4,13 @@
 	interface Props {
 		value: string;
 		onInput: (value: string) => void;
+		onNextResult?: () => void;
+		onPrevResult?: () => void;
 		placeholder?: string;
 		debounceMs?: number;
 	}
 
-	let { value, onInput, placeholder = 'Search messages...', debounceMs = 300 }: Props = $props();
+	let { value, onInput, onNextResult, onPrevResult, placeholder = 'Search messages...', debounceMs = 300 }: Props = $props();
 
 	let localValue = $state('');
 	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -31,6 +33,26 @@
 		debounceTimer = setTimeout(() => {
 			onInput(localValue);
 		}, debounceMs);
+	}
+
+	function handleKeyDown(e: KeyboardEvent) {
+		// Handle navigation keys when there's a search query
+		if (!localValue) return;
+
+		if (e.key === 'Enter') {
+			e.preventDefault();
+			if (e.shiftKey) {
+				onPrevResult?.();
+			} else {
+				onNextResult?.();
+			}
+		} else if (e.key === 'ArrowDown') {
+			e.preventDefault();
+			onNextResult?.();
+		} else if (e.key === 'ArrowUp') {
+			e.preventDefault();
+			onPrevResult?.();
+		}
 	}
 
 	function handleClear() {
@@ -63,6 +85,7 @@
 		{placeholder}
 		class="w-full pl-10 pr-10 py-2 bg-gray-100 dark:bg-gray-800 border-0 rounded-lg text-gray-800 dark:text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-[var(--color-whatsapp-teal)] focus:outline-none transition-all"
 		oninput={handleInput}
+		onkeydown={handleKeyDown}
 	/>
 
 	{#if localValue}

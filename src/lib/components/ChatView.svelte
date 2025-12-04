@@ -75,12 +75,11 @@
 
 	// Debounced scroll handler as fallback for browsers without scrollend
 	let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
-	// Track if browser supports scrollend
-	let supportsScrollEnd = typeof window !== 'undefined' && 'onscrollend' in window;
 	
 	function handleScroll() {
 		// Only use debounced fallback if scrollend is not supported
-		if (supportsScrollEnd) return;
+		// Check inside function to handle SSR correctly
+		if (typeof window !== 'undefined' && 'onscrollend' in window) return;
 		
 		if (scrollTimeout) {
 			clearTimeout(scrollTimeout);

@@ -69,6 +69,11 @@
 		let result = '';
 		let match;
 		while ((match = regex.exec(text)) !== null) {
+			// Prevent infinite loop if regex matches empty string
+			if (match[0].length === 0) {
+				regex.lastIndex++;
+				continue;
+			}
 			// Add text before the match, escaped
 			result += escapeHtml(text.slice(lastIndex, match.index));
 			// Add the matched text, escaped and wrapped in <mark>

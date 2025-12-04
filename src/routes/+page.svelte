@@ -238,6 +238,8 @@
 								<SearchBar
 									value={appState.searchQuery}
 									onInput={handleSearchInput}
+									onNextResult={() => appState.nextSearchResult()}
+									onPrevResult={() => appState.prevSearchResult()}
 									placeholder="Search in chat..."
 								/>
 							</div>
