@@ -15,6 +15,7 @@ const config = {
 		}),
 		// Required for Electron - use relative paths
 		paths: {
+			base: '',
 			relative: true
 		}
 	}

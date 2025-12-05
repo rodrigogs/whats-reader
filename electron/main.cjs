@@ -1,13 +1,14 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require('electron-squirrel-startup')) {
-	app.quit();
-}
-
 let mainWindow;
+
+// Get the build directory path
+const getBuildPath = () => {
+	// In production, __dirname is inside the app.asar
+	return path.join(__dirname, '../build');
+};
 
 const createWindow = () => {
 	// Build window options
@@ -36,18 +37,83 @@ const createWindow = () => {
 	mainWindow = new BrowserWindow(windowOptions);
 
 	// In development, load from Vite dev server
-	// In production, load from built files
+	// In production, load from built files using custom protocol
 	if (process.env.NODE_ENV === 'development') {
 		mainWindow.loadURL('http://localhost:5173');
 		mainWindow.webContents.openDevTools();
 	} else {
-		mainWindow.loadFile(path.join(__dirname, '../build/index.html'));
+		// Load root path, not /index.html - SvelteKit router needs the path to be /
+		mainWindow.loadURL('app://localhost/');
 	}
 };
+
+// Register custom protocol for serving local files
+// This allows absolute paths like /favicon.ico to work
+protocol.registerSchemesAsPrivileged([
+	{
+		scheme: 'app',
+		privileges: {
+			standard: true,
+			secure: true,
+			supportFetchAPI: true
+		}
+	}
+]);
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 app.whenReady().then(() => {
+	// Register protocol handler for 'app://' scheme
+	protocol.handle('app', async (request) => {
+		// Parse the URL to get just the pathname
+		const requestUrl = new URL(request.url);
+		let pathname = requestUrl.pathname;
+		
+		// Remove leading slash and decode
+		pathname = decodeURIComponent(pathname.replace(/^\/+/, ''));
+		
+		// Default to index.html for empty path or root
+		if (!pathname || pathname === '' || pathname === '.') {
+			pathname = 'index.html';
+		}
+		
+		const buildPath = getBuildPath();
+		const filePath = path.join(buildPath, pathname);
+		
+		// Determine MIME type based on extension
+		const ext = path.extname(pathname).toLowerCase();
+		const mimeTypes = {
+			'.html': 'text/html',
+			'.js': 'text/javascript',
+			'.mjs': 'text/javascript',
+			'.css': 'text/css',
+			'.json': 'application/json',
+			'.png': 'image/png',
+			'.jpg': 'image/jpeg',
+			'.jpeg': 'image/jpeg',
+			'.gif': 'image/gif',
+			'.svg': 'image/svg+xml',
+			'.ico': 'image/x-icon',
+			'.woff': 'font/woff',
+			'.woff2': 'font/woff2',
+			'.ttf': 'font/ttf',
+			'.wasm': 'application/wasm',
+			'.webmanifest': 'application/manifest+json'
+		};
+		const mimeType = mimeTypes[ext] || 'application/octet-stream';
+		
+		try {
+			// Read file using fs (works with ASAR)
+			const data = fs.readFileSync(filePath);
+			return new Response(data, {
+				headers: { 'Content-Type': mimeType }
+			});
+		} catch (err) {
+			console.error('[Protocol] Error reading file:', filePath, err.message);
+			return new Response('Not Found', { status: 404 });
+		}
+	});
+
 	createWindow();
 
 	// On OS X it's common to re-create a window in the app when the
