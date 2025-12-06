@@ -3,7 +3,10 @@
  * Runs model inference off the main thread to keep UI responsive
  */
 
-import { pipeline, type AutomaticSpeechRecognitionPipeline } from '@huggingface/transformers';
+import {
+	type AutomaticSpeechRecognitionPipeline,
+	pipeline,
+} from '@huggingface/transformers';
 
 // Model configuration
 const MODEL_ID = 'Xenova/whisper-small';
@@ -52,16 +55,14 @@ interface TranscriptionErrorResponse {
 	error: string;
 }
 
-type WorkerResponse = ProgressResponse | ModelReadyResponse | ModelErrorResponse | TranscriptionResultResponse | TranscriptionErrorResponse;
-
 /**
  * Load the Whisper model
  */
 async function loadModel(): Promise<void> {
 	if (whisperPipeline || isLoading) return;
-	
+
 	isLoading = true;
-	
+
 	try {
 		// @ts-expect-error - pipeline types are complex
 		whisperPipeline = await pipeline('automatic-speech-recognition', MODEL_ID, {
@@ -70,19 +71,20 @@ async function loadModel(): Promise<void> {
 			progress_callback: (progress: { progress?: number; status?: string }) => {
 				const response: ProgressResponse = {
 					type: 'progress',
-					progress: progress.progress !== undefined ? Math.round(progress.progress) : 0,
-					status: progress.status
+					progress:
+						progress.progress !== undefined ? Math.round(progress.progress) : 0,
+					status: progress.status,
 				};
 				self.postMessage(response);
-			}
+			},
 		});
-		
+
 		const response: ModelReadyResponse = { type: 'model-ready' };
 		self.postMessage(response);
 	} catch (e) {
 		const response: ModelErrorResponse = {
 			type: 'model-error',
-			error: e instanceof Error ? e.message : 'Failed to load model'
+			error: e instanceof Error ? e.message : 'Failed to load model',
 		};
 		self.postMessage(response);
 	} finally {
@@ -96,40 +98,44 @@ async function loadModel(): Promise<void> {
 /**
  * Transcribe pre-decoded audio data
  */
-async function transcribe(audioData: Float32Array, language: string, messageId: string): Promise<void> {
+async function transcribe(
+	audioData: Float32Array,
+	language: string,
+	messageId: string,
+): Promise<void> {
 	try {
 		// Ensure model is loaded
 		if (!whisperPipeline) {
 			await loadModel();
 		}
-		
+
 		if (!whisperPipeline) {
 			throw new Error('Model not available');
 		}
-		
+
 		// Build options
 		const options: Record<string, unknown> = {
 			chunk_length_s: 30,
 			stride_length_s: 5,
 			return_timestamps: false,
-			task: 'transcribe'
+			task: 'transcribe',
 		};
-		
+
 		if (language !== 'auto') {
 			options.language = language;
 		}
-		
+
 		// Run transcription with the pre-decoded audio
 		const result = await whisperPipeline(audioData, options);
-		
+
 		// Extract text
 		const text = Array.isArray(result) ? result[0]?.text : result.text;
 		const transcription = text?.trim() || '';
-		
+
 		const response: TranscriptionResultResponse = {
 			type: 'transcription-result',
 			messageId,
-			text: transcription
+			text: transcription,
 		};
 		self.postMessage(response);
 	} catch (e) {
@@ -137,7 +143,7 @@ async function transcribe(audioData: Float32Array, language: string, messageId: 
 		const response: TranscriptionErrorResponse = {
 			type: 'transcription-error',
 			messageId,
-			error: e instanceof Error ? e.message : 'Transcription failed'
+			error: e instanceof Error ? e.message : 'Transcription failed',
 		};
 		self.postMessage(response);
 	}
@@ -146,7 +152,7 @@ async function transcribe(audioData: Float32Array, language: string, messageId: 
 // Handle messages from main thread
 self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
 	const message = event.data;
-	
+
 	switch (message.type) {
 		case 'load-model':
 			await loadModel();

@@ -32,33 +32,33 @@ interface SearchWorkerOutput {
 
 // Process search in chunks to allow progress updates to be sent
 async function processSearch(
-	messages: SearchMessage[], 
-	query: string, 
-	transcriptions: Record<string, string> = {}
+	messages: SearchMessage[],
+	query: string,
+	transcriptions: Record<string, string> = {},
 ) {
 	const lowerQuery = query.toLowerCase();
 	const matchingIds: string[] = [];
 	const total = messages.length;
-	
+
 	// Process in chunks to yield control and send progress updates
 	// Use smaller chunks for better progress visibility
 	const NUM_CHUNKS = 10; // ~10 progress updates
 	const CHUNK_SIZE = Math.max(50, Math.ceil(total / NUM_CHUNKS));
-	
+
 	// Send initial progress
 	self.postMessage({
 		type: 'progress',
 		query,
-		progress: 0
+		progress: 0,
 	} as SearchWorkerOutput);
 
 	for (let i = 0; i < messages.length; i += CHUNK_SIZE) {
 		const chunkEnd = Math.min(i + CHUNK_SIZE, messages.length);
-		
+
 		// Process this chunk
 		for (let j = i; j < chunkEnd; j++) {
 			const message = messages[j];
-			
+
 			// Check message content and sender
 			if (
 				message.content.toLowerCase().includes(lowerQuery) ||
@@ -67,24 +67,24 @@ async function processSearch(
 				matchingIds.push(message.id);
 				continue;
 			}
-			
+
 			// Check transcription for audio messages
 			const transcription = transcriptions[message.id];
-			if (transcription && transcription.toLowerCase().includes(lowerQuery)) {
+			if (transcription?.toLowerCase().includes(lowerQuery)) {
 				matchingIds.push(message.id);
 			}
 		}
-		
+
 		// Report progress after each chunk
 		const currentProgress = Math.round((chunkEnd / total) * 100);
 		self.postMessage({
 			type: 'progress',
 			query,
-			progress: currentProgress
+			progress: currentProgress,
 		} as SearchWorkerOutput);
-		
+
 		// Give main thread time to process and render
-		await new Promise(resolve => setTimeout(resolve, FRAME_TIME_MS));
+		await new Promise((resolve) => setTimeout(resolve, FRAME_TIME_MS));
 	}
 
 	return matchingIds;
@@ -98,7 +98,7 @@ self.onmessage = async (event: MessageEvent<SearchWorkerInput>) => {
 		const result: SearchWorkerOutput = {
 			type: 'complete',
 			matchingIds: [],
-			query
+			query,
 		};
 		self.postMessage(result);
 		return;
@@ -110,7 +110,7 @@ self.onmessage = async (event: MessageEvent<SearchWorkerInput>) => {
 		type: 'complete',
 		matchingIds,
 		query,
-		progress: 100
+		progress: 100,
 	};
 
 	self.postMessage(result);

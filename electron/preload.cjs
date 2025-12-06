@@ -14,5 +14,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
 	// Platform info
 	platform: process.platform,
-	isElectron: true
+	isElectron: true,
 });

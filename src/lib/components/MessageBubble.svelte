@@ -1,221 +1,245 @@
 <script lang="ts">
-	import type { ChatMessage } from '$lib/parser';
-	import type { MediaFile } from '$lib/parser/zip-parser';
-	import type { Bookmark } from '$lib/bookmarks.svelte';
-	import { formatTime, loadMediaFile } from '$lib/parser';
-	import { bookmarksState } from '$lib/bookmarks.svelte';
-	import BookmarkModal from './BookmarkModal.svelte';
-	import { transcribeAudio, getCachedTranscription, getTranscriptionState, isTranscriptionSupported } from '$lib/transcription.svelte';
+import type { Bookmark } from '$lib/bookmarks.svelte';
+import { bookmarksState } from '$lib/bookmarks.svelte';
+import type { ChatMessage } from '$lib/parser';
+import { formatTime, loadMediaFile } from '$lib/parser';
+import type { MediaFile } from '$lib/parser/zip-parser';
+import {
+	getCachedTranscription,
+	getTranscriptionState,
+	isTranscriptionSupported,
+	transcribeAudio,
+} from '$lib/transcription.svelte';
+import BookmarkModal from './BookmarkModal.svelte';
 
-	interface MessageWithMedia extends ChatMessage {
-		mediaFile?: MediaFile;
-	}
+interface MessageWithMedia extends ChatMessage {
+	mediaFile?: MediaFile;
+}
 
-	interface Props {
-		message: MessageWithMedia;
-		chatId: string;
-		bookmarkedMessageIds?: Map<string, Bookmark>;
-		isOwn?: boolean;
-		showSender?: boolean;
-		searchQuery?: string;
-		isSearchMatch?: boolean;
-		isCurrentSearchResult?: boolean;
-		triggerHighlight?: boolean;
-		isHighlighted?: boolean;
-		autoLoadMedia?: boolean;
-	}
+interface Props {
+	message: MessageWithMedia;
+	chatId: string;
+	bookmarkedMessageIds?: Map<string, Bookmark>;
+	isOwn?: boolean;
+	showSender?: boolean;
+	searchQuery?: string;
+	isSearchMatch?: boolean;
+	isCurrentSearchResult?: boolean;
+	triggerHighlight?: boolean;
+	isHighlighted?: boolean;
+	autoLoadMedia?: boolean;
+}
 
-	let { message, chatId, bookmarkedMessageIds = new Map(), isOwn = false, showSender = true, searchQuery = '', isSearchMatch = false, isCurrentSearchResult = false, triggerHighlight = false, isHighlighted = false, autoLoadMedia = false }: Props = $props();
+let {
+	message,
+	chatId,
+	bookmarkedMessageIds = new Map(),
+	isOwn = false,
+	showSender = true,
+	searchQuery = '',
+	isSearchMatch = false,
+	isCurrentSearchResult = false,
+	triggerHighlight = false,
+	isHighlighted = false,
+	autoLoadMedia = false,
+}: Props = $props();
 
-	let containerRef = $state<HTMLDivElement | null>(null);
-	let mediaUrl = $state<string | null>(null);
-	let mediaLoading = $state(false);
-	let mediaError = $state<string | null>(null);
-	let shouldAnimate = $state(false);
-	let showBookmarkModal = $state(false);
+let containerRef = $state<HTMLDivElement | null>(null);
+let mediaUrl = $state<string | null>(null);
+let mediaLoading = $state(false);
+let mediaError = $state<string | null>(null);
+let shouldAnimate = $state(false);
+let showBookmarkModal = $state(false);
 
-	// Transcription state
-	let transcription = $state<string | null>(null);
-	let transcriptionLoading = $state(false);
-	let transcriptionError = $state<string | null>(null);
-	let showTranscription = $state(false);
-	const transcriptionState = getTranscriptionState();
+// Transcription state
+let transcription = $state<string | null>(null);
+let transcriptionLoading = $state(false);
+let transcriptionError = $state<string | null>(null);
+let showTranscription = $state(false);
+const transcriptionState = getTranscriptionState();
 
-	// Auto-load media when visible and autoLoadMedia is enabled
-	$effect(() => {
-		if (!autoLoadMedia || !containerRef || !message.mediaFile || mediaUrl || mediaLoading) return;
-		
-		const observer = new IntersectionObserver(
-			(entries) => {
-				if (entries[0]?.isIntersecting) {
-					loadMedia();
-					observer.disconnect();
-				}
-			},
-			{ rootMargin: '200px' } // Start loading slightly before visible
-		);
-		
-		observer.observe(containerRef);
-		
-		return () => observer.disconnect();
-	});
+// Auto-load media when visible and autoLoadMedia is enabled
+$effect(() => {
+	if (
+		!autoLoadMedia ||
+		!containerRef ||
+		!message.mediaFile ||
+		mediaUrl ||
+		mediaLoading
+	)
+		return;
 
-	const bubbleClass = $derived(
-		isOwn
-			? 'bg-[var(--color-message-out)] ml-auto'
-			: 'bg-[var(--color-message-in)] mr-auto'
-	);
-
-	// Use wider bubble for audio messages to fit the audio player
-	const bubbleWidthClass = $derived(
-		message.isMediaMessage && message.mediaType === 'audio' && message.mediaFile?._zipEntry
-			? 'min-w-[280px] max-w-[90%] sm:max-w-[400px]'
-			: 'max-w-[75%]'
-	);
-
-	// Highlight class for search results and persistent selection
-	const highlightClass = $derived.by(() => {
-		// Persistent highlight (from search navigation or bookmark navigation)
-		if (isHighlighted) {
-			return 'ring-2 ring-[var(--color-whatsapp-teal)] shadow-lg shadow-[var(--color-whatsapp-teal)]/20';
-		}
-		if (isCurrentSearchResult) {
-			return 'ring-2 ring-[var(--color-whatsapp-teal)] ring-offset-2 shadow-lg shadow-[var(--color-whatsapp-teal)]/30';
-		}
-		if (isSearchMatch) {
-			return 'ring-1 ring-yellow-400/60';
-		}
-		if (bookmarkedMessageIds.has(message.id)) {
-			return 'ring-1 ring-[var(--color-whatsapp-teal)]/40';
-		}
-		return '';
-	});
-
-	// Background highlight overlay for persistent selection (WhatsApp-style)
-	const highlightBgClass = $derived(
-		isHighlighted ? 'bg-[var(--color-whatsapp-teal)]/10' : ''
-	);
-
-	function handleBookmarkClick(e: MouseEvent) {
-		e.stopPropagation();
-		// Open modal - the modal handles both create and edit modes
-		showBookmarkModal = true;
-	}
-
-	// Trigger animation when triggerHighlight becomes true
-	$effect(() => {
-		if (triggerHighlight) {
-			// Reset and trigger animation
-			shouldAnimate = false;
-			requestAnimationFrame(() => {
-				shouldAnimate = true;
-				setTimeout(() => {
-					shouldAnimate = false;
-				}, 600);
-			});
-		}
-	});
-
-	// Check if this message has an actual media file that can be loaded
-	const hasMediaFile = $derived(
-		message.mediaFile && 
-		message.mediaFile._zipEntry
-	);
-
-	// Check for cached transcription on mount
-	$effect(() => {
-		if (message.isMediaMessage && message.mediaType === 'audio' && message.id) {
-			const cached = getCachedTranscription(message.id);
-			if (cached) {
-				transcription = cached;
-				showTranscription = true;
+	const observer = new IntersectionObserver(
+		(entries) => {
+			if (entries[0]?.isIntersecting) {
+				loadMedia();
+				observer.disconnect();
 			}
-		}
-	});
+		},
+		{ rootMargin: '200px' }, // Start loading slightly before visible
+	);
 
-	// Check if transcription matches current search query
-	const transcriptionMatchesSearch = $derived.by(() => {
-		if (!searchQuery.trim() || !transcription) return false;
-		return transcription.toLowerCase().includes(searchQuery.toLowerCase());
-	});
+	observer.observe(containerRef);
 
-	// Auto-expand transcription when it matches search
-	$effect(() => {
-		if (transcriptionMatchesSearch && transcription && !showTranscription) {
+	return () => observer.disconnect();
+});
+
+const bubbleClass = $derived(
+	isOwn
+		? 'bg-[var(--color-message-out)] ml-auto'
+		: 'bg-[var(--color-message-in)] mr-auto',
+);
+
+// Use wider bubble for audio messages to fit the audio player
+const bubbleWidthClass = $derived(
+	message.isMediaMessage &&
+		message.mediaType === 'audio' &&
+		message.mediaFile?._zipEntry
+		? 'min-w-[280px] max-w-[90%] sm:max-w-[400px]'
+		: 'max-w-[75%]',
+);
+
+// Highlight class for search results and persistent selection
+const highlightClass = $derived.by(() => {
+	// Persistent highlight (from search navigation or bookmark navigation)
+	if (isHighlighted) {
+		return 'ring-2 ring-[var(--color-whatsapp-teal)] shadow-lg shadow-[var(--color-whatsapp-teal)]/20';
+	}
+	if (isCurrentSearchResult) {
+		return 'ring-2 ring-[var(--color-whatsapp-teal)] ring-offset-2 shadow-lg shadow-[var(--color-whatsapp-teal)]/30';
+	}
+	if (isSearchMatch) {
+		return 'ring-1 ring-yellow-400/60';
+	}
+	if (bookmarkedMessageIds.has(message.id)) {
+		return 'ring-1 ring-[var(--color-whatsapp-teal)]/40';
+	}
+	return '';
+});
+
+// Background highlight overlay for persistent selection (WhatsApp-style)
+const highlightBgClass = $derived(
+	isHighlighted ? 'bg-[var(--color-whatsapp-teal)]/10' : '',
+);
+
+function handleBookmarkClick(e: MouseEvent) {
+	e.stopPropagation();
+	// Open modal - the modal handles both create and edit modes
+	showBookmarkModal = true;
+}
+
+// Trigger animation when triggerHighlight becomes true
+$effect(() => {
+	if (triggerHighlight) {
+		// Reset and trigger animation
+		shouldAnimate = false;
+		requestAnimationFrame(() => {
+			shouldAnimate = true;
+			setTimeout(() => {
+				shouldAnimate = false;
+			}, 600);
+		});
+	}
+});
+
+// Check if this message has an actual media file that can be loaded
+const hasMediaFile = $derived(message.mediaFile?._zipEntry);
+
+// Check for cached transcription on mount
+$effect(() => {
+	if (message.isMediaMessage && message.mediaType === 'audio' && message.id) {
+		const cached = getCachedTranscription(message.id);
+		if (cached) {
+			transcription = cached;
 			showTranscription = true;
 		}
-	});
+	}
+});
 
-	// Highlight search terms in text (safe from XSS)
-	function highlightText(text: string, query: string): string {
-		if (!query.trim()) return escapeHtml(text);
-		
-		// Search on original text, then escape parts between matches
-		const regex = new RegExp(escapeRegex(query), 'gi');
-		let lastIndex = 0;
-		let result = '';
-		let match;
-		while ((match = regex.exec(text)) !== null) {
-			// Prevent infinite loop if regex matches empty string
-			if (match[0].length === 0) {
-				regex.lastIndex++;
-				continue;
-			}
-			// Add text before the match, escaped
-			result += escapeHtml(text.slice(lastIndex, match.index));
-			// Add the matched text, escaped and wrapped in <mark>
-			result += `<mark class="bg-yellow-300 dark:bg-yellow-600 rounded px-0.5">${escapeHtml(match[0])}</mark>`;
-			lastIndex = match.index + match[0].length;
+// Check if transcription matches current search query
+const transcriptionMatchesSearch = $derived.by(() => {
+	if (!searchQuery.trim() || !transcription) return false;
+	return transcription.toLowerCase().includes(searchQuery.toLowerCase());
+});
+
+// Auto-expand transcription when it matches search
+$effect(() => {
+	if (transcriptionMatchesSearch && transcription && !showTranscription) {
+		showTranscription = true;
+	}
+});
+
+// Highlight search terms in text (safe from XSS)
+function highlightText(text: string, query: string): string {
+	if (!query.trim()) return escapeHtml(text);
+
+	// Search on original text, then escape parts between matches
+	const regex = new RegExp(escapeRegex(query), 'gi');
+	let lastIndex = 0;
+	let result = '';
+	let match;
+	while ((match = regex.exec(text)) !== null) {
+		// Prevent infinite loop if regex matches empty string
+		if (match[0].length === 0) {
+			regex.lastIndex++;
+			continue;
 		}
-		// Add the rest of the text, escaped
-		result += escapeHtml(text.slice(lastIndex));
-		return result;
+		// Add text before the match, escaped
+		result += escapeHtml(text.slice(lastIndex, match.index));
+		// Add the matched text, escaped and wrapped in <mark>
+		result += `<mark class="bg-yellow-300 dark:bg-yellow-600 rounded px-0.5">${escapeHtml(match[0])}</mark>`;
+		lastIndex = match.index + match[0].length;
 	}
+	// Add the rest of the text, escaped
+	result += escapeHtml(text.slice(lastIndex));
+	return result;
+}
 
-	function escapeHtml(text: string): string {
-		return text
-			.replace(/&/g, '&amp;')
-			.replace(/</g, '&lt;')
-			.replace(/>/g, '&gt;')
-			.replace(/"/g, '&quot;')
-			.replace(/'/g, '&#039;');
-	}
+function escapeHtml(text: string): string {
+	return text
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#039;');
+}
 
-	function escapeRegex(str: string): string {
-		return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-	}
+function escapeRegex(str: string): string {
+	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
-	async function loadMedia() {
-		if (!message.mediaFile || mediaLoading || mediaUrl) return;
-		
-		mediaLoading = true;
-		mediaError = null;
-		
-		try {
-			mediaUrl = await loadMediaFile(message.mediaFile);
-		} catch (e) {
-			mediaError = e instanceof Error ? e.message : 'Failed to load media';
-		} finally {
-			mediaLoading = false;
-		}
-	}
+async function loadMedia() {
+	if (!message.mediaFile || mediaLoading || mediaUrl) return;
 
-	async function transcribeVoiceMessage() {
-		if (!mediaUrl || transcriptionLoading) return;
-		
-		transcriptionLoading = true;
-		transcriptionError = null;
-		
-		try {
-			const text = await transcribeAudio(mediaUrl, message.id);
-			transcription = text || '(No speech detected)';
-			showTranscription = true;
-		} catch (e) {
-			transcriptionError = e instanceof Error ? e.message : 'Transcription failed';
-		} finally {
-			transcriptionLoading = false;
-		}
+	mediaLoading = true;
+	mediaError = null;
+
+	try {
+		mediaUrl = await loadMediaFile(message.mediaFile);
+	} catch (e) {
+		mediaError = e instanceof Error ? e.message : 'Failed to load media';
+	} finally {
+		mediaLoading = false;
 	}
+}
+
+async function transcribeVoiceMessage() {
+	if (!mediaUrl || transcriptionLoading) return;
+
+	transcriptionLoading = true;
+	transcriptionError = null;
+
+	try {
+		const text = await transcribeAudio(mediaUrl, message.id);
+		transcription = text || '(No speech detected)';
+		showTranscription = true;
+	} catch (e) {
+		transcriptionError =
+			e instanceof Error ? e.message : 'Transcription failed';
+	} finally {
+		transcriptionLoading = false;
+	}
+}
 </script>
 
 {#if message.isSystemMessage}

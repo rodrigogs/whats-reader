@@ -5,5 +5,5 @@ import { defineConfig } from 'vite';
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
 	// Electron needs to use relative paths
-	base: './'
+	base: './',
 });

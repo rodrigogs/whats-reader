@@ -1,120 +1,122 @@
 <script lang="ts">
-	import { bookmarksState, type Bookmark } from '$lib/bookmarks.svelte';
-	import BookmarkModal from './BookmarkModal.svelte';
+import { type Bookmark, bookmarksState } from '$lib/bookmarks.svelte';
+import BookmarkModal from './BookmarkModal.svelte';
 
-	interface Props {
-		currentChatId?: string;
-		onNavigateToMessage: (messageId: string, chatId: string) => void;
-		onClose: () => void;
-	}
+interface Props {
+	currentChatId?: string;
+	onNavigateToMessage: (messageId: string, chatId: string) => void;
+	onClose: () => void;
+}
 
-	let { currentChatId, onNavigateToMessage, onClose }: Props = $props();
+let { currentChatId, onNavigateToMessage, onClose }: Props = $props();
 
-	let filterMode = $state<'all' | 'current'>('all');
-	let editingBookmark = $state<Bookmark | null>(null);
-	let expandedBookmarkId = $state<string | null>(null);
-	let importInput: HTMLInputElement;
-	let importError = $state<string | null>(null);
-	let importSuccess = $state<string | null>(null);
+let filterMode = $state<'all' | 'current'>('all');
+let editingBookmark = $state<Bookmark | null>(null);
+let expandedBookmarkId = $state<string | null>(null);
+let importInput: HTMLInputElement;
+let importError = $state<string | null>(null);
+let importSuccess = $state<string | null>(null);
 
-	// Filtered and sorted bookmarks - single derived, no function wrapper
-	const displayedBookmarks = $derived.by(() => {
-		const all = bookmarksState.bookmarks;
-		const filtered = (filterMode === 'current' && currentChatId)
-			? all.filter(b => b.chatId === currentChatId)
+// Filtered and sorted bookmarks - single derived, no function wrapper
+const displayedBookmarks = $derived.by(() => {
+	const all = bookmarksState.bookmarks;
+	const filtered =
+		filterMode === 'current' && currentChatId
+			? all.filter((b) => b.chatId === currentChatId)
 			: all;
-		// Sort by creation date, newest first
-		return filtered.toSorted((a, b) => 
-			new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-		);
-	});
+	// Sort by creation date, newest first
+	return filtered.toSorted(
+		(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+	);
+});
 
-	// Group bookmarks by chat for display - computed from displayedBookmarks
-	const groupedBookmarks = $derived.by(() => {
-		const groups = new Map<string, Bookmark[]>();
-		for (const bookmark of displayedBookmarks) {
-			const existing = groups.get(bookmark.chatId);
-			if (existing) {
-				existing.push(bookmark);
-			} else {
-				groups.set(bookmark.chatId, [bookmark]);
-			}
-		}
-		return groups;
-	});
-
-	function formatDate(isoString: string): string {
-		const date = new Date(isoString);
-		return date.toLocaleDateString(undefined, {
-			day: 'numeric',
-			month: 'short',
-			hour: '2-digit',
-			minute: '2-digit'
-		});
-	}
-
-	function handleBookmarkClick(bookmark: Bookmark) {
-		// Toggle expand/collapse
-		if (expandedBookmarkId === bookmark.id) {
-			expandedBookmarkId = null;
+// Group bookmarks by chat for display - computed from displayedBookmarks
+const groupedBookmarks = $derived.by(() => {
+	const groups = new Map<string, Bookmark[]>();
+	for (const bookmark of displayedBookmarks) {
+		const existing = groups.get(bookmark.chatId);
+		if (existing) {
+			existing.push(bookmark);
 		} else {
-			expandedBookmarkId = bookmark.id;
+			groups.set(bookmark.chatId, [bookmark]);
 		}
 	}
+	return groups;
+});
 
-	function handleNavigateClick(e: MouseEvent, bookmark: Bookmark) {
-		e.stopPropagation();
-		e.preventDefault();
-		onNavigateToMessage(bookmark.messageId, bookmark.chatId);
-	}
+function formatDate(isoString: string): string {
+	const date = new Date(isoString);
+	return date.toLocaleDateString(undefined, {
+		day: 'numeric',
+		month: 'short',
+		hour: '2-digit',
+		minute: '2-digit',
+	});
+}
 
-	function handleEditClick(e: MouseEvent, bookmark: Bookmark) {
-		e.stopPropagation();
-		e.preventDefault();
-		editingBookmark = bookmark;
-	}
-
-	function handleDeleteClick(e: MouseEvent, bookmark: Bookmark) {
-		e.stopPropagation();
-		e.preventDefault();
-		bookmarksState.removeBookmark(bookmark.messageId);
+function handleBookmarkClick(bookmark: Bookmark) {
+	// Toggle expand/collapse
+	if (expandedBookmarkId === bookmark.id) {
 		expandedBookmarkId = null;
+	} else {
+		expandedBookmarkId = bookmark.id;
+	}
+}
+
+function handleNavigateClick(e: MouseEvent, bookmark: Bookmark) {
+	e.stopPropagation();
+	e.preventDefault();
+	onNavigateToMessage(bookmark.messageId, bookmark.chatId);
+}
+
+function handleEditClick(e: MouseEvent, bookmark: Bookmark) {
+	e.stopPropagation();
+	e.preventDefault();
+	editingBookmark = bookmark;
+}
+
+function handleDeleteClick(e: MouseEvent, bookmark: Bookmark) {
+	e.stopPropagation();
+	e.preventDefault();
+	bookmarksState.removeBookmark(bookmark.messageId);
+	expandedBookmarkId = null;
+}
+
+function handleExport() {
+	bookmarksState.downloadExport();
+}
+
+async function handleImport(e: Event) {
+	const input = e.target as HTMLInputElement;
+	const file = input.files?.[0];
+
+	if (!file) return;
+
+	importError = null;
+	importSuccess = null;
+
+	try {
+		const result = await bookmarksState.importFromFile(file);
+		importSuccess = `Imported ${result.imported} bookmark${result.imported !== 1 ? 's' : ''}`;
+
+		// Clear success message after 3 seconds
+		setTimeout(() => {
+			importSuccess = null;
+		}, 3000);
+	} catch (err) {
+		importError =
+			err instanceof Error ? err.message : 'Failed to import bookmarks';
 	}
 
-	function handleExport() {
-		bookmarksState.downloadExport();
+	// Reset input
+	input.value = '';
+}
+
+function handleKeydown(e: KeyboardEvent) {
+	if (e.key === 'Escape' && !editingBookmark) {
+		onClose();
 	}
-
-	async function handleImport(e: Event) {
-		const input = e.target as HTMLInputElement;
-		const file = input.files?.[0];
-		
-		if (!file) return;
-
-		importError = null;
-		importSuccess = null;
-
-		try {
-			const result = await bookmarksState.importFromFile(file);
-			importSuccess = `Imported ${result.imported} bookmark${result.imported !== 1 ? 's' : ''}`;
-			
-			// Clear success message after 3 seconds
-			setTimeout(() => {
-				importSuccess = null;
-			}, 3000);
-		} catch (err) {
-			importError = err instanceof Error ? err.message : 'Failed to import bookmarks';
-		}
-
-		// Reset input
-		input.value = '';
-	}
-
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape' && !editingBookmark) {
-			onClose();
-		}
-	}
+}
 </script>
 
 <svelte:window onkeydown={handleKeydown} />

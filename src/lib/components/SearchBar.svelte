@@ -1,75 +1,82 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
+import { onDestroy } from 'svelte';
 
-	interface Props {
-		value: string;
-		onInput: (value: string) => void;
-		onNextResult?: () => void;
-		onPrevResult?: () => void;
-		placeholder?: string;
-		debounceMs?: number;
+interface Props {
+	value: string;
+	onInput: (value: string) => void;
+	onNextResult?: () => void;
+	onPrevResult?: () => void;
+	placeholder?: string;
+	debounceMs?: number;
+}
+
+let {
+	value,
+	onInput,
+	onNextResult,
+	onPrevResult,
+	placeholder = 'Search messages...',
+	debounceMs = 300,
+}: Props = $props();
+
+let localValue = $state('');
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+// Sync external value changes (including initial value)
+$effect(() => {
+	localValue = value;
+});
+
+function handleInput(e: Event) {
+	const input = e.target as HTMLInputElement;
+	localValue = input.value;
+
+	// Clear existing timer
+	if (debounceTimer) {
+		clearTimeout(debounceTimer);
 	}
 
-	let { value, onInput, onNextResult, onPrevResult, placeholder = 'Search messages...', debounceMs = 300 }: Props = $props();
+	// Set new debounced call
+	debounceTimer = setTimeout(() => {
+		onInput(localValue);
+	}, debounceMs);
+}
 
-	let localValue = $state('');
-	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+function handleKeyDown(e: KeyboardEvent) {
+	// Handle navigation keys when there's a search query
+	if (!localValue) return;
 
-	// Sync external value changes (including initial value)
-	$effect(() => {
-		localValue = value;
-	});
-
-	function handleInput(e: Event) {
-		const input = e.target as HTMLInputElement;
-		localValue = input.value;
-
-		// Clear existing timer
-		if (debounceTimer) {
-			clearTimeout(debounceTimer);
-		}
-
-		// Set new debounced call
-		debounceTimer = setTimeout(() => {
-			onInput(localValue);
-		}, debounceMs);
-	}
-
-	function handleKeyDown(e: KeyboardEvent) {
-		// Handle navigation keys when there's a search query
-		if (!localValue) return;
-
-		if (e.key === 'Enter') {
-			e.preventDefault();
-			if (e.shiftKey) {
-				onPrevResult?.();
-			} else {
-				onNextResult?.();
-			}
-		} else if (e.key === 'ArrowDown') {
-			e.preventDefault();
-			onNextResult?.();
-		} else if (e.key === 'ArrowUp') {
-			e.preventDefault();
+	if (e.key === 'Enter') {
+		e.preventDefault();
+		if (e.shiftKey) {
 			onPrevResult?.();
+		} else {
+			onNextResult?.();
 		}
+	} else if (e.key === 'ArrowDown') {
+		e.preventDefault();
+		onNextResult?.();
+	} else if (e.key === 'ArrowUp') {
+		e.preventDefault();
+		onPrevResult?.();
 	}
+}
 
-	function handleClear() {
-		localValue = '';
-		if (debounceTimer) {
-			clearTimeout(debounceTimer);
-		}
-		// Intentionally call onInput('') immediately for instant feedback when clearing,
-		// rather than debouncing, to provide a more responsive user experience.
-		onInput('');
+function handleClear() {
+	localValue = '';
+	if (debounceTimer) {
+		clearTimeout(debounceTimer);
 	}
+	// Intentionally call onInput('') immediately for instant feedback when clearing,
+	// rather than debouncing, to provide a more responsive user experience.
+	onInput('');
+}
 
-	onDestroy(() => {
-		if (debounceTimer) {
-			clearTimeout(debounceTimer);
-		}
-	});
+onDestroy(() => {
+	if (debounceTimer) {
+		clearTimeout(debounceTimer);
+	}
+});
 </script>
 
 <div class="relative">

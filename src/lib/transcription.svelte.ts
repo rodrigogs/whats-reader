@@ -21,25 +21,28 @@ let isModelReady = $state(false);
 let worker: Worker | null = null;
 
 // Pending transcription callbacks
-const pendingTranscriptions = new Map<string, {
-	resolve: (text: string) => void;
-	reject: (error: Error) => void;
-}>();
+const pendingTranscriptions = new Map<
+	string,
+	{
+		resolve: (text: string) => void;
+		reject: (error: Error) => void;
+	}
+>();
 
 /**
  * Initialize the transcription worker
  */
 function initWorker(): Worker {
 	if (worker) return worker;
-	
+
 	worker = new Worker(
 		new URL('./workers/transcription-worker.ts', import.meta.url),
-		{ type: 'module' }
+		{ type: 'module' },
 	);
-	
+
 	worker.onmessage = (event) => {
 		const message = event.data;
-		
+
 		switch (message.type) {
 			case 'progress':
 				modelLoadProgress = message.progress;
@@ -76,23 +79,33 @@ function initWorker(): Worker {
 			}
 		}
 	};
-	
+
 	worker.onerror = (error) => {
 		console.error('Transcription worker error:', error);
 		modelError = error.message;
 	};
-	
+
 	return worker;
 }
 
 // Export reactive state
 export function getTranscriptionState() {
 	return {
-		get isModelLoading() { return isModelLoading; },
-		get modelLoadProgress() { return modelLoadProgress; },
-		get modelError() { return modelError; },
-		get isModelReady() { return isModelReady; },
-		get language() { return transcriptionLanguage; }
+		get isModelLoading() {
+			return isModelLoading;
+		},
+		get modelLoadProgress() {
+			return modelLoadProgress;
+		},
+		get modelError() {
+			return modelError;
+		},
+		get isModelReady() {
+			return isModelReady;
+		},
+		get language() {
+			return transcriptionLanguage;
+		},
 	};
 }
 
@@ -119,7 +132,7 @@ export function getAvailableLanguages(): { code: string; name: string }[] {
 		{ code: 'chinese', name: '中文' },
 		{ code: 'korean', name: '한국어' },
 		{ code: 'russian', name: 'Русский' },
-		{ code: 'auto', name: 'Auto-detect' }
+		{ code: 'auto', name: 'Auto-detect' },
 	];
 }
 
@@ -153,11 +166,11 @@ export function getAllTranscriptions(): Record<string, string> {
  */
 export function preloadModel(): void {
 	if (!browser || isModelReady || isModelLoading) return;
-	
+
 	isModelLoading = true;
 	modelError = null;
 	modelLoadProgress = 0;
-	
+
 	const w = initWorker();
 	w.postMessage({ type: 'load-model' });
 }
@@ -172,28 +185,28 @@ async function fetchAndDecodeAudio(url: string): Promise<Float32Array> {
 		throw new Error(`Failed to fetch audio: ${response.status}`);
 	}
 	const arrayBuffer = await response.arrayBuffer();
-	
+
 	// Decode using AudioContext (main thread only)
 	const audioContext = new AudioContext({ sampleRate: 16000 });
-	
+
 	try {
 		const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-		
+
 		// If already at 16kHz, just get the channel data
 		if (audioBuffer.sampleRate === 16000) {
 			return audioBuffer.getChannelData(0);
 		}
-		
+
 		// Resample to 16kHz mono using OfflineAudioContext
 		const duration = audioBuffer.duration;
 		const targetLength = Math.ceil(duration * 16000);
 		const offlineCtx = new OfflineAudioContext(1, targetLength, 16000);
-		
+
 		const source = offlineCtx.createBufferSource();
 		source.buffer = audioBuffer;
 		source.connect(offlineCtx.destination);
 		source.start();
-		
+
 		const resampledBuffer = await offlineCtx.startRendering();
 		return resampledBuffer.getChannelData(0);
 	} finally {
@@ -206,43 +219,46 @@ async function fetchAndDecodeAudio(url: string): Promise<Float32Array> {
  */
 export async function transcribeAudio(
 	audioUrl: string,
-	messageId: string
+	messageId: string,
 ): Promise<string> {
 	if (!browser) {
 		throw new Error('Transcription only available in browser');
 	}
-	
+
 	// Check cache first
 	if (transcriptionStore.has(messageId)) {
 		return transcriptionStore.get(messageId)!;
 	}
-	
+
 	// Initialize worker if needed
 	const w = initWorker();
-	
+
 	// Start loading model if not already
 	if (!isModelReady && !isModelLoading) {
 		isModelLoading = true;
 		modelError = null;
 		modelLoadProgress = 0;
 	}
-	
+
 	try {
 		// Fetch and decode audio to Float32Array on main thread
 		// (AudioContext is not available in workers)
 		const audioData = await fetchAndDecodeAudio(audioUrl);
-		
+
 		// Create promise for this transcription
 		return new Promise((resolve, reject) => {
 			pendingTranscriptions.set(messageId, { resolve, reject });
-			
+
 			// Send to worker - transfer the underlying buffer for performance
-			w.postMessage({
-				type: 'transcribe',
-				audioData,
-				language: transcriptionLanguage,
-				messageId
-			}, [audioData.buffer]);
+			w.postMessage(
+				{
+					type: 'transcribe',
+					audioData,
+					language: transcriptionLanguage,
+					messageId,
+				},
+				[audioData.buffer],
+			);
 		});
 	} catch (e) {
 		console.error('Failed to decode audio:', e);
@@ -270,7 +286,9 @@ export function clearTranscriptionCache(): void {
 export function isTranscriptionSupported(): boolean {
 	if (!browser) return false;
 	// Requires Web Audio API and WebAssembly
-	return typeof AudioContext !== 'undefined' && typeof WebAssembly !== 'undefined';
+	return (
+		typeof AudioContext !== 'undefined' && typeof WebAssembly !== 'undefined'
+	);
 }
 
 /**

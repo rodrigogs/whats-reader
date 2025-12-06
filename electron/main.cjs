@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog, protocol } = require('electron');
-const path = require('path');
-const fs = require('fs');
+const path = require('node:path');
+const fs = require('node:fs');
 
 let mainWindow;
 
@@ -21,11 +21,11 @@ const createWindow = () => {
 			preload: path.join(__dirname, 'preload.cjs'),
 			contextIsolation: true,
 			nodeIntegration: false,
-			sandbox: false
+			sandbox: false,
 		},
 		titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
 		backgroundColor: '#ECE5DD',
-		icon: path.join(__dirname, '../static/favicon.png')
+		icon: path.join(__dirname, '../static/favicon.png'),
 	};
 
 	// Only apply trafficLightPosition on macOS
@@ -55,9 +55,9 @@ protocol.registerSchemesAsPrivileged([
 		privileges: {
 			standard: true,
 			secure: true,
-			supportFetchAPI: true
-		}
-	}
+			supportFetchAPI: true,
+		},
+	},
 ]);
 
 // This method will be called when Electron has finished
@@ -68,18 +68,18 @@ app.whenReady().then(() => {
 		// Parse the URL to get just the pathname
 		const requestUrl = new URL(request.url);
 		let pathname = requestUrl.pathname;
-		
+
 		// Remove leading slash and decode
 		pathname = decodeURIComponent(pathname.replace(/^\/+/, ''));
-		
+
 		// Default to index.html for empty path or root
 		if (!pathname || pathname === '' || pathname === '.') {
 			pathname = 'index.html';
 		}
-		
+
 		const buildPath = getBuildPath();
 		const filePath = path.join(buildPath, pathname);
-		
+
 		// Determine MIME type based on extension
 		const ext = path.extname(pathname).toLowerCase();
 		const mimeTypes = {
@@ -98,15 +98,15 @@ app.whenReady().then(() => {
 			'.woff2': 'font/woff2',
 			'.ttf': 'font/ttf',
 			'.wasm': 'application/wasm',
-			'.webmanifest': 'application/manifest+json'
+			'.webmanifest': 'application/manifest+json',
 		};
 		const mimeType = mimeTypes[ext] || 'application/octet-stream';
-		
+
 		try {
 			// Read file using fs (works with ASAR)
 			const data = fs.readFileSync(filePath);
 			return new Response(data, {
-				headers: { 'Content-Type': mimeType }
+				headers: { 'Content-Type': mimeType },
 			});
 		} catch (err) {
 			console.error('[Protocol] Error reading file:', filePath, err.message);
@@ -138,8 +138,8 @@ ipcMain.handle('dialog:openFile', async () => {
 		properties: ['openFile'],
 		filters: [
 			{ name: 'WhatsApp Exports', extensions: ['zip'] },
-			{ name: 'All Files', extensions: ['*'] }
-		]
+			{ name: 'All Files', extensions: ['*'] },
+		],
 	});
 
 	if (result.canceled || result.filePaths.length === 0) {
@@ -153,13 +153,13 @@ ipcMain.handle('dialog:openFile', async () => {
 	return {
 		path: filePath,
 		name: fileName,
-		buffer: fileContent.buffer
+		buffer: fileContent.buffer,
 	};
 });
 
 ipcMain.handle('dialog:openFolder', async () => {
 	const result = await dialog.showOpenDialog(mainWindow, {
-		properties: ['openDirectory']
+		properties: ['openDirectory'],
 	});
 
 	if (result.canceled || result.filePaths.length === 0) {
@@ -169,7 +169,7 @@ ipcMain.handle('dialog:openFolder', async () => {
 	return result.filePaths[0];
 });
 
-ipcMain.handle('fs:readFile', async (event, filePath) => {
+ipcMain.handle('fs:readFile', async (_event, filePath) => {
 	try {
 		const content = fs.readFileSync(filePath);
 		return { success: true, data: content.buffer };
@@ -178,7 +178,7 @@ ipcMain.handle('fs:readFile', async (event, filePath) => {
 	}
 });
 
-ipcMain.handle('fs:readDir', async (event, dirPath) => {
+ipcMain.handle('fs:readDir', async (_event, dirPath) => {
 	try {
 		const files = fs.readdirSync(dirPath, { withFileTypes: true });
 		return {
@@ -186,14 +186,14 @@ ipcMain.handle('fs:readDir', async (event, dirPath) => {
 			data: files.map((f) => ({
 				name: f.name,
 				isDirectory: f.isDirectory(),
-				path: path.join(dirPath, f.name)
-			}))
+				path: path.join(dirPath, f.name),
+			})),
 		};
 	} catch (error) {
 		return { success: false, error: error.message };
 	}
 });
 
-ipcMain.handle('fs:fileExists', async (event, filePath) => {
+ipcMain.handle('fs:fileExists', async (_event, filePath) => {
 	return fs.existsSync(filePath);
 });

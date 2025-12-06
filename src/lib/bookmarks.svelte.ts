@@ -1,7 +1,7 @@
 /**
  * Bookmarks state management using Svelte 5 runes
  * Allows users to bookmark messages with optional comments
- * 
+ *
  * NOTE: Bookmarks are NOT persisted automatically.
  * Users must export/import bookmarks manually each session.
  */
@@ -31,7 +31,7 @@ function generateId(): string {
 // Truncate text for preview
 function truncateText(text: string, maxLength: number = 100): string {
 	if (text.length <= maxLength) return text;
-	return text.substring(0, maxLength).trim() + '...';
+	return `${text.substring(0, maxLength).trim()}...`;
 }
 
 // Create reactive bookmarks state
@@ -41,7 +41,7 @@ function createBookmarksState() {
 
 	// Derived: Map of messageId -> Bookmark for fast lookup
 	const bookmarksByMessageId = $derived(
-		new Map(bookmarks.map(b => [b.messageId, b]))
+		new Map(bookmarks.map((b) => [b.messageId, b])),
 	);
 
 	// Derived: Group bookmarks by chatId
@@ -57,10 +57,18 @@ function createBookmarksState() {
 
 	return {
 		// Getters
-		get bookmarks() { return bookmarks; },
-		get bookmarksByMessageId() { return bookmarksByMessageId; },
-		get bookmarksByChatId() { return bookmarksByChatId(); },
-		get count() { return bookmarks.length; },
+		get bookmarks() {
+			return bookmarks;
+		},
+		get bookmarksByMessageId() {
+			return bookmarksByMessageId;
+		},
+		get bookmarksByChatId() {
+			return bookmarksByChatId();
+		},
+		get count() {
+			return bookmarks.length;
+		},
 
 		// Check if a message is bookmarked
 		isBookmarked(messageId: string): boolean {
@@ -74,7 +82,7 @@ function createBookmarksState() {
 
 		// Get bookmarks for a specific chat
 		getBookmarksForChat(chatId: string): Bookmark[] {
-			return bookmarks.filter(b => b.chatId === chatId);
+			return bookmarks.filter((b) => b.chatId === chatId);
 		},
 
 		// Add a new bookmark
@@ -94,7 +102,7 @@ function createBookmarksState() {
 				createdAt: new Date().toISOString(),
 				messagePreview: truncateText(params.messageContent),
 				sender: params.sender,
-				messageTimestamp: params.messageTimestamp.toISOString()
+				messageTimestamp: params.messageTimestamp.toISOString(),
 			};
 
 			bookmarks = [...bookmarks, newBookmark];
@@ -103,22 +111,20 @@ function createBookmarksState() {
 
 		// Update bookmark comment
 		updateBookmarkComment(messageId: string, comment: string): void {
-			bookmarks = bookmarks.map(b =>
-				b.messageId === messageId
-					? { ...b, comment }
-					: b
+			bookmarks = bookmarks.map((b) =>
+				b.messageId === messageId ? { ...b, comment } : b,
 			);
 		},
 
 		// Remove a bookmark
 		removeBookmark(messageId: string): boolean {
 			const initialLength = bookmarks.length;
-			const filtered = bookmarks.filter(b => b.messageId !== messageId);
-			
+			const filtered = bookmarks.filter((b) => b.messageId !== messageId);
+
 			if (filtered.length === initialLength) {
 				return false;
 			}
-			
+
 			bookmarks = filtered;
 			return true;
 		},
@@ -132,7 +138,7 @@ function createBookmarksState() {
 			messageTimestamp: Date;
 		}): { added: boolean; bookmark?: Bookmark } {
 			const existing = bookmarksByMessageId.get(params.messageId);
-			
+
 			if (existing) {
 				this.removeBookmark(params.messageId);
 				return { added: false };
@@ -147,7 +153,7 @@ function createBookmarksState() {
 			return {
 				version: 1,
 				exportedAt: new Date().toISOString(),
-				bookmarks: [...bookmarks]
+				bookmarks: [...bookmarks],
 			};
 		},
 
@@ -157,7 +163,7 @@ function createBookmarksState() {
 			const json = JSON.stringify(data, null, 2);
 			const blob = new Blob([json], { type: 'application/json' });
 			const url = URL.createObjectURL(blob);
-			
+
 			const a = document.createElement('a');
 			a.href = url;
 			a.download = `whatsapp-bookmarks-${new Date().toISOString().split('T')[0]}.json`;
@@ -187,7 +193,7 @@ function createBookmarksState() {
 		// Clear all bookmarks
 		clearAll(): void {
 			bookmarks = [];
-		}
+		},
 	};
 }
 

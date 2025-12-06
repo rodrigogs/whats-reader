@@ -6,7 +6,7 @@
  */
 
 import JSZip from 'jszip';
-import { parseChat, type ParsedChat, type ChatMessage } from './chat-parser';
+import { type ChatMessage, type ParsedChat, parseChat } from './chat-parser';
 
 export interface MediaFile {
 	name: string;
@@ -37,7 +37,18 @@ function getMediaType(filename: string): MediaFile['type'] {
 	const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
 	const videoExts = ['mp4', 'mov', 'avi', 'mkv', '3gp', 'webm'];
 	const audioExts = ['opus', 'mp3', 'wav', 'aac', 'm4a', 'ogg'];
-	const docExts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'vcf', 'xml'];
+	const docExts = [
+		'pdf',
+		'doc',
+		'docx',
+		'xls',
+		'xlsx',
+		'ppt',
+		'pptx',
+		'txt',
+		'vcf',
+		'xml',
+	];
 
 	if (imageExts.includes(ext)) return 'image';
 	if (videoExts.includes(ext)) return 'video';
@@ -58,15 +69,15 @@ export interface ParseProgress {
  */
 export async function parseZipFile(
 	file: File | ArrayBuffer,
-	onProgress?: (progress: ParseProgress) => void
+	onProgress?: (progress: ParseProgress) => void,
 ): Promise<ParsedZipChat> {
 	const zip = new JSZip();
-	
+
 	onProgress?.({ stage: 'extracting', progress: 0 });
-	
+
 	// Load ZIP (JSZip doesn't support progress callback for loadAsync)
 	const contents = await zip.loadAsync(file);
-	
+
 	onProgress?.({ stage: 'extracting', progress: 30 });
 
 	let chatContent = '';
@@ -74,7 +85,9 @@ export async function parseZipFile(
 	const mediaFiles: MediaFile[] = [];
 
 	// Get all file entries for progress tracking
-	const fileEntries = Object.entries(contents.files).filter(([, entry]) => !entry.dir);
+	const fileEntries = Object.entries(contents.files).filter(
+		([, entry]) => !entry.dir,
+	);
 	const totalFiles = fileEntries.length;
 	let processedFiles = 0;
 
@@ -97,11 +110,11 @@ export async function parseZipFile(
 					type: mediaType,
 					size: 0, // Will be set when loaded
 					_zipEntry: zipEntry,
-					_loaded: false
+					_loaded: false,
 				});
 			}
 		}
-		
+
 		processedFiles++;
 		// Report progress: 30-80% for file enumeration
 		const enumerationProgress = 30 + (processedFiles / totalFiles) * 50;
@@ -113,15 +126,18 @@ export async function parseZipFile(
 	}
 
 	onProgress?.({ stage: 'parsing', progress: 0 });
-	
+
 	// Parse the chat content
 	const parsedChat = parseChat(chatContent, chatFilename);
-	
+
 	onProgress?.({ stage: 'parsing', progress: 50 });
 
 	// Try to match media files with messages (just references, no loading)
-	const enhancedMessages = matchMediaToMessages(parsedChat.messages, mediaFiles);
-	
+	const enhancedMessages = matchMediaToMessages(
+		parsedChat.messages,
+		mediaFiles,
+	);
+
 	onProgress?.({ stage: 'parsing', progress: 100 });
 
 	return {
@@ -129,14 +145,17 @@ export async function parseZipFile(
 		messages: enhancedMessages,
 		mediaFiles,
 		hasMedia: mediaFiles.length > 0,
-		_zip: zip
+		_zip: zip,
 	};
 }
 
 /**
  * Try to match media files with their corresponding messages
  */
-function matchMediaToMessages(messages: ChatMessage[], mediaFiles: MediaFile[]): ChatMessage[] {
+function matchMediaToMessages(
+	messages: ChatMessage[],
+	mediaFiles: MediaFile[],
+): ChatMessage[] {
 	// Create a map of media files by name for quick lookup
 	const mediaMap = new Map<string, MediaFile>();
 	for (const media of mediaFiles) {
@@ -156,7 +175,7 @@ function matchMediaToMessages(messages: ChatMessage[], mediaFiles: MediaFile[]):
 			if (content.includes(key) || content.includes(media.name.toLowerCase())) {
 				return {
 					...message,
-					mediaFile: media
+					mediaFile: media,
 				} as ChatMessage & { mediaFile: MediaFile };
 			}
 		}
@@ -170,7 +189,7 @@ function matchMediaToMessages(messages: ChatMessage[], mediaFiles: MediaFile[]):
  */
 export function readFileAsArrayBuffer(
 	file: File,
-	onProgress?: (progress: number) => void
+	onProgress?: (progress: number) => void,
 ): Promise<ArrayBuffer> {
 	return new Promise((resolve, reject) => {
 		const reader = new FileReader();
@@ -194,32 +213,32 @@ function getMimeType(filename: string): string {
 	const ext = filename.toLowerCase().split('.').pop() || '';
 	const mimeTypes: Record<string, string> = {
 		// Images
-		'jpg': 'image/jpeg',
-		'jpeg': 'image/jpeg',
-		'png': 'image/png',
-		'gif': 'image/gif',
-		'webp': 'image/webp',
-		'bmp': 'image/bmp',
-		'svg': 'image/svg+xml',
+		jpg: 'image/jpeg',
+		jpeg: 'image/jpeg',
+		png: 'image/png',
+		gif: 'image/gif',
+		webp: 'image/webp',
+		bmp: 'image/bmp',
+		svg: 'image/svg+xml',
 		// Videos
-		'mp4': 'video/mp4',
-		'mov': 'video/quicktime',
-		'avi': 'video/x-msvideo',
-		'mkv': 'video/x-matroska',
+		mp4: 'video/mp4',
+		mov: 'video/quicktime',
+		avi: 'video/x-msvideo',
+		mkv: 'video/x-matroska',
 		'3gp': 'video/3gpp',
-		'webm': 'video/webm',
+		webm: 'video/webm',
 		// Audio
-		'opus': 'audio/opus',
-		'mp3': 'audio/mpeg',
-		'wav': 'audio/wav',
-		'aac': 'audio/aac',
-		'm4a': 'audio/mp4',
-		'ogg': 'audio/ogg',
+		opus: 'audio/opus',
+		mp3: 'audio/mpeg',
+		wav: 'audio/wav',
+		aac: 'audio/aac',
+		m4a: 'audio/mp4',
+		ogg: 'audio/ogg',
 		// Documents
-		'pdf': 'application/pdf',
-		'txt': 'text/plain',
-		'xml': 'application/xml',
-		'vcf': 'text/vcard',
+		pdf: 'application/pdf',
+		txt: 'text/plain',
+		xml: 'application/xml',
+		vcf: 'text/vcard',
 	};
 	return mimeTypes[ext] || 'application/octet-stream';
 }
@@ -245,7 +264,9 @@ export async function loadMediaFile(media: MediaFile): Promise<string> {
 
 	// Need to load from zip
 	if (!media._zipEntry) {
-		throw new Error(`Cannot load media file: ${media.name} - no zip entry reference`);
+		throw new Error(
+			`Cannot load media file: ${media.name} - no zip entry reference`,
+		);
 	}
 
 	// Evict old entries if cache is full
@@ -314,13 +335,13 @@ export function cleanupMediaUrls(mediaFiles: MediaFile[]): void {
 export async function preloadMedia(mediaFiles: MediaFile[]): Promise<void> {
 	// Limit concurrent loads to avoid overwhelming the browser
 	const BATCH_SIZE = 5;
-	
+
 	for (let i = 0; i < mediaFiles.length; i += BATCH_SIZE) {
 		const batch = mediaFiles.slice(i, i + BATCH_SIZE);
 		await Promise.all(
 			batch
-				.filter(m => !m._loaded && m._zipEntry)
-				.map(m => loadMediaFile(m).catch(() => {})) // Ignore individual failures
+				.filter((m) => !m._loaded && m._zipEntry)
+				.map((m) => loadMediaFile(m).catch(() => {})), // Ignore individual failures
 		);
 	}
 }

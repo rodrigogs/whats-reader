@@ -1,22 +1,30 @@
 <script lang="ts">
-	interface Props {
-		messageId: string;
-		chatId: string;
-		messageContent: string;
-		sender: string;
-		messageTimestamp: Date;
-		isBookmarked?: boolean;
-		onBookmarkClick?: (isBookmarked: boolean) => void;
-	}
+interface Props {
+	messageId: string;
+	chatId: string;
+	messageContent: string;
+	sender: string;
+	messageTimestamp: Date;
+	isBookmarked?: boolean;
+	onBookmarkClick?: (isBookmarked: boolean) => void;
+}
 
-	let { messageId, chatId, messageContent, sender, messageTimestamp, isBookmarked = false, onBookmarkClick }: Props = $props();
+let {
+	messageId,
+	chatId,
+	messageContent,
+	sender,
+	messageTimestamp,
+	isBookmarked = false,
+	onBookmarkClick,
+}: Props = $props();
 
-	function handleClick(e: MouseEvent) {
-		e.stopPropagation();
-		// Just notify parent - don't save the bookmark here
-		// The modal will handle saving when user clicks Save
-		onBookmarkClick?.(isBookmarked);
-	}
+function handleClick(e: MouseEvent) {
+	e.stopPropagation();
+	// Just notify parent - don't save the bookmark here
+	// The modal will handle saving when user clicks Save
+	onBookmarkClick?.(isBookmarked);
+}
 </script>
 
 <button

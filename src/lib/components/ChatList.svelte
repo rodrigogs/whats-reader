@@ -1,119 +1,135 @@
 <script lang="ts">
-	import type { ChatData } from '$lib/state.svelte';
-	import { getAvailableLanguages } from '$lib/transcription.svelte';
-	import { floating } from '$lib/actions/floating';
+import { floating } from '$lib/actions/floating';
+import type { ChatData } from '$lib/state.svelte';
+import { getAvailableLanguages } from '$lib/transcription.svelte';
 
-	interface Props {
-		chats: ChatData[];
-		selectedIndex: number | null;
-		onSelect: (index: number) => void;
-		onRemove: (index: number) => void;
-		languageByChat?: Map<string, string>;
-		onLanguageChange?: (chatTitle: string, language: string) => void;
-		autoLoadMediaByChat?: Map<string, boolean>;
-		onAutoLoadMediaChange?: (chatTitle: string, enabled: boolean) => void;
+interface Props {
+	chats: ChatData[];
+	selectedIndex: number | null;
+	onSelect: (index: number) => void;
+	onRemove: (index: number) => void;
+	languageByChat?: Map<string, string>;
+	onLanguageChange?: (chatTitle: string, language: string) => void;
+	autoLoadMediaByChat?: Map<string, boolean>;
+	onAutoLoadMediaChange?: (chatTitle: string, enabled: boolean) => void;
+}
+
+let {
+	chats,
+	selectedIndex,
+	onSelect,
+	onRemove,
+	languageByChat = new Map(),
+	onLanguageChange,
+	autoLoadMediaByChat = new Map(),
+	onAutoLoadMediaChange,
+}: Props = $props();
+
+// Context menu state
+let contextMenuIndex = $state<number | null>(null);
+let menuButtonRef = $state<HTMLButtonElement | null>(null);
+let showLanguageSubmenu = $state(false);
+let languageTriggerRef = $state<HTMLButtonElement | null>(null);
+let submenuHideTimeout: ReturnType<typeof setTimeout> | null = null;
+
+const availableLanguages = getAvailableLanguages();
+
+function openContextMenu(
+	e: MouseEvent,
+	index: number,
+	buttonEl: HTMLButtonElement,
+) {
+	e.preventDefault();
+	e.stopPropagation();
+	contextMenuIndex = index;
+	menuButtonRef = buttonEl;
+	showLanguageSubmenu = false;
+}
+
+function closeContextMenu() {
+	contextMenuIndex = null;
+	showLanguageSubmenu = false;
+	menuButtonRef = null;
+	languageTriggerRef = null;
+}
+
+function handleLanguageSelect(language: string) {
+	if (contextMenuIndex !== null && onLanguageChange) {
+		const chat = chats[contextMenuIndex];
+		onLanguageChange(chat.title, language);
 	}
+	closeContextMenu();
+}
 
-	let { chats, selectedIndex, onSelect, onRemove, languageByChat = new Map(), onLanguageChange, autoLoadMediaByChat = new Map(), onAutoLoadMediaChange }: Props = $props();
+function showSubmenu() {
+	if (submenuHideTimeout) {
+		clearTimeout(submenuHideTimeout);
+		submenuHideTimeout = null;
+	}
+	showLanguageSubmenu = true;
+}
 
-	// Context menu state
-	let contextMenuIndex = $state<number | null>(null);
-	let menuButtonRef = $state<HTMLButtonElement | null>(null);
-	let showLanguageSubmenu = $state(false);
-	let languageTriggerRef = $state<HTMLButtonElement | null>(null);
-	let submenuHideTimeout: ReturnType<typeof setTimeout> | null = null;
-	
-	const availableLanguages = getAvailableLanguages();
-
-	function openContextMenu(e: MouseEvent, index: number, buttonEl: HTMLButtonElement) {
-		e.preventDefault();
-		e.stopPropagation();
-		contextMenuIndex = index;
-		menuButtonRef = buttonEl;
+function hideSubmenuDelayed() {
+	submenuHideTimeout = setTimeout(() => {
 		showLanguageSubmenu = false;
-	}
+	}, 150); // Small delay to allow mouse to move between elements
+}
 
-	function closeContextMenu() {
-		contextMenuIndex = null;
-		showLanguageSubmenu = false;
-		menuButtonRef = null;
-		languageTriggerRef = null;
+function cancelHideSubmenu() {
+	if (submenuHideTimeout) {
+		clearTimeout(submenuHideTimeout);
+		submenuHideTimeout = null;
 	}
+}
 
-	function handleLanguageSelect(language: string) {
-		if (contextMenuIndex !== null && onLanguageChange) {
-			const chat = chats[contextMenuIndex];
-			onLanguageChange(chat.title, language);
-		}
-		closeContextMenu();
+function getLanguageForChat(chatTitle: string): string {
+	return languageByChat.get(chatTitle) || 'portuguese';
+}
+
+function getLanguageName(code: string): string {
+	return availableLanguages.find((l) => l.code === code)?.name || code;
+}
+
+function isAutoLoadEnabled(chatTitle: string): boolean {
+	return autoLoadMediaByChat.get(chatTitle) || false;
+}
+
+function handleAutoLoadToggle() {
+	if (contextMenuIndex !== null && onAutoLoadMediaChange) {
+		const chat = chats[contextMenuIndex];
+		const currentEnabled = isAutoLoadEnabled(chat.title);
+		onAutoLoadMediaChange(chat.title, !currentEnabled);
 	}
+	closeContextMenu();
+}
 
-	function showSubmenu() {
-		if (submenuHideTimeout) {
-			clearTimeout(submenuHideTimeout);
-			submenuHideTimeout = null;
-		}
-		showLanguageSubmenu = true;
+function formatDate(date: Date | null): string {
+	if (!date) return '';
+	const now = new Date();
+	const diff = now.getTime() - date.getTime();
+	const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+	if (days === 0) {
+		return date.toLocaleTimeString('en-US', {
+			hour: '2-digit',
+			minute: '2-digit',
+		});
+	} else if (days === 1) {
+		return 'Yesterday';
+	} else if (days < 7) {
+		return date.toLocaleDateString('en-US', { weekday: 'short' });
+	} else {
+		return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 	}
+}
 
-	function hideSubmenuDelayed() {
-		submenuHideTimeout = setTimeout(() => {
-			showLanguageSubmenu = false;
-		}, 150); // Small delay to allow mouse to move between elements
-	}
-
-	function cancelHideSubmenu() {
-		if (submenuHideTimeout) {
-			clearTimeout(submenuHideTimeout);
-			submenuHideTimeout = null;
-		}
-	}
-
-	function getLanguageForChat(chatTitle: string): string {
-		return languageByChat.get(chatTitle) || 'portuguese';
-	}
-
-	function getLanguageName(code: string): string {
-		return availableLanguages.find(l => l.code === code)?.name || code;
-	}
-
-	function isAutoLoadEnabled(chatTitle: string): boolean {
-		return autoLoadMediaByChat.get(chatTitle) || false;
-	}
-
-	function handleAutoLoadToggle() {
-		if (contextMenuIndex !== null && onAutoLoadMediaChange) {
-			const chat = chats[contextMenuIndex];
-			const currentEnabled = isAutoLoadEnabled(chat.title);
-			onAutoLoadMediaChange(chat.title, !currentEnabled);
-		}
-		closeContextMenu();
-	}
-
-	function formatDate(date: Date | null): string {
-		if (!date) return '';
-		const now = new Date();
-		const diff = now.getTime() - date.getTime();
-		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-		if (days === 0) {
-			return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-		} else if (days === 1) {
-			return 'Yesterday';
-		} else if (days < 7) {
-			return date.toLocaleDateString('en-US', { weekday: 'short' });
-		} else {
-			return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-		}
-	}
-
-	function getLastMessage(chat: ChatData): string {
-		if (chat.messages.length === 0) return 'No messages';
-		const last = chat.messages[chat.messages.length - 1];
-		if (last.isMediaMessage) return '📎 Media';
-		if (last.isSystemMessage) return last.content;
-		return `${last.sender}: ${last.content}`;
-	}
+function getLastMessage(chat: ChatData): string {
+	if (chat.messages.length === 0) return 'No messages';
+	const last = chat.messages[chat.messages.length - 1];
+	if (last.isMediaMessage) return '📎 Media';
+	if (last.isSystemMessage) return last.content;
+	return `${last.sender}: ${last.content}`;
+}
 </script>
 
 <div class="flex flex-col h-full bg-white dark:bg-gray-900">

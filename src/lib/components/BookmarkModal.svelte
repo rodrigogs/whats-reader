@@ -1,99 +1,108 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
-	import { bookmarksState, type Bookmark } from '$lib/bookmarks.svelte';
+import { untrack } from 'svelte';
+import { type Bookmark, bookmarksState } from '$lib/bookmarks.svelte';
 
-	// Data needed to create a new bookmark
-	interface NewBookmarkData {
-		messageId: string;
-		chatId: string;
-		messageContent: string;
-		sender: string;
-		messageTimestamp: Date;
-	}
+// Data needed to create a new bookmark
+interface NewBookmarkData {
+	messageId: string;
+	chatId: string;
+	messageContent: string;
+	sender: string;
+	messageTimestamp: Date;
+}
 
-	interface Props {
-		// Either an existing bookmark (edit mode) or data to create new (create mode)
-		bookmark?: Bookmark;
-		newBookmarkData?: NewBookmarkData;
-		onClose: () => void;
-		onSave?: () => void;
-	}
+interface Props {
+	// Either an existing bookmark (edit mode) or data to create new (create mode)
+	bookmark?: Bookmark;
+	newBookmarkData?: NewBookmarkData;
+	onClose: () => void;
+	onSave?: () => void;
+}
 
-	let { bookmark, newBookmarkData, onClose, onSave }: Props = $props();
+let { bookmark, newBookmarkData, onClose, onSave }: Props = $props();
 
-	// Determine if we're in create mode or edit mode
-	const isCreateMode = $derived(!bookmark && !!newBookmarkData);
+// Determine if we're in create mode or edit mode
+const isCreateMode = $derived(!bookmark && !!newBookmarkData);
 
-	// Initialize with current bookmark comment, using untrack to avoid warning
-	// The $effect below ensures this stays in sync if bookmark changes
-	let comment = $state(untrack(() => bookmark?.comment ?? ''));
-	let textarea: HTMLTextAreaElement;
+// Initialize with current bookmark comment, using untrack to avoid warning
+// The $effect below ensures this stays in sync if bookmark changes
+let comment = $state(untrack(() => bookmark?.comment ?? ''));
+let textarea: HTMLTextAreaElement;
 
-	// Sync comment when bookmark prop changes
-	$effect(() => {
-		comment = bookmark?.comment ?? '';
-	});
+// Sync comment when bookmark prop changes
+$effect(() => {
+	comment = bookmark?.comment ?? '';
+});
 
-	function handleSave() {
-		if (isCreateMode && newBookmarkData) {
-			// Create mode: add the bookmark now
-			bookmarksState.addBookmark({
-				...newBookmarkData,
-				comment
-			});
-		} else if (bookmark) {
-			// Edit mode: update the comment
-			bookmarksState.updateBookmarkComment(bookmark.messageId, comment);
-		}
-		onSave?.();
-		onClose();
-	}
-
-	function handleDelete() {
-		if (bookmark) {
-			bookmarksState.removeBookmark(bookmark.messageId);
-		}
-		onClose();
-	}
-
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			onClose();
-		} else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-			handleSave();
-		}
-	}
-
-	function handleBackdropClick(e: MouseEvent) {
-		if (e.target === e.currentTarget) {
-			onClose();
-		}
-	}
-
-	// Focus textarea on mount
-	$effect(() => {
-		if (textarea) {
-			textarea.focus();
-			textarea.setSelectionRange(comment.length, comment.length);
-		}
-	});
-
-	// Format date for display
-	function formatDate(dateOrIsoString: Date | string): string {
-		const date = typeof dateOrIsoString === 'string' ? new Date(dateOrIsoString) : dateOrIsoString;
-		return date.toLocaleDateString(undefined, {
-			day: 'numeric',
-			month: 'short',
-			year: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
+function handleSave() {
+	if (isCreateMode && newBookmarkData) {
+		// Create mode: add the bookmark now
+		bookmarksState.addBookmark({
+			...newBookmarkData,
+			comment,
 		});
+	} else if (bookmark) {
+		// Edit mode: update the comment
+		bookmarksState.updateBookmarkComment(bookmark.messageId, comment);
 	}
+	onSave?.();
+	onClose();
+}
 
-	// Get display data from either bookmark or newBookmarkData
-	const displaySender = $derived(bookmark?.sender ?? newBookmarkData?.sender ?? '');
-	const displayTimestamp = $derived(bookmark?.messageTimestamp ?? newBookmarkData?.messageTimestamp ?? new Date());
-	const displayPreview = $derived(bookmark?.messagePreview ?? newBookmarkData?.messageContent ?? '');
+function handleDelete() {
+	if (bookmark) {
+		bookmarksState.removeBookmark(bookmark.messageId);
+	}
+	onClose();
+}
+
+function handleKeydown(e: KeyboardEvent) {
+	if (e.key === 'Escape') {
+		onClose();
+	} else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+		handleSave();
+	}
+}
+
+function handleBackdropClick(e: MouseEvent) {
+	if (e.target === e.currentTarget) {
+		onClose();
+	}
+}
+
+// Focus textarea on mount
+$effect(() => {
+	if (textarea) {
+		textarea.focus();
+		textarea.setSelectionRange(comment.length, comment.length);
+	}
+});
+
+// Format date for display
+function formatDate(dateOrIsoString: Date | string): string {
+	const date =
+		typeof dateOrIsoString === 'string'
+			? new Date(dateOrIsoString)
+			: dateOrIsoString;
+	return date.toLocaleDateString(undefined, {
+		day: 'numeric',
+		month: 'short',
+		year: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit',
+	});
+}
+
+// Get display data from either bookmark or newBookmarkData
+const displaySender = $derived(
+	bookmark?.sender ?? newBookmarkData?.sender ?? '',
+);
+const displayTimestamp = $derived(
+	bookmark?.messageTimestamp ?? newBookmarkData?.messageTimestamp ?? new Date(),
+);
+const displayPreview = $derived(
+	bookmark?.messagePreview ?? newBookmarkData?.messageContent ?? '',
+);
 </script>
 
 <svelte:window onkeydown={handleKeydown} />

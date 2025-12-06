@@ -11,14 +11,14 @@ const config = {
 			assets: 'build',
 			fallback: 'index.html',
 			precompress: false,
-			strict: true
+			strict: true,
 		}),
 		// Required for Electron - use relative paths
 		paths: {
 			base: '',
-			relative: true
-		}
-	}
+			relative: true,
+		},
+	},
 };
 
 export default config;

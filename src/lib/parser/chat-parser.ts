@@ -12,7 +12,14 @@ export interface ChatMessage {
 	content: string;
 	isSystemMessage: boolean;
 	isMediaMessage: boolean;
-	mediaType?: 'image' | 'video' | 'audio' | 'document' | 'sticker' | 'contact' | 'location';
+	mediaType?:
+		| 'image'
+		| 'video'
+		| 'audio'
+		| 'document'
+		| 'sticker'
+		| 'contact'
+		| 'location';
 	rawLine: string;
 }
 
@@ -55,7 +62,7 @@ const MEDIA_INDICATORS = [
 	'.opus (arquivo anexado)',
 	'.pdf (arquivo anexado)',
 	'.webp (arquivo anexado)',
-	'.vcf (arquivo anexado)'
+	'.vcf (arquivo anexado)',
 ];
 
 // System message indicators
@@ -83,93 +90,98 @@ const SYSTEM_INDICATORS = [
 	'foi removido',
 	'mudou a imagem deste grupo',
 	'mudou o assunto',
-	'entrou usando o link'
+	'entrou usando o link',
 ];
 
 /**
  * Date format patterns for WhatsApp exports
  * Different locales use different formats
- * 
+ *
  * IMPORTANT: The order matters! More specific patterns should come first.
  * US format (with AM/PM) is checked first, then European/Brazilian (24h).
  */
 const DATE_PATTERNS = [
 	// MM/DD/YY, HH:MM AM/PM - US format (12h) - MUST have AM/PM to be identified as US
 	{
-		regex: /^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)\s*-\s*/i,
+		regex:
+			/^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)\s*-\s*/i,
 		parse: (match: RegExpMatchArray) => {
 			const [, month, day, year, hours, minutes, seconds, ampm] = match;
 			return parseDateTime(
-				parseInt(day),
-				parseInt(month),
-				normalizeYear(parseInt(year)),
-				parseInt(hours),
-				parseInt(minutes),
-				seconds ? parseInt(seconds) : 0,
-				ampm
+				parseInt(day, 10),
+				parseInt(month, 10),
+				normalizeYear(parseInt(year, 10)),
+				parseInt(hours, 10),
+				parseInt(minutes, 10),
+				seconds ? parseInt(seconds, 10) : 0,
+				ampm,
 			);
-		}
+		},
 	},
 	// DD/MM/YY, HH:MM - European/Brazilian format (24h) - No AM/PM means it's not US format
 	{
-		regex: /^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*-\s*/,
+		regex:
+			/^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*-\s*/,
 		parse: (match: RegExpMatchArray) => {
 			const [, day, month, year, hours, minutes, seconds] = match;
 			return parseDateTime(
-				parseInt(day),
-				parseInt(month),
-				normalizeYear(parseInt(year)),
-				parseInt(hours),
-				parseInt(minutes),
-				seconds ? parseInt(seconds) : 0
+				parseInt(day, 10),
+				parseInt(month, 10),
+				normalizeYear(parseInt(year, 10)),
+				parseInt(hours, 10),
+				parseInt(minutes, 10),
+				seconds ? parseInt(seconds, 10) : 0,
 			);
-		}
+		},
 	},
 	// YYYY-MM-DD, HH:MM - ISO format
 	{
-		regex: /^(\d{4})-(\d{1,2})-(\d{1,2}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*-\s*/,
+		regex:
+			/^(\d{4})-(\d{1,2})-(\d{1,2}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*-\s*/,
 		parse: (match: RegExpMatchArray) => {
 			const [, year, month, day, hours, minutes, seconds] = match;
 			return parseDateTime(
-				parseInt(day),
-				parseInt(month),
-				parseInt(year),
-				parseInt(hours),
-				parseInt(minutes),
-				seconds ? parseInt(seconds) : 0
+				parseInt(day, 10),
+				parseInt(month, 10),
+				parseInt(year, 10),
+				parseInt(hours, 10),
+				parseInt(minutes, 10),
+				seconds ? parseInt(seconds, 10) : 0,
 			);
-		}
+		},
 	},
 	// DD.MM.YY, HH:MM - German format
 	{
-		regex: /^(\d{1,2})\.(\d{1,2})\.(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*-\s*/,
+		regex:
+			/^(\d{1,2})\.(\d{1,2})\.(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*-\s*/,
 		parse: (match: RegExpMatchArray) => {
 			const [, day, month, year, hours, minutes, seconds] = match;
 			return parseDateTime(
-				parseInt(day),
-				parseInt(month),
-				normalizeYear(parseInt(year)),
-				parseInt(hours),
-				parseInt(minutes),
-				seconds ? parseInt(seconds) : 0
+				parseInt(day, 10),
+				parseInt(month, 10),
+				normalizeYear(parseInt(year, 10)),
+				parseInt(hours, 10),
+				parseInt(minutes, 10),
+				seconds ? parseInt(seconds, 10) : 0,
 			);
-		}
+		},
 	},
 	// [DD/MM/YY, HH:MM:SS] - Bracketed format
 	{
-		regex: /^\[(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2}):(\d{2})\]\s*/,
+		regex:
+			/^\[(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2}):(\d{2})\]\s*/,
 		parse: (match: RegExpMatchArray) => {
 			const [, day, month, year, hours, minutes, seconds] = match;
 			return parseDateTime(
-				parseInt(day),
-				parseInt(month),
-				normalizeYear(parseInt(year)),
-				parseInt(hours),
-				parseInt(minutes),
-				parseInt(seconds)
+				parseInt(day, 10),
+				parseInt(month, 10),
+				normalizeYear(parseInt(year, 10)),
+				parseInt(hours, 10),
+				parseInt(minutes, 10),
+				parseInt(seconds, 10),
 			);
-		}
-	}
+		},
+	},
 ];
 
 function normalizeYear(year: number): number {
@@ -186,7 +198,7 @@ function parseDateTime(
 	hours: number,
 	minutes: number,
 	seconds: number = 0,
-	ampm?: string
+	ampm?: string,
 ): Date {
 	let adjustedHours = hours;
 
@@ -203,20 +215,46 @@ function parseDateTime(
 }
 
 function detectMediaType(
-	content: string
-): 'image' | 'video' | 'audio' | 'document' | 'sticker' | 'contact' | 'location' | undefined {
+	content: string,
+):
+	| 'image'
+	| 'video'
+	| 'audio'
+	| 'document'
+	| 'sticker'
+	| 'contact'
+	| 'location'
+	| undefined {
 	const lower = content.toLowerCase();
 
-	if (lower.includes('.jpg') || lower.includes('.png') || lower.includes('.jpeg')) {
+	if (
+		lower.includes('.jpg') ||
+		lower.includes('.png') ||
+		lower.includes('.jpeg')
+	) {
 		return 'image';
 	}
-	if (lower.includes('.mp4') || lower.includes('.mov') || lower.includes('video')) {
+	if (
+		lower.includes('.mp4') ||
+		lower.includes('.mov') ||
+		lower.includes('video')
+	) {
 		return 'video';
 	}
-	if (lower.includes('.opus') || lower.includes('.mp3') || lower.includes('audio') || lower.includes('ptt-') || lower.includes('aud-')) {
+	if (
+		lower.includes('.opus') ||
+		lower.includes('.mp3') ||
+		lower.includes('audio') ||
+		lower.includes('ptt-') ||
+		lower.includes('aud-')
+	) {
 		return 'audio';
 	}
-	if (lower.includes('.webp') || lower.includes('sticker') || lower.includes('stk-')) {
+	if (
+		lower.includes('.webp') ||
+		lower.includes('sticker') ||
+		lower.includes('stk-')
+	) {
 		return 'sticker';
 	}
 	if (lower.includes('contact card') || lower.includes('.vcf')) {
@@ -225,7 +263,13 @@ function detectMediaType(
 	if (lower.includes('location:') || lower.includes('live location')) {
 		return 'location';
 	}
-	if (lower.includes('.pdf') || lower.includes('.doc') || lower.includes('.xml') || lower.includes('.svg') || lower.includes('document')) {
+	if (
+		lower.includes('.pdf') ||
+		lower.includes('.doc') ||
+		lower.includes('.xml') ||
+		lower.includes('.svg') ||
+		lower.includes('document')
+	) {
 		return 'document';
 	}
 
@@ -234,17 +278,24 @@ function detectMediaType(
 
 function isMediaMessage(content: string): boolean {
 	const lower = content.toLowerCase();
-	return MEDIA_INDICATORS.some((indicator) => lower.includes(indicator.toLowerCase()));
+	return MEDIA_INDICATORS.some((indicator) =>
+		lower.includes(indicator.toLowerCase()),
+	);
 }
 
 function isSystemMessage(content: string): boolean {
 	const lower = content.toLowerCase();
-	return SYSTEM_INDICATORS.some((indicator) => lower.includes(indicator.toLowerCase()));
+	return SYSTEM_INDICATORS.some((indicator) =>
+		lower.includes(indicator.toLowerCase()),
+	);
 }
 
-function parseLine(
-	line: string
-): { timestamp: Date; sender: string; content: string; pattern: RegExp } | null {
+function parseLine(line: string): {
+	timestamp: Date;
+	sender: string;
+	content: string;
+	pattern: RegExp;
+} | null {
 	for (const { regex, parse } of DATE_PATTERNS) {
 		const match = line.match(regex);
 		if (match) {
@@ -262,7 +313,12 @@ function parseLine(
 			}
 
 			// No sender found - might be a system message
-			return { timestamp, sender: '', content: remainder.trim(), pattern: regex };
+			return {
+				timestamp,
+				sender: '',
+				content: remainder.trim(),
+				pattern: regex,
+			};
 		}
 	}
 
@@ -273,23 +329,28 @@ function parseLine(
  * Generate a deterministic ID based on message content.
  * This ensures the same message always gets the same ID across parses,
  * which is essential for bookmark navigation to work after import.
- * 
+ *
  * Uses a collision resolution strategy: if two messages would have the same hash,
  * a counter suffix is added to make them unique while still being deterministic.
  */
-function generateDeterministicId(timestamp: Date, sender: string | null, content: string, existingIds: Set<string>): string {
+function generateDeterministicId(
+	timestamp: Date,
+	sender: string | null,
+	content: string,
+	existingIds: Set<string>,
+): string {
 	// Create a string combining timestamp, sender, and full content
 	const baseString = `${timestamp.toISOString()}|${sender ?? ''}|${content}`;
-	
+
 	// Simple hash function (djb2)
 	let hash = 5381;
 	for (let i = 0; i < baseString.length; i++) {
 		hash = ((hash << 5) + hash) ^ baseString.charCodeAt(i);
 	}
-	
+
 	// Convert to base36 string and ensure positive
-	let id = Math.abs(hash).toString(36);
-	
+	const id = Math.abs(hash).toString(36);
+
 	// Handle collisions by adding a suffix
 	let counter = 0;
 	let uniqueId = id;
@@ -297,14 +358,17 @@ function generateDeterministicId(timestamp: Date, sender: string | null, content
 		counter++;
 		uniqueId = `${id}_${counter}`;
 	}
-	
+
 	return uniqueId;
 }
 
 /**
  * Parse a WhatsApp chat export text content
  */
-export function parseChat(content: string, filename: string = 'WhatsApp Chat'): ParsedChat {
+export function parseChat(
+	content: string,
+	filename: string = 'WhatsApp Chat',
+): ParsedChat {
 	const lines = content.split(/\r?\n/);
 	const messages: ChatMessage[] = [];
 	const participantsSet = new Set<string>();
@@ -320,7 +384,7 @@ export function parseChat(content: string, filename: string = 'WhatsApp Chat'): 
 				currentMessage.timestamp,
 				currentMessage.sender,
 				currentMessage.content,
-				usedIds
+				usedIds,
 			);
 			usedIds.add(currentMessage.id);
 			messages.push(currentMessage);
@@ -347,7 +411,7 @@ export function parseChat(content: string, filename: string = 'WhatsApp Chat'): 
 				isSystemMessage: isSystem,
 				isMediaMessage: isMedia,
 				mediaType: isMedia ? detectMediaType(parsed.content) : undefined,
-				rawLine: line
+				rawLine: line,
 			};
 
 			if (parsed.sender && !isSystem) {
@@ -355,8 +419,8 @@ export function parseChat(content: string, filename: string = 'WhatsApp Chat'): 
 			}
 		} else if (currentMessage) {
 			// This is a continuation of the previous message (multiline)
-			currentMessage.content += '\n' + line;
-			currentMessage.rawLine += '\n' + line;
+			currentMessage.content += `\n${line}`;
+			currentMessage.rawLine += `\n${line}`;
 		}
 	}
 
@@ -387,24 +451,27 @@ export function parseChat(content: string, filename: string = 'WhatsApp Chat'): 
 		messages,
 		participants,
 		startDate: messages.length > 0 ? messages[0].timestamp : null,
-		endDate: messages.length > 0 ? messages[messages.length - 1].timestamp : null,
+		endDate:
+			messages.length > 0 ? messages[messages.length - 1].timestamp : null,
 		title,
 		messageCount: messages.length,
-		mediaCount
+		mediaCount,
 	};
 }
 
 /**
  * Group messages by date for display
  */
-export function groupMessagesByDate(messages: ChatMessage[]): Map<string, ChatMessage[]> {
+export function groupMessagesByDate(
+	messages: ChatMessage[],
+): Map<string, ChatMessage[]> {
 	const groups = new Map<string, ChatMessage[]>();
 
 	for (const message of messages) {
 		const dateKey = message.timestamp.toLocaleDateString('en-US', {
 			year: 'numeric',
 			month: 'long',
-			day: 'numeric'
+			day: 'numeric',
 		});
 
 		const existing = groups.get(dateKey) || [];
@@ -425,7 +492,7 @@ export function formatTime(date: Date): string {
 		year: 'numeric',
 		hour: '2-digit',
 		minute: '2-digit',
-		hour12: true
+		hour12: true,
 	});
 }
 
@@ -467,9 +534,13 @@ export function getChatStats(chat: ParsedChat) {
 	const mostActiveHour = messagesByHour.indexOf(Math.max(...messagesByHour));
 
 	// Calculate average messages per day
-	const daysDiff = chat.startDate && chat.endDate
-		? Math.ceil((chat.endDate.getTime() - chat.startDate.getTime()) / (1000 * 60 * 60 * 24)) || 1
-		: 1;
+	const daysDiff =
+		chat.startDate && chat.endDate
+			? Math.ceil(
+					(chat.endDate.getTime() - chat.startDate.getTime()) /
+						(1000 * 60 * 60 * 24),
+				) || 1
+			: 1;
 	const avgMessagesPerDay = Math.round(chat.messageCount / daysDiff);
 
 	return {
@@ -479,6 +550,6 @@ export function getChatStats(chat: ParsedChat) {
 		mostActiveParticipant,
 		mostActiveHour,
 		avgMessagesPerDay,
-		totalDays: daysDiff
+		totalDays: daysDiff,
 	};
 }

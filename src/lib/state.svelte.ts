@@ -2,8 +2,8 @@
  * Application state management using Svelte 5 runes
  */
 
-import type { MediaFile, ParsedZipChat } from './parser/zip-parser';
 import type { ChatMessage } from './parser/chat-parser';
+import type { ParsedZipChat } from './parser/zip-parser';
 import { getAllTranscriptions } from './transcription.svelte';
 
 // ChatData is now always a ParsedZipChat since we only support ZIP files
@@ -36,17 +36,15 @@ export function createAppState() {
 
 	// Derived values
 	const selectedChat = $derived(
-		selectedChatIndex !== null ? chats[selectedChatIndex] : null
+		selectedChatIndex !== null ? chats[selectedChatIndex] : null,
 	);
 
 	// All messages (no filtering - we highlight and navigate instead)
-	const displayMessages = $derived(
-		selectedChat ? selectedChat.messages : []
-	);
+	const displayMessages = $derived(selectedChat ? selectedChat.messages : []);
 
 	// Current highlighted message ID
 	const currentSearchResultId = $derived(
-		searchResultIds.length > 0 ? searchResultIds[currentSearchIndex] : null
+		searchResultIds.length > 0 ? searchResultIds[currentSearchIndex] : null,
 	);
 
 	// Search results as a Set for fast lookup
@@ -80,18 +78,25 @@ export function createAppState() {
 
 		isSearching = true;
 		searchProgress = 0;
-		
+
 		const searchStartTime = Date.now();
 		const MIN_SEARCH_DISPLAY_TIME = 300; // Minimum time to show progress (ms)
 
 		searchWorker = new Worker(
 			new URL('./workers/search-worker.ts', import.meta.url),
-			{ type: 'module' }
+			{ type: 'module' },
 		);
 
-		searchWorker.onmessage = (event: MessageEvent<{ type: 'progress' | 'complete'; matchingIds?: string[]; query: string; progress?: number }>) => {
+		searchWorker.onmessage = (
+			event: MessageEvent<{
+				type: 'progress' | 'complete';
+				matchingIds?: string[];
+				query: string;
+				progress?: number;
+			}>,
+		) => {
 			const data = event.data;
-			
+
 			// Only process if this result matches current query
 			if (data.query !== searchQuery) return;
 
@@ -100,7 +105,7 @@ export function createAppState() {
 			} else if (data.type === 'complete') {
 				const elapsed = Date.now() - searchStartTime;
 				const remainingTime = Math.max(0, MIN_SEARCH_DISPLAY_TIME - elapsed);
-				
+
 				// Ensure progress indicator is visible for at least MIN_SEARCH_DISPLAY_TIME
 				searchTimeoutId = setTimeout(() => {
 					searchResultIds = data.matchingIds ?? [];
@@ -131,34 +136,68 @@ export function createAppState() {
 			isSystemMessage: m.isSystemMessage,
 			isMediaMessage: m.isMediaMessage,
 			mediaType: m.mediaType,
-			rawLine: m.rawLine
+			rawLine: m.rawLine,
 		}));
 
 		// Include transcriptions for audio message search
 		const transcriptions = getAllTranscriptions();
 
-		searchWorker.postMessage({ messages: serializedMessages, query, transcriptions });
+		searchWorker.postMessage({
+			messages: serializedMessages,
+			query,
+			transcriptions,
+		});
 	}
 
 	return {
 		// State getters
-		get chats() { return chats; },
-		get selectedChatIndex() { return selectedChatIndex; },
-		get searchQuery() { return searchQuery; },
-		get isLoading() { return isLoading; },
-		get loadingProgress() { return loadingProgress; },
-		get error() { return error; },
-		get isSearching() { return isSearching; },
-		get searchProgress() { return searchProgress; },
-		get searchResultIds() { return searchResultIds; },
-		get currentSearchIndex() { return currentSearchIndex; },
-		get currentSearchResultId() { return currentSearchResultId; },
-		get searchResultSet() { return searchResultSet; },
-		
+		get chats() {
+			return chats;
+		},
+		get selectedChatIndex() {
+			return selectedChatIndex;
+		},
+		get searchQuery() {
+			return searchQuery;
+		},
+		get isLoading() {
+			return isLoading;
+		},
+		get loadingProgress() {
+			return loadingProgress;
+		},
+		get error() {
+			return error;
+		},
+		get isSearching() {
+			return isSearching;
+		},
+		get searchProgress() {
+			return searchProgress;
+		},
+		get searchResultIds() {
+			return searchResultIds;
+		},
+		get currentSearchIndex() {
+			return currentSearchIndex;
+		},
+		get currentSearchResultId() {
+			return currentSearchResultId;
+		},
+		get searchResultSet() {
+			return searchResultSet;
+		},
+
 		// Derived getters
-		get selectedChat() { return selectedChat; },
-		get displayMessages() { return displayMessages; },
-		get hasChats() { return hasChats; },
+		get selectedChat() {
+			return selectedChat;
+		},
+		get displayMessages() {
+			return displayMessages;
+		},
+		get hasChats() {
+			return hasChats;
+		},
 
 		// Actions
 		addChat(chat: ChatData) {
@@ -204,7 +243,9 @@ export function createAppState() {
 		// Navigate to previous search result
 		prevSearchResult() {
 			if (searchResultIds.length > 0) {
-				currentSearchIndex = (currentSearchIndex - 1 + searchResultIds.length) % searchResultIds.length;
+				currentSearchIndex =
+					(currentSearchIndex - 1 + searchResultIds.length) %
+					searchResultIds.length;
 			}
 		},
 
@@ -238,7 +279,7 @@ export function createAppState() {
 			currentSearchIndex = 0;
 			isSearching = false;
 			searchProgress = 0;
-		}
+		},
 	};
 }
 

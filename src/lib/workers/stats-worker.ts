@@ -70,7 +70,8 @@ self.onmessage = (event: MessageEvent<WorkerInput>) => {
 	const end = endDate ? new Date(endDate) : null;
 	const daysDiff =
 		start && end
-			? Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) || 1
+			? Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) ||
+				1
 			: 1;
 	const avgMessagesPerDay = Math.round(messageCount / daysDiff);
 
@@ -81,7 +82,7 @@ self.onmessage = (event: MessageEvent<WorkerInput>) => {
 		mostActiveParticipant,
 		mostActiveHour,
 		avgMessagesPerDay,
-		totalDays: daysDiff
+		totalDays: daysDiff,
 	};
 
 	self.postMessage(result);

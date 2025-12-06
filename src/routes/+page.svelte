@@ -1,230 +1,251 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
-	import { tick } from 'svelte';
-	import { appState, type ChatData } from '$lib/state.svelte';
-	import { parseZipFile, readFileAsArrayBuffer } from '$lib/parser';
-	import { ChatList, ChatView, ChatStats, FileDropZone, SearchBar } from '$lib/components';
-	import BookmarksPanel from '$lib/components/BookmarksPanel.svelte';
-	import { setTranscriptionLanguage } from '$lib/transcription.svelte';
-	import { floating } from '$lib/actions/floating';
+import { tick } from 'svelte';
+import { browser } from '$app/environment';
+import { floating } from '$lib/actions/floating';
+import {
+	ChatList,
+	ChatStats,
+	ChatView,
+	FileDropZone,
+	SearchBar,
+} from '$lib/components';
+import BookmarksPanel from '$lib/components/BookmarksPanel.svelte';
+import { parseZipFile, readFileAsArrayBuffer } from '$lib/parser';
+import { appState, type ChatData } from '$lib/state.svelte';
+import { setTranscriptionLanguage } from '$lib/transcription.svelte';
 
-	// Detect if running in Electron
-	const isElectron = browser && typeof window !== 'undefined' && 'electronAPI' in window;
+// Detect if running in Electron
+const isElectron =
+	browser && typeof window !== 'undefined' && 'electronAPI' in window;
 
-	// Dark mode state - check if dark class is on html element
-	let isDarkMode = $state(browser ? document.documentElement.classList.contains('dark') : true);
+// Dark mode state - check if dark class is on html element
+let isDarkMode = $state(
+	browser ? document.documentElement.classList.contains('dark') : true,
+);
 
-	function toggleDarkMode() {
-		isDarkMode = !isDarkMode;
-		if (browser) {
-			if (isDarkMode) {
-				document.documentElement.classList.add('dark');
-			} else {
-				document.documentElement.classList.remove('dark');
-			}
-			// Only persist to localStorage when user explicitly toggles
-			localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+function toggleDarkMode() {
+	isDarkMode = !isDarkMode;
+	if (browser) {
+		if (isDarkMode) {
+			document.documentElement.classList.add('dark');
+		} else {
+			document.documentElement.classList.remove('dark');
 		}
+		// Only persist to localStorage when user explicitly toggles
+		localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
 	}
+}
 
-	let showStats = $state(false);
-	let showSidebar = $state(true);
-	let showBookmarks = $state(false);
-	let scrollToMessageId = $state<string | null>(null);
-	let showPerspectiveDropdown = $state(false);
-	let perspectiveSearchQuery = $state('');
-	let perspectiveButtonRef = $state<HTMLButtonElement | null>(null);
-	let perspectiveSearchInputRef = $state<HTMLInputElement | null>(null);
-	
-	// Auto-focus search input when perspective dropdown opens
-	$effect(() => {
-		if (showPerspectiveDropdown && perspectiveSearchInputRef) {
-			// Small delay to ensure the element is rendered and positioned
-			setTimeout(() => perspectiveSearchInputRef?.focus(), 50);
-		}
-	});
-	
-	// Store selected perspective per chat (chatTitle -> participant name or null for "None")
-	let perspectiveByChat = $state<Map<string, string | null>>(new Map());
-	
-	// Store transcription language per chat (chatTitle -> language code)
-	let languageByChat = $state<Map<string, string>>(new Map());
-	
-	// Store auto-load media preference per chat (chatTitle -> enabled)
-	let autoLoadMediaByChat = $state<Map<string, boolean>>(new Map());
-	
-	// Get auto-load media setting for the current chat
-	const autoLoadMediaForCurrentChat = $derived.by(() => {
-		if (!appState.selectedChat) return false;
-		return autoLoadMediaByChat.get(appState.selectedChat.title) || false;
-	});
+let showStats = $state(false);
+let showSidebar = $state(true);
+let showBookmarks = $state(false);
+let scrollToMessageId = $state<string | null>(null);
+let showPerspectiveDropdown = $state(false);
+let perspectiveSearchQuery = $state('');
+let perspectiveButtonRef = $state<HTMLButtonElement | null>(null);
+let perspectiveSearchInputRef = $state<HTMLInputElement | null>(null);
 
-	async function handleFilesSelected(files: FileList) {
-		appState.setLoading(true);
-		appState.clearError();
-		appState.setLoadingProgress(0);
+// Auto-focus search input when perspective dropdown opens
+$effect(() => {
+	if (showPerspectiveDropdown && perspectiveSearchInputRef) {
+		// Small delay to ensure the element is rendered and positioned
+		setTimeout(() => perspectiveSearchInputRef?.focus(), 50);
+	}
+});
 
-		try {
-			const totalFiles = files.length;
-			let processedFiles = 0;
+// Store selected perspective per chat (chatTitle -> participant name or null for "None")
+let perspectiveByChat = $state<Map<string, string | null>>(new Map());
 
-			for (const file of files) {
-				if (!file.name.endsWith('.zip')) {
-					throw new Error(`Unsupported file type: ${file.name}. Only .zip files are supported.`);
-				}
+// Store transcription language per chat (chatTitle -> language code)
+let languageByChat = $state<Map<string, string>>(new Map());
 
-				const fileBaseProgress = (processedFiles / totalFiles) * 100;
-				const fileWeight = 100 / totalFiles;
+// Store auto-load media preference per chat (chatTitle -> enabled)
+let autoLoadMediaByChat = $state<Map<string, boolean>>(new Map());
 
-				// Read file (0-10% of file progress)
-				const buffer = await readFileAsArrayBuffer(file, (readProgress) => {
-					const overallProgress = fileBaseProgress + (readProgress / 100) * (fileWeight * 0.1);
-					appState.setLoadingProgress(overallProgress);
-				});
-				
-				// Parse ZIP file using Web Worker (10-100% of file progress)
-				// The worker handles all heavy processing without blocking the UI
-				const chatData: ChatData = await parseZipFile(buffer, async ({ stage, progress }) => {
+// Get auto-load media setting for the current chat
+const autoLoadMediaForCurrentChat = $derived.by(() => {
+	if (!appState.selectedChat) return false;
+	return autoLoadMediaByChat.get(appState.selectedChat.title) || false;
+});
+
+async function handleFilesSelected(files: FileList) {
+	appState.setLoading(true);
+	appState.clearError();
+	appState.setLoadingProgress(0);
+
+	try {
+		const totalFiles = files.length;
+		let processedFiles = 0;
+
+		for (const file of files) {
+			if (!file.name.endsWith('.zip')) {
+				throw new Error(
+					`Unsupported file type: ${file.name}. Only .zip files are supported.`,
+				);
+			}
+
+			const fileBaseProgress = (processedFiles / totalFiles) * 100;
+			const fileWeight = 100 / totalFiles;
+
+			// Read file (0-10% of file progress)
+			const buffer = await readFileAsArrayBuffer(file, (readProgress) => {
+				const overallProgress =
+					fileBaseProgress + (readProgress / 100) * (fileWeight * 0.1);
+				appState.setLoadingProgress(overallProgress);
+			});
+
+			// Parse ZIP file using Web Worker (10-100% of file progress)
+			// The worker handles all heavy processing without blocking the UI
+			const chatData: ChatData = await parseZipFile(
+				buffer,
+				async ({ stage, progress }) => {
 					// Progress stages: Reading (0-10%), Extracting (10-60%), Parsing (60-100%)
 					const STAGE_PROGRESS = {
-						reading:    { offset: 0.0, weight: 0.1 },
+						reading: { offset: 0.0, weight: 0.1 },
 						extracting: { offset: 0.1, weight: 0.5 },
-						parsing:    { offset: 0.6, weight: 0.4 }
+						parsing: { offset: 0.6, weight: 0.4 },
 					} as const;
 
-					const { offset: stageOffset, weight: stageWeight } = STAGE_PROGRESS[stage] ?? STAGE_PROGRESS['extracting'];
-					
-					const overallProgress = fileBaseProgress + (stageOffset + (progress / 100) * stageWeight) * fileWeight;
+					const { offset: stageOffset, weight: stageWeight } =
+						STAGE_PROGRESS[stage] ?? STAGE_PROGRESS.extracting;
+
+					const overallProgress =
+						fileBaseProgress +
+						(stageOffset + (progress / 100) * stageWeight) * fileWeight;
 					appState.setLoadingProgress(overallProgress);
-				});
-				
-				appState.addChat(chatData);
-				processedFiles++;
-				appState.setLoadingProgress((processedFiles / totalFiles) * 100);
-			}
+				},
+			);
 
-			// On mobile, collapse sidebar after loading chats
-			if (browser && window.innerWidth < 768) {
-				showSidebar = false;
-			}
-		} catch (error) {
-			console.error('Error parsing file:', error);
-			appState.setError(error instanceof Error ? error.message : 'Failed to parse file');
-		} finally {
-			appState.setLoading(false);
+			appState.addChat(chatData);
+			processedFiles++;
+			appState.setLoadingProgress((processedFiles / totalFiles) * 100);
 		}
-	}
 
-	function handleSelectChat(index: number) {
-		appState.selectChat(index);
-		// Set the transcription language for this chat
-		const chat = appState.chats[index];
-		if (chat) {
-			const lang = languageByChat.get(chat.title) || 'portuguese';
-			setTranscriptionLanguage(lang);
-		}
-		// On mobile, collapse sidebar after selecting a chat
+		// On mobile, collapse sidebar after loading chats
 		if (browser && window.innerWidth < 768) {
 			showSidebar = false;
 		}
-	}
-
-	function handleRemoveChat(index: number) {
-		appState.removeChat(index);
-	}
-
-	function handleLanguageChange(chatTitle: string, language: string) {
-		languageByChat.set(chatTitle, language);
-		languageByChat = new Map(languageByChat); // trigger reactivity
-		// If this is the currently selected chat, update the transcription service
-		if (appState.selectedChat?.title === chatTitle) {
-			setTranscriptionLanguage(language);
-		}
-	}
-
-	function handleAutoLoadMediaChange(chatTitle: string, enabled: boolean) {
-		autoLoadMediaByChat.set(chatTitle, enabled);
-		autoLoadMediaByChat = new Map(autoLoadMediaByChat); // trigger reactivity
-	}
-
-	function handleSearchInput(value: string) {
-		appState.setSearchQuery(value);
-	}
-
-	function toggleStats() {
-		showStats = !showStats;
-	}
-
-	function toggleSidebar() {
-		showSidebar = !showSidebar;
-	}
-
-	function toggleBookmarks() {
-		showBookmarks = !showBookmarks;
-	}
-
-	async function handleNavigateToBookmark(messageId: string, chatId: string) {
-		// Find and select the chat if different from current
-		const chatIndex = appState.chats.findIndex(c => c.title === chatId);
-		const needsChatSwitch = chatIndex !== -1 && chatIndex !== appState.selectedChatIndex;
-		
-		if (needsChatSwitch) {
-			appState.selectChat(chatIndex);
-		}
-		
-		// Clear any previous scroll target
-		scrollToMessageId = null;
-		
-		// Wait for Svelte to process the null value
-		await tick();
-		
-		// Use longer delay when switching chats to allow messages to load
-		const delay = needsChatSwitch ? 300 : 0;
-		if (delay > 0) {
-			await new Promise(resolve => setTimeout(resolve, delay));
-		}
-		
-		// Set the new scroll target
-		scrollToMessageId = messageId;
-	}
-
-	function selectPerspective(participant: string | null) {
-		if (appState.selectedChat) {
-			// Create a new Map to trigger reactivity
-			const newMap = new Map(perspectiveByChat);
-			newMap.set(appState.selectedChat.title, participant);
-			perspectiveByChat = newMap;
-		}
-		showPerspectiveDropdown = false;
-		perspectiveSearchQuery = '';
-	}
-
-	// Get current perspective for selected chat
-	const currentPerspective = $derived.by(() => {
-		if (!appState.selectedChat) return null;
-		return perspectiveByChat.get(appState.selectedChat.title) ?? null;
-	});
-
-	// Filter participants based on search query
-	const filteredParticipants = $derived.by(() => {
-		if (!appState.selectedChat) return [];
-		const query = perspectiveSearchQuery.toLowerCase().trim();
-		if (!query) return appState.selectedChat.participants;
-		return appState.selectedChat.participants.filter(p => 
-			p.toLowerCase().includes(query)
+	} catch (error) {
+		console.error('Error parsing file:', error);
+		appState.setError(
+			error instanceof Error ? error.message : 'Failed to parse file',
 		);
-	});
+	} finally {
+		appState.setLoading(false);
+	}
+}
 
-	// Determine current user based on selected perspective
-	const currentUser = $derived.by(() => {
-		if (!appState.selectedChat) return undefined;
-		// If a perspective is selected, use it
-		if (currentPerspective !== null) {
-			return currentPerspective;
-		}
-		// Otherwise, no perspective (all messages on left)
-		return undefined;
-	});
+function handleSelectChat(index: number) {
+	appState.selectChat(index);
+	// Set the transcription language for this chat
+	const chat = appState.chats[index];
+	if (chat) {
+		const lang = languageByChat.get(chat.title) || 'portuguese';
+		setTranscriptionLanguage(lang);
+	}
+	// On mobile, collapse sidebar after selecting a chat
+	if (browser && window.innerWidth < 768) {
+		showSidebar = false;
+	}
+}
+
+function handleRemoveChat(index: number) {
+	appState.removeChat(index);
+}
+
+function handleLanguageChange(chatTitle: string, language: string) {
+	languageByChat.set(chatTitle, language);
+	languageByChat = new Map(languageByChat); // trigger reactivity
+	// If this is the currently selected chat, update the transcription service
+	if (appState.selectedChat?.title === chatTitle) {
+		setTranscriptionLanguage(language);
+	}
+}
+
+function handleAutoLoadMediaChange(chatTitle: string, enabled: boolean) {
+	autoLoadMediaByChat.set(chatTitle, enabled);
+	autoLoadMediaByChat = new Map(autoLoadMediaByChat); // trigger reactivity
+}
+
+function handleSearchInput(value: string) {
+	appState.setSearchQuery(value);
+}
+
+function toggleStats() {
+	showStats = !showStats;
+}
+
+function toggleSidebar() {
+	showSidebar = !showSidebar;
+}
+
+function toggleBookmarks() {
+	showBookmarks = !showBookmarks;
+}
+
+async function handleNavigateToBookmark(messageId: string, chatId: string) {
+	// Find and select the chat if different from current
+	const chatIndex = appState.chats.findIndex((c) => c.title === chatId);
+	const needsChatSwitch =
+		chatIndex !== -1 && chatIndex !== appState.selectedChatIndex;
+
+	if (needsChatSwitch) {
+		appState.selectChat(chatIndex);
+	}
+
+	// Clear any previous scroll target
+	scrollToMessageId = null;
+
+	// Wait for Svelte to process the null value
+	await tick();
+
+	// Use longer delay when switching chats to allow messages to load
+	const delay = needsChatSwitch ? 300 : 0;
+	if (delay > 0) {
+		await new Promise((resolve) => setTimeout(resolve, delay));
+	}
+
+	// Set the new scroll target
+	scrollToMessageId = messageId;
+}
+
+function selectPerspective(participant: string | null) {
+	if (appState.selectedChat) {
+		// Create a new Map to trigger reactivity
+		const newMap = new Map(perspectiveByChat);
+		newMap.set(appState.selectedChat.title, participant);
+		perspectiveByChat = newMap;
+	}
+	showPerspectiveDropdown = false;
+	perspectiveSearchQuery = '';
+}
+
+// Get current perspective for selected chat
+const currentPerspective = $derived.by(() => {
+	if (!appState.selectedChat) return null;
+	return perspectiveByChat.get(appState.selectedChat.title) ?? null;
+});
+
+// Filter participants based on search query
+const filteredParticipants = $derived.by(() => {
+	if (!appState.selectedChat) return [];
+	const query = perspectiveSearchQuery.toLowerCase().trim();
+	if (!query) return appState.selectedChat.participants;
+	return appState.selectedChat.participants.filter((p) =>
+		p.toLowerCase().includes(query),
+	);
+});
+
+// Determine current user based on selected perspective
+const currentUser = $derived.by(() => {
+	if (!appState.selectedChat) return undefined;
+	// If a perspective is selected, use it
+	if (currentPerspective !== null) {
+		return currentPerspective;
+	}
+	// Otherwise, no perspective (all messages on left)
+	return undefined;
+});
 </script>
 
 <div class="h-screen flex flex-col bg-gray-100 dark:bg-gray-950">

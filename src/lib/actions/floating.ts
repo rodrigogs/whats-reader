@@ -4,13 +4,13 @@
  */
 
 import {
+	autoUpdate,
 	computePosition,
 	flip,
-	shift,
 	offset,
-	autoUpdate,
+	type Placement,
+	shift,
 	size,
-	type Placement
 } from '@floating-ui/dom';
 
 export interface FloatingOptions {
@@ -53,37 +53,45 @@ export function floating(node: HTMLElement, options: FloatingOptions) {
 			enableFlip = true,
 			enableShift = true,
 			enableSizeConstraint = true,
-			onPositioned
+			onPositioned,
 		} = opts;
 
 		const middleware = [
 			offset(offsetDistance),
-			...(enableFlip ? [flip({ 
-				padding: 8,
-				fallbackPlacements: fallbackPlacements,
-				fallbackStrategy: 'bestFit'
-			})] : []),
+			...(enableFlip
+				? [
+						flip({
+							padding: 8,
+							fallbackPlacements: fallbackPlacements,
+							fallbackStrategy: 'bestFit',
+						}),
+					]
+				: []),
 			...(enableShift ? [shift({ padding: 8, crossAxis: true })] : []),
-			...(enableSizeConstraint ? [size({
-				padding: 8,
-				apply({ availableWidth, availableHeight, elements }) {
-					Object.assign(elements.floating.style, {
-						maxWidth: `${Math.max(120, availableWidth)}px`,
-						maxHeight: `${Math.max(120, availableHeight)}px`,
-					});
-				}
-			})] : [])
+			...(enableSizeConstraint
+				? [
+						size({
+							padding: 8,
+							apply({ availableWidth, availableHeight, elements }) {
+								Object.assign(elements.floating.style, {
+									maxWidth: `${Math.max(120, availableWidth)}px`,
+									maxHeight: `${Math.max(120, availableHeight)}px`,
+								});
+							},
+						}),
+					]
+				: []),
 		];
 
 		// Set up auto-update which handles scroll, resize, etc.
 		cleanup = autoUpdate(reference, node, () => {
 			computePosition(reference, node, {
 				placement,
-				middleware
+				middleware,
 			}).then(({ x, y, placement: finalPlacement }) => {
 				Object.assign(node.style, {
 					left: `${x}px`,
-					top: `${y}px`
+					top: `${y}px`,
 				});
 				onPositioned?.({ x, y, placement: finalPlacement });
 			});
@@ -97,6 +105,6 @@ export function floating(node: HTMLElement, options: FloatingOptions) {
 		update,
 		destroy() {
 			cleanup?.();
-		}
+		},
 	};
 }

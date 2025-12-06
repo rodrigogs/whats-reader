@@ -1,101 +1,101 @@
 <script lang="ts">
-	import type { ChatData } from '$lib/state.svelte';
-	import { onMount } from 'svelte';
+import { onMount } from 'svelte';
+import type { ChatData } from '$lib/state.svelte';
 
-	interface Props {
-		chat: ChatData;
-		onClose: () => void;
-	}
+interface Props {
+	chat: ChatData;
+	onClose: () => void;
+}
 
-	interface StatsResult {
-		messagesByParticipant: Record<string, number>;
-		messagesByDate: Record<string, number>;
-		messagesByHour: number[];
-		mostActiveParticipant: string;
-		mostActiveHour: number;
-		avgMessagesPerDay: number;
-		totalDays: number;
-	}
+interface StatsResult {
+	messagesByParticipant: Record<string, number>;
+	messagesByDate: Record<string, number>;
+	messagesByHour: number[];
+	mostActiveParticipant: string;
+	mostActiveHour: number;
+	avgMessagesPerDay: number;
+	totalDays: number;
+}
 
-	let { chat, onClose }: Props = $props();
+let { chat, onClose }: Props = $props();
 
-	let stats = $state<StatsResult | null>(null);
-	let isLoading = $state(true);
-	let error = $state<string | null>(null);
+let stats = $state<StatsResult | null>(null);
+let isLoading = $state(true);
+let error = $state<string | null>(null);
 
-	onMount(() => {
-		// Create worker using Vite's recommended syntax for ES module workers
-		const worker = new Worker(
-			new URL('../workers/stats-worker.ts', import.meta.url),
-			{ type: 'module' }
-		);
+onMount(() => {
+	// Create worker using Vite's recommended syntax for ES module workers
+	const worker = new Worker(
+		new URL('../workers/stats-worker.ts', import.meta.url),
+		{ type: 'module' },
+	);
 
-		worker.onmessage = (event: MessageEvent<StatsResult>) => {
-			stats = event.data;
-			isLoading = false;
-			worker.terminate();
-		};
+	worker.onmessage = (event: MessageEvent<StatsResult>) => {
+		stats = event.data;
+		isLoading = false;
+		worker.terminate();
+	};
 
-		worker.onerror = (err) => {
-			console.error('Stats worker error:', err);
-			error = 'Failed to compute statistics';
-			isLoading = false;
-			worker.terminate();
-		};
+	worker.onerror = (err) => {
+		console.error('Stats worker error:', err);
+		error = 'Failed to compute statistics';
+		isLoading = false;
+		worker.terminate();
+	};
 
-		// Serialize messages for the worker (Date objects don't survive postMessage)
-		const serializedMessages = chat.messages.map((m) => ({
-			timestamp: m.timestamp.toISOString(),
-			sender: m.sender,
-			isSystemMessage: m.isSystemMessage
-		}));
+	// Serialize messages for the worker (Date objects don't survive postMessage)
+	const serializedMessages = chat.messages.map((m) => ({
+		timestamp: m.timestamp.toISOString(),
+		sender: m.sender,
+		isSystemMessage: m.isSystemMessage,
+	}));
 
-		worker.postMessage({
-			messages: serializedMessages,
-			messageCount: chat.messageCount,
-			startDate: chat.startDate?.toISOString() ?? null,
-			endDate: chat.endDate?.toISOString() ?? null
-		});
-
-		return () => {
-			worker.terminate();
-		};
+	worker.postMessage({
+		messages: serializedMessages,
+		messageCount: chat.messageCount,
+		startDate: chat.startDate?.toISOString() ?? null,
+		endDate: chat.endDate?.toISOString() ?? null,
 	});
 
-	function formatDuration(startDate: Date | null, endDate: Date | null): string {
-		if (!startDate || !endDate) return 'Unknown';
+	return () => {
+		worker.terminate();
+	};
+});
 
-		const diff = endDate.getTime() - startDate.getTime();
-		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-		const months = Math.floor(days / 30);
-		const years = Math.floor(days / 365);
+function formatDuration(startDate: Date | null, endDate: Date | null): string {
+	if (!startDate || !endDate) return 'Unknown';
 
-		if (years > 0) {
-			return `${years} year${years > 1 ? 's' : ''}, ${months % 12} month${months % 12 !== 1 ? 's' : ''}`;
-		}
-		if (months > 0) {
-			return `${months} month${months > 1 ? 's' : ''}, ${days % 30} day${days % 30 !== 1 ? 's' : ''}`;
-		}
-		return `${days} day${days !== 1 ? 's' : ''}`;
+	const diff = endDate.getTime() - startDate.getTime();
+	const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+	const months = Math.floor(days / 30);
+	const years = Math.floor(days / 365);
+
+	if (years > 0) {
+		return `${years} year${years > 1 ? 's' : ''}, ${months % 12} month${months % 12 !== 1 ? 's' : ''}`;
 	}
-
-	function formatHour(hour: number): string {
-		const ampm = hour >= 12 ? 'PM' : 'AM';
-		const h = hour % 12 || 12;
-		return `${h} ${ampm}`;
+	if (months > 0) {
+		return `${months} month${months > 1 ? 's' : ''}, ${days % 30} day${days % 30 !== 1 ? 's' : ''}`;
 	}
+	return `${days} day${days !== 1 ? 's' : ''}`;
+}
 
-	const participantEntries = $derived(
-		stats ? Object.entries(stats.messagesByParticipant).sort((a, b) => b[1] - a[1]) : []
-	);
+function formatHour(hour: number): string {
+	const ampm = hour >= 12 ? 'PM' : 'AM';
+	const h = hour % 12 || 12;
+	return `${h} ${ampm}`;
+}
 
-	const maxMessages = $derived(
-		stats ? Math.max(...Object.values(stats.messagesByParticipant)) : 0
-	);
+const participantEntries = $derived(
+	stats
+		? Object.entries(stats.messagesByParticipant).sort((a, b) => b[1] - a[1])
+		: [],
+);
 
-	const maxHourCount = $derived(
-		stats ? Math.max(...stats.messagesByHour) : 0
-	);
+const maxMessages = $derived(
+	stats ? Math.max(...Object.values(stats.messagesByParticipant)) : 0,
+);
+
+const maxHourCount = $derived(stats ? Math.max(...stats.messagesByHour) : 0);
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->

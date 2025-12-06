@@ -1,67 +1,74 @@
 <script lang="ts">
-	interface Props {
-		onFilesSelected: (files: FileList) => void;
-		accept?: string;
-		isLoading?: boolean;
-		loadingProgress?: number;
+interface Props {
+	onFilesSelected: (files: FileList) => void;
+	accept?: string;
+	isLoading?: boolean;
+	loadingProgress?: number;
+}
+
+let {
+	onFilesSelected,
+	accept = '.zip',
+	isLoading = false,
+	loadingProgress = 0,
+}: Props = $props();
+
+let isDragOver = $state(false);
+let fileInput: HTMLInputElement;
+
+function handleDragOver(e: DragEvent) {
+	e.preventDefault();
+	isDragOver = true;
+}
+
+function handleDragLeave(e: DragEvent) {
+	e.preventDefault();
+	isDragOver = false;
+}
+
+function handleDrop(e: DragEvent) {
+	e.preventDefault();
+	isDragOver = false;
+
+	if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+		onFilesSelected(e.dataTransfer.files);
 	}
+}
 
-	let { onFilesSelected, accept = '.zip', isLoading = false, loadingProgress = 0 }: Props = $props();
-
-	let isDragOver = $state(false);
-	let fileInput: HTMLInputElement;
-
-	function handleDragOver(e: DragEvent) {
-		e.preventDefault();
-		isDragOver = true;
+function handleFileSelect(e: Event) {
+	const input = e.target as HTMLInputElement;
+	if (input.files && input.files.length > 0) {
+		onFilesSelected(input.files);
 	}
+}
 
-	function handleDragLeave(e: DragEvent) {
-		e.preventDefault();
-		isDragOver = false;
-	}
+function openFilePicker() {
+	fileInput?.click();
+}
 
-	function handleDrop(e: DragEvent) {
-		e.preventDefault();
-		isDragOver = false;
-
-		if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-			onFilesSelected(e.dataTransfer.files);
+async function openElectronFilePicker() {
+	if (window.electronAPI) {
+		const result = await window.electronAPI.openFile();
+		if (result) {
+			// Convert ArrayBuffer to File-like object
+			const blob = new Blob([result.buffer]);
+			const file = new File([blob], result.name, {
+				type: getMimeType(result.name),
+			});
+			const dataTransfer = new DataTransfer();
+			dataTransfer.items.add(file);
+			onFilesSelected(dataTransfer.files);
 		}
+	} else {
+		openFilePicker();
 	}
+}
 
-	function handleFileSelect(e: Event) {
-		const input = e.target as HTMLInputElement;
-		if (input.files && input.files.length > 0) {
-			onFilesSelected(input.files);
-		}
-	}
-
-	function openFilePicker() {
-		fileInput?.click();
-	}
-
-	async function openElectronFilePicker() {
-		if (window.electronAPI) {
-			const result = await window.electronAPI.openFile();
-			if (result) {
-				// Convert ArrayBuffer to File-like object
-				const blob = new Blob([result.buffer]);
-				const file = new File([blob], result.name, { type: getMimeType(result.name) });
-				const dataTransfer = new DataTransfer();
-				dataTransfer.items.add(file);
-				onFilesSelected(dataTransfer.files);
-			}
-		} else {
-			openFilePicker();
-		}
-	}
-
-	function getMimeType(filename: string): string {
-		const ext = filename.toLowerCase().split('.').pop();
-		if (ext === 'zip') return 'application/zip';
-		return 'application/octet-stream';
-	}
+function getMimeType(filename: string): string {
+	const ext = filename.toLowerCase().split('.').pop();
+	if (ext === 'zip') return 'application/zip';
+	return 'application/octet-stream';
+}
 </script>
 
 <div
