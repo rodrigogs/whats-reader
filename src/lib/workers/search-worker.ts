@@ -7,111 +7,111 @@
 const FRAME_TIME_MS = 16;
 
 interface SearchMessage {
-	id: string;
-	timestamp: string;
-	sender: string;
-	content: string;
-	isSystemMessage: boolean;
-	isMediaMessage: boolean;
-	mediaType?: string;
-	rawLine: string;
+  id: string;
+  timestamp: string;
+  sender: string;
+  content: string;
+  isSystemMessage: boolean;
+  isMediaMessage: boolean;
+  mediaType?: string;
+  rawLine: string;
 }
 
 interface SearchWorkerInput {
-	messages: SearchMessage[];
-	query: string;
-	transcriptions?: Record<string, string>; // messageId -> transcription text
+  messages: SearchMessage[];
+  query: string;
+  transcriptions?: Record<string, string>; // messageId -> transcription text
 }
 
 interface SearchWorkerOutput {
-	type: 'progress' | 'complete';
-	matchingIds?: string[];
-	query: string;
-	progress?: number; // 0-100
+  type: "progress" | "complete";
+  matchingIds?: string[];
+  query: string;
+  progress?: number; // 0-100
 }
 
 // Process search in chunks to allow progress updates to be sent
 async function processSearch(
-	messages: SearchMessage[],
-	query: string,
-	transcriptions: Record<string, string> = {},
+  messages: SearchMessage[],
+  query: string,
+  transcriptions: Record<string, string> = {},
 ) {
-	const lowerQuery = query.toLowerCase();
-	const matchingIds: string[] = [];
-	const total = messages.length;
+  const lowerQuery = query.toLowerCase();
+  const matchingIds: string[] = [];
+  const total = messages.length;
 
-	// Process in chunks to yield control and send progress updates
-	// Use smaller chunks for better progress visibility
-	const NUM_CHUNKS = 10; // ~10 progress updates
-	const CHUNK_SIZE = Math.max(50, Math.ceil(total / NUM_CHUNKS));
+  // Process in chunks to yield control and send progress updates
+  // Use smaller chunks for better progress visibility
+  const NUM_CHUNKS = 10; // ~10 progress updates
+  const CHUNK_SIZE = Math.max(50, Math.ceil(total / NUM_CHUNKS));
 
-	// Send initial progress
-	self.postMessage({
-		type: 'progress',
-		query,
-		progress: 0,
-	} as SearchWorkerOutput);
+  // Send initial progress
+  self.postMessage({
+    type: "progress",
+    query,
+    progress: 0,
+  } as SearchWorkerOutput);
 
-	for (let i = 0; i < messages.length; i += CHUNK_SIZE) {
-		const chunkEnd = Math.min(i + CHUNK_SIZE, messages.length);
+  for (let i = 0; i < messages.length; i += CHUNK_SIZE) {
+    const chunkEnd = Math.min(i + CHUNK_SIZE, messages.length);
 
-		// Process this chunk
-		for (let j = i; j < chunkEnd; j++) {
-			const message = messages[j];
+    // Process this chunk
+    for (let j = i; j < chunkEnd; j++) {
+      const message = messages[j];
 
-			// Check message content and sender
-			if (
-				message.content.toLowerCase().includes(lowerQuery) ||
-				message.sender.toLowerCase().includes(lowerQuery)
-			) {
-				matchingIds.push(message.id);
-				continue;
-			}
+      // Check message content and sender
+      if (
+        message.content.toLowerCase().includes(lowerQuery) ||
+        message.sender.toLowerCase().includes(lowerQuery)
+      ) {
+        matchingIds.push(message.id);
+        continue;
+      }
 
-			// Check transcription for audio messages
-			const transcription = transcriptions[message.id];
-			if (transcription?.toLowerCase().includes(lowerQuery)) {
-				matchingIds.push(message.id);
-			}
-		}
+      // Check transcription for audio messages
+      const transcription = transcriptions[message.id];
+      if (transcription?.toLowerCase().includes(lowerQuery)) {
+        matchingIds.push(message.id);
+      }
+    }
 
-		// Report progress after each chunk
-		const currentProgress = Math.round((chunkEnd / total) * 100);
-		self.postMessage({
-			type: 'progress',
-			query,
-			progress: currentProgress,
-		} as SearchWorkerOutput);
+    // Report progress after each chunk
+    const currentProgress = Math.round((chunkEnd / total) * 100);
+    self.postMessage({
+      type: "progress",
+      query,
+      progress: currentProgress,
+    } as SearchWorkerOutput);
 
-		// Give main thread time to process and render
-		await new Promise((resolve) => setTimeout(resolve, FRAME_TIME_MS));
-	}
+    // Give main thread time to process and render
+    await new Promise((resolve) => setTimeout(resolve, FRAME_TIME_MS));
+  }
 
-	return matchingIds;
+  return matchingIds;
 }
 
 self.onmessage = async (event: MessageEvent<SearchWorkerInput>) => {
-	const { messages, query, transcriptions = {} } = event.data;
+  const { messages, query, transcriptions = {} } = event.data;
 
-	if (!query.trim()) {
-		// Empty query - return empty results (don't highlight anything)
-		const result: SearchWorkerOutput = {
-			type: 'complete',
-			matchingIds: [],
-			query,
-		};
-		self.postMessage(result);
-		return;
-	}
+  if (!query.trim()) {
+    // Empty query - return empty results (don't highlight anything)
+    const result: SearchWorkerOutput = {
+      type: "complete",
+      matchingIds: [],
+      query,
+    };
+    self.postMessage(result);
+    return;
+  }
 
-	const matchingIds = await processSearch(messages, query, transcriptions);
+  const matchingIds = await processSearch(messages, query, transcriptions);
 
-	const result: SearchWorkerOutput = {
-		type: 'complete',
-		matchingIds,
-		query,
-		progress: 100,
-	};
+  const result: SearchWorkerOutput = {
+    type: "complete",
+    matchingIds,
+    query,
+    progress: 100,
+  };
 
-	self.postMessage(result);
+  self.postMessage(result);
 };

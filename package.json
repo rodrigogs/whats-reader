@@ -22,10 +22,13 @@
 		"electron:build": "npm run build && electron-builder",
 		"electron:build:mac": "npm run build && electron-builder --mac",
 		"electron:build:win": "npm run build && electron-builder --win",
-		"electron:build:linux": "npm run build && electron-builder --linux"
+		"electron:build:linux": "npm run build && electron-builder --linux",
+		"machine-translate": "inlang machine translate --project project.inlang"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.8",
+		"@inlang/cli": "^3.0.0",
+		"@inlang/paraglide-js": "2.6.0",
 		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/kit": "^2.48.5",

@@ -1,4 +1,6 @@
 <script lang="ts">
+import * as m from '$lib/paraglide/messages';
+
 interface Props {
 	onFilesSelected: (files: FileList) => void;
 	accept?: string;
@@ -121,7 +123,7 @@ function getMimeType(filename: string): string {
 				/>
 			</svg>
 			<div class="text-center">
-				<p class="text-gray-600 dark:text-gray-300 font-medium">Processing file...</p>
+				<p class="text-gray-600 dark:text-gray-300 font-medium">{m.dropzone_loading()}</p>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{Math.round(loadingProgress)}%</p>
 			</div>
 		</div>
@@ -136,10 +138,10 @@ function getMimeType(filename: string): string {
 
 			<div>
 				<p class="text-lg font-medium text-gray-700 dark:text-gray-200">
-					{isDragOver ? 'Drop your file here' : 'Drop WhatsApp export here'}
+					{m.dropzone_title()}
 				</p>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-					or click to browse • Supports .zip files
+					{m.dropzone_subtitle()} • {m.dropzone_formats()}
 				</p>
 			</div>
 

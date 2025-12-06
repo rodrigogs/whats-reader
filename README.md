@@ -13,6 +13,7 @@
   <img src="https://img.shields.io/badge/electron-39-47848F?logo=electron&logoColor=white" alt="Electron" />
   <img src="https://img.shields.io/badge/AI-local_whisper-00A67E?logo=openai&logoColor=white" alt="Local AI" />
   <img src="https://img.shields.io/badge/privacy-100%25_offline-blue" alt="Privacy" />
+  <img src="https://img.shields.io/badge/i18n-EN%20%7C%20PT-green" alt="Languages" />
 </p>
 
 <p align="center">
@@ -61,7 +62,8 @@ Voice messages can be transcribed using [Whisper](https://openai.com/research/wh
 - **Bookmarks** — Save messages with notes, export/import as JSON
 - **Perspective mode** — View the chat as any participant
 - **Statistics** — Message counts, activity charts, timeline
-- **Dark mode** — Follows system or toggle manually
+- **Dark mode** — Follows system or toggle manually (preference saved)
+- **Multi-language UI** — English and Portuguese (more coming soon)
 - **Desktop app** — macOS, Windows, Linux via Electron
 
 ---
@@ -79,7 +81,7 @@ node --version
 
 ### Running the app
 
-1. Download this project (click the green "Code" button above, then "Download ZIP") and unzip it
+1. Clone or download this project
 2. Open a terminal in the project folder
 3. Run these commands:
 
@@ -98,6 +100,13 @@ If you prefer a standalone app instead of using your browser:
 ```bash
 npm run electron:dev    # run in dev mode
 npm run electron:build  # create an installer for your OS
+```
+
+Platform-specific builds:
+```bash
+npm run electron:build:mac    # macOS (dmg, zip)
+npm run electron:build:win    # Windows (nsis, portable)
+npm run electron:build:linux  # Linux (AppImage, deb)
 ```
 
 ---
@@ -127,9 +136,51 @@ First, you need to export a chat from WhatsApp on your phone. This creates a `.z
 
 ---
 
+## Development
+
+### Project structure
+
+```
+src/
+├── lib/
+│   ├── components/    # Svelte components
+│   ├── paraglide/     # i18n generated files
+│   ├── actions/       # Svelte actions
+│   └── *.svelte.ts    # State and utilities
+├── routes/            # SvelteKit routes
+messages/              # Translation files (en.json, pt.json)
+electron/              # Electron main process
+static/                # Static assets
+```
+
+### Scripts
+
+```bash
+npm run dev           # Start dev server
+npm run build         # Build for production
+npm run check         # Type check
+npm run lint          # Lint with Biome
+npm run lint:fix      # Auto-fix lint issues
+npm run format        # Format code
+```
+
+### Adding translations
+
+Translation files are in `messages/`. To add a new language:
+1. Copy `messages/en.json` to `messages/{locale}.json`
+2. Translate the strings
+3. Add the locale to `project.inlang/settings.json`
+
+---
+
 ## Built with
 
-[SvelteKit](https://kit.svelte.dev) + [Svelte 5](https://svelte.dev), [Tailwind CSS 4](https://tailwindcss.com), [Electron](https://electronjs.org), [Transformers.js](https://huggingface.co/docs/transformers.js) for Whisper, [JSZip](https://stuk.github.io/jszip/).
+- [SvelteKit](https://kit.svelte.dev) + [Svelte 5](https://svelte.dev) — Framework
+- [Tailwind CSS 4](https://tailwindcss.com) — Styling
+- [Electron](https://electronjs.org) — Desktop app
+- [Transformers.js](https://huggingface.co/docs/transformers.js) — Whisper AI for transcription
+- [JSZip](https://stuk.github.io/jszip/) — ZIP file handling
+- [Paraglide JS](https://inlang.com/m/gerre34r/library-inlang-paraglideJs) — Internationalization
 
 ---
 

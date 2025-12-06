@@ -10,6 +10,8 @@ import {
 	SearchBar,
 } from '$lib/components';
 import BookmarksPanel from '$lib/components/BookmarksPanel.svelte';
+import LocaleSwitcher from '$lib/components/LocaleSwitcher.svelte';
+import * as m from '$lib/paraglide/messages';
 import { parseZipFile, readFileAsArrayBuffer } from '$lib/parser';
 import { appState, type ChatData } from '$lib/state.svelte';
 import { setTranscriptionLanguage } from '$lib/transcription.svelte';
@@ -79,9 +81,7 @@ async function handleFilesSelected(files: FileList) {
 
 		for (const file of files) {
 			if (!file.name.endsWith('.zip')) {
-				throw new Error(
-					`Unsupported file type: ${file.name}. Only .zip files are supported.`,
-				);
+				throw new Error(m.error_unsupported_file({ filename: file.name }));
 			}
 
 			const fileBaseProgress = (processedFiles / totalFiles) * 100;
@@ -251,55 +251,39 @@ const currentUser = $derived.by(() => {
 <div class="h-screen flex flex-col bg-gray-100 dark:bg-gray-950">
 	<!-- Electron drag region for macOS titlebar (only shown in Electron) -->
 	{#if isElectron}
-		<div class="electron-drag h-[38px] flex-shrink-0 bg-[var(--color-whatsapp-dark-green)] flex items-center justify-end px-3">
-			<!-- Dark mode toggle in title bar -->
-			{#if !appState.hasChats || !appState.selectedChat}
-				<button
-					onclick={toggleDarkMode}
-					class="electron-no-drag p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
-					aria-label="Toggle dark mode"
-					title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-				>
-					{#if isDarkMode}
-						<svg class="w-4 h-4 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-						</svg>
-					{:else}
-						<svg class="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-						</svg>
-					{/if}
-				</button>
-			{/if}
-		</div>
-	{/if}
-
-	<!-- Dark mode toggle button (top right corner) - only shown when no chat is open AND not in Electron -->
-	{#if (!appState.hasChats || !appState.selectedChat) && !isElectron}
-		<button
-			onclick={toggleDarkMode}
-			class="fixed top-4 right-4 z-50 p-2 rounded-full bg-gray-200/80 dark:bg-gray-800/80 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors backdrop-blur-sm cursor-pointer"
-			aria-label="Toggle dark mode"
-			title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-		>
-			{#if isDarkMode}
-				<!-- Sun icon -->
-				<svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-				</svg>
-			{:else}
-				<!-- Moon icon -->
-				<svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-				</svg>
-			{/if}
-		</button>
+		<div class="electron-drag h-[38px] flex-shrink-0 bg-[var(--color-whatsapp-dark-green)]"></div>
 	{/if}
 
 	{#if !appState.hasChats}
 		<!-- Empty state - show file upload -->
-		<div class="flex-1 flex items-center justify-center p-8">
-			<div class="max-w-lg w-full flex flex-col items-center">
+		<div class="flex-1 overflow-auto">
+			<!-- Language selector and Dark mode toggle (top right) -->
+			<div class="absolute top-4 right-4 z-50 flex items-center gap-1.5" class:top-[54px]={isElectron}>
+				<LocaleSwitcher variant={isElectron ? 'header' : 'default'} />
+				<button
+					onclick={toggleDarkMode}
+					class="p-1.5 rounded transition-colors cursor-pointer {isElectron 
+						? 'rounded-full bg-white/10 hover:bg-white/20' 
+						: 'bg-gray-100/80 dark:bg-gray-800/80 hover:bg-gray-200 dark:hover:bg-gray-700 backdrop-blur-sm'}"
+					aria-label={m.toggle_dark_mode()}
+					title={isDarkMode ? m.theme_switch_to_light() : m.theme_switch_to_dark()}
+				>
+				{#if isDarkMode}
+					<!-- Sun icon -->
+					<svg class="w-4 h-4 {isElectron ? 'text-yellow-300' : 'text-yellow-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+					</svg>
+				{:else}
+					<!-- Moon icon -->
+					<svg class="w-4 h-4 {isElectron ? 'text-white/80' : 'text-gray-600 dark:text-gray-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+					</svg>
+				{/if}
+			</button>
+			</div>
+			
+			<div class="min-h-full flex items-center justify-center p-8">
+				<div class="max-w-lg w-full flex flex-col items-center">
 				<!-- Logo and title -->
 				<div class="text-center mb-8">
 					<div class="w-20 h-20 mx-auto mb-4 rounded-full bg-[var(--color-whatsapp-green)] flex items-center justify-center shadow-lg">
@@ -308,10 +292,10 @@ const currentUser = $derived.by(() => {
 						</svg>
 					</div>
 					<h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">
-						WhatsApp Backup Reader
+						{m.app_title()}
 					</h1>
 					<p class="text-gray-500 dark:text-gray-400">
-						View and analyze your WhatsApp chat exports
+						{m.app_subtitle()}
 					</p>
 				</div>
 
@@ -332,42 +316,43 @@ const currentUser = $derived.by(() => {
 				<div class="mt-8 w-full">
 					<div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-5 border border-gray-200 dark:border-gray-700/50">
 						<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 text-center">
-							How to export your WhatsApp chat
+							{m.export_instructions_title()}
 						</h3>
 						<ol class="text-sm text-gray-600 dark:text-gray-400 space-y-2">
 							<li class="flex items-start gap-3">
 								<span class="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--color-whatsapp-green)] text-white text-xs flex items-center justify-center font-medium">1</span>
-								<span>Open WhatsApp on your phone</span>
+								<span>{m.export_step_1()}</span>
 							</li>
 							<li class="flex items-start gap-3">
 								<span class="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--color-whatsapp-green)] text-white text-xs flex items-center justify-center font-medium">2</span>
-								<span>Go to the chat you want to export</span>
+								<span>{m.export_step_2()}</span>
 							</li>
 							<li class="flex items-start gap-3">
 								<span class="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--color-whatsapp-green)] text-white text-xs flex items-center justify-center font-medium">3</span>
-								<span>Tap <strong class="text-gray-700 dark:text-gray-300">⋮</strong> → More → Export chat</span>
+								<span>{m.export_step_3()}</span>
 							</li>
 							<li class="flex items-start gap-3">
 								<span class="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--color-whatsapp-green)] text-white text-xs flex items-center justify-center font-medium">4</span>
-								<span>Choose "Include media" for full backup</span>
+								<span>{m.export_step_4()}</span>
 							</li>
 							<li class="flex items-start gap-3">
 								<span class="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--color-whatsapp-green)] text-white text-xs flex items-center justify-center font-medium">5</span>
-								<span>Save the .zip file and upload it here</span>
+								<span>{m.export_step_5()}</span>
 							</li>
 						</ol>
 					</div>
 				</div>
 			</div>
 		</div>
+	</div>
 	{:else}
 		<!-- Main app layout -->
 		<div class="flex-1 flex overflow-hidden">
-			<!-- Sidebar toggle for mobile - Hamburger with smooth X morph animation -->
+			<!-- Sidebar toggle - Hamburger with smooth X morph animation -->
 			<button
-				class="hamburger-btn md:hidden fixed bottom-4 left-4 z-50 w-11 h-11 rounded-full bg-[var(--color-whatsapp-teal)] text-white shadow-lg flex items-center justify-center {showSidebar ? 'is-active' : ''}"
+				class="hamburger-btn fixed bottom-4 left-4 z-50 w-11 h-11 rounded-full bg-[var(--color-whatsapp-teal)] text-white shadow-lg flex items-center justify-center {showSidebar ? 'is-active' : ''}"
 				onclick={toggleSidebar}
-				aria-label="Toggle sidebar"
+				aria-label={m.sidebar_toggle()}
 			>
 				<div class="hamburger-icon">
 					<span class="hamburger-line"></span>
@@ -380,13 +365,21 @@ const currentUser = $derived.by(() => {
 			<div
 				class="sidebar-panel w-80 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col {showSidebar ? 'sidebar-open' : 'sidebar-closed'}"
 			>
-				<!-- Import button -->
-				<div class="p-4 border-b border-gray-200 dark:border-gray-700">
-					<label class="flex items-center justify-center gap-2 w-full py-2 px-4 bg-[var(--color-whatsapp-teal)] hover:bg-[var(--color-whatsapp-dark-green)] text-white rounded-lg cursor-pointer transition-colors">
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-						</svg>
-						<span>Import Chat</span>
+				<!-- Sidebar header - empty green bar to match main header -->
+				{#if isElectron}
+					<div class="electron-drag h-[38px] flex-shrink-0 bg-[var(--color-whatsapp-dark-green)]"></div>
+				{/if}
+				<div class="h-16 bg-[var(--color-whatsapp-dark-green)] flex-shrink-0"></div>
+				
+				<!-- Chats title bar - matches search bar styling exactly -->
+				<div class="p-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+					<label class="relative flex items-center w-full h-10 pl-10 pr-4 bg-gray-100 dark:bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+						<div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+							<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+							</svg>
+						</div>
+						<span class="text-gray-500">{m.import_chat()}</span>
 						<input
 							type="file"
 							accept=".txt,.zip"
@@ -420,7 +413,7 @@ const currentUser = $derived.by(() => {
 				<button
 					class="md:hidden fixed inset-0 bg-black/50 z-30"
 					onclick={() => (showSidebar = false)}
-					aria-label="Close sidebar"
+					aria-label={m.sidebar_close()}
 				></button>
 			{/if}
 
@@ -429,18 +422,6 @@ const currentUser = $derived.by(() => {
 				<div class="flex-1 flex flex-col overflow-hidden">
 					<!-- Chat header -->
 					<div class="h-16 px-4 flex items-center gap-4 bg-[var(--color-whatsapp-dark-green)] text-white shadow-md">
-						<!-- Toggle sidebar button -->
-						<button 
-							class="p-1.5 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
-							onclick={toggleSidebar}
-							aria-label={showSidebar ? 'Hide sidebar' : 'Show sidebar'}
-							title={showSidebar ? 'Hide sidebar' : 'Show sidebar'}
-						>
-							<svg class="w-6 h-6 transition-transform {showSidebar ? '' : 'rotate-180'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-							</svg>
-						</button>
-
 						<!-- Avatar -->
 						<div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-semibold">
 							{appState.selectedChat.title.charAt(0).toUpperCase()}
@@ -452,7 +433,7 @@ const currentUser = $derived.by(() => {
 							<p class="text-xs text-white/70 truncate">
 								{appState.selectedChat.participants.slice(0, 5).join(', ')}
 								{#if appState.selectedChat.participants.length > 5}
-									+{appState.selectedChat.participants.length - 5} more
+									{m.perspective_more_participants({ count: appState.selectedChat.participants.length - 5 })}
 								{/if}
 							</p>
 						</div>
@@ -465,8 +446,8 @@ const currentUser = $derived.by(() => {
 									bind:this={perspectiveButtonRef}
 									class="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer {currentPerspective ? 'bg-white/20' : ''}"
 									onclick={() => showPerspectiveDropdown = !showPerspectiveDropdown}
-									title="View as participant"
-									aria-label="Select perspective"
+									title={m.perspective_view_as()}
+									aria-label={m.perspective_select()}
 								>
 									<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -479,7 +460,7 @@ const currentUser = $derived.by(() => {
 										type="button"
 										class="fixed inset-0 z-40 cursor-default" 
 										onclick={() => { showPerspectiveDropdown = false; perspectiveSearchQuery = ''; }}
-										aria-label="Close menu"
+										aria-label={m.sidebar_close()}
 									></button>
 									
 									<!-- Dropdown menu -->
@@ -498,7 +479,7 @@ const currentUser = $derived.by(() => {
 										onclick={(e) => e.stopPropagation()}
 									>
 										<div class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
-											View as
+											{m.perspective_view_as()}
 										</div>
 										
 										<!-- Search input -->
@@ -511,7 +492,7 @@ const currentUser = $derived.by(() => {
 													bind:this={perspectiveSearchInputRef}
 													type="text"
 													bind:value={perspectiveSearchQuery}
-													placeholder="Search by name or number..."
+													placeholder={m.perspective_search_placeholder()}
 													class="w-full pl-8 pr-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded-md focus:ring-2 focus:ring-[var(--color-whatsapp-teal)] focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
 												/>
 											</div>
@@ -525,7 +506,7 @@ const currentUser = $derived.by(() => {
 													onclick={() => selectPerspective(null)}
 												>
 													<span class="w-5 text-center">{currentPerspective === null ? '✓' : ''}</span>
-													<span class="italic">None (all messages left)</span>
+													<span class="italic">{m.perspective_none()}</span>
 												</button>
 											{/if}
 											{#each filteredParticipants as participant}
@@ -539,7 +520,7 @@ const currentUser = $derived.by(() => {
 											{/each}
 											{#if filteredParticipants.length === 0 && perspectiveSearchQuery}
 												<div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 italic">
-													No participants match "{perspectiveSearchQuery}"
+													{m.perspective_no_match({ query: perspectiveSearchQuery })}
 												</div>
 											{/if}
 										</div>
@@ -550,8 +531,8 @@ const currentUser = $derived.by(() => {
 							<button
 									class="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer {showBookmarks ? 'bg-white/20' : ''}"
 									onclick={toggleBookmarks}
-									title="Bookmarks"
-									aria-label="Toggle bookmarks"
+									title={m.bookmarks_title()}
+									aria-label={m.bookmarks_toggle()}
 								>
 									<svg class="w-5 h-5" fill={showBookmarks ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
@@ -560,8 +541,8 @@ const currentUser = $derived.by(() => {
 								<button
 									class="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
 								onclick={toggleStats}
-								title="View statistics"
-								aria-label="View statistics"
+								title={m.stats_view()}
+								aria-label={m.stats_view()}
 							>
 								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -571,8 +552,8 @@ const currentUser = $derived.by(() => {
 							<button
 								class="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
 								onclick={toggleDarkMode}
-								title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-								aria-label="Toggle dark mode"
+								title={isDarkMode ? m.theme_switch_to_light() : m.theme_switch_to_dark()}
+								aria-label={m.toggle_dark_mode()}
 							>
 								{#if isDarkMode}
 									<svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -584,6 +565,8 @@ const currentUser = $derived.by(() => {
 									</svg>
 								{/if}
 							</button>
+							<!-- Language switcher -->
+							<LocaleSwitcher variant="header" />
 						</div>
 					</div>
 
@@ -596,7 +579,7 @@ const currentUser = $derived.by(() => {
 									onInput={handleSearchInput}
 									onNextResult={() => appState.nextSearchResult()}
 									onPrevResult={() => appState.prevSearchResult()}
-									placeholder="Search in chat..."
+									placeholder={m.search_placeholder()}
 								/>
 							</div>
 							{#if appState.searchQuery}
@@ -613,9 +596,9 @@ const currentUser = $derived.by(() => {
 									{:else}
 										<span class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap px-2">
 											{#if appState.searchResultIds.length > 0}
-												{appState.currentSearchIndex + 1} of {appState.searchResultIds.length}
+												{m.search_result_of({ current: appState.currentSearchIndex + 1, total: appState.searchResultIds.length })}
 											{:else}
-												No results
+												{m.search_no_results()}
 											{/if}
 										</span>
 										<!-- Navigation buttons -->
@@ -624,8 +607,8 @@ const currentUser = $derived.by(() => {
 											class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
 											onclick={() => appState.prevSearchResult()}
 											disabled={appState.searchResultIds.length === 0}
-											title="Previous match (↑)"
-											aria-label="Previous match"
+											title={m.search_previous()}
+											aria-label={m.search_previous()}
 										>
 											<svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
@@ -636,8 +619,8 @@ const currentUser = $derived.by(() => {
 											class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
 											onclick={() => appState.nextSearchResult()}
 											disabled={appState.searchResultIds.length === 0}
-											title="Next match (↓)"
-											aria-label="Next match"
+											title={m.search_next()}
+											aria-label={m.search_next()}
 										>
 											<svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -687,7 +670,7 @@ const currentUser = $derived.by(() => {
 						<svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
 						</svg>
-						<p>Select a chat to view messages</p>
+						<p>{m.chat_select()}</p>
 					</div>
 				</div>
 			{/if}

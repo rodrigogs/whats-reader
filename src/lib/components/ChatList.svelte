@@ -133,12 +133,6 @@ function getLastMessage(chat: ChatData): string {
 </script>
 
 <div class="flex flex-col h-full bg-white dark:bg-gray-900">
-	<!-- Header -->
-	<div class="p-4 border-b border-gray-200 dark:border-gray-700">
-		<h2 class="text-lg font-semibold text-gray-800 dark:text-white">Chats</h2>
-		<p class="text-sm text-gray-500 dark:text-gray-400">{chats.length} conversations</p>
-	</div>
-
 	<!-- Chat list -->
 	<div class="flex-1 overflow-y-auto">
 		{#if chats.length === 0}
