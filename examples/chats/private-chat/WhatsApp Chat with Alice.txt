@@ -1,0 +1,45 @@
+01/12/24, 10:00 - Messages and calls are end-to-end encrypted. No one outside of this chat, not even WhatsApp, can read or listen to them. Tap to learn more.
+01/12/24, 10:05 - Alice: Hey Bob! 👋 How are you doing?
+01/12/24, 10:08 - Bob: Hi Alice! I'm doing great, thanks! And you? 😊
+01/12/24, 10:10 - Alice: Pretty good! Just finished a big project at work. Finally have some free time!
+01/12/24, 10:12 - Bob: That's awesome! You deserve a break. Any plans for the weekend?
+01/12/24, 10:15 - Alice: Not yet! I was thinking we could meet up? Maybe grab coffee? ☕
+01/12/24, 10:18 - Bob: That sounds perfect! I know a great new café downtown.
+01/12/24, 10:20 - Alice: Oh nice! Send me the details.
+01/12/24, 10:22 - Bob: Sure! It's called "The Cozy Bean" on Main Street. Best lattes in town! 🥤
+01/12/24, 10:25 - Alice: Perfect! Saturday afternoon works for me.
+01/12/24, 10:28 - Bob: 2 PM? ⏰
+01/12/24, 10:30 - Alice: It's a date! 📅
+02/12/24, 15:00 - Alice: Hey! Check out this photo from my balcony this morning. Beautiful sunrise! 🌅
+02/12/24, 15:00 - Alice: IMG-20241202-WA0001.jpg (file attached)
+02/12/24, 15:05 - Bob: Wow! That's absolutely stunning! 😍 You have such a great view.
+02/12/24, 15:08 - Alice: Thanks! It's one of my favorite things about my apartment.
+02/12/24, 15:12 - Bob: I can see why! Here's a voice message about something funny that happened today:
+02/12/24, 15:12 - Bob: PTT-20241202-WA0002.opus (file attached)
+02/12/24, 15:18 - Alice: 😂😂😂 No way! That actually happened? I can't stop laughing!
+02/12/24, 15:20 - Bob: I swear it's true! My coworker's face was priceless 😅
+02/12/24, 15:25 - Alice: You have to tell me more details on Saturday!
+02/12/24, 15:28 - Bob: Deal! Can't wait 🎉
+03/12/24, 09:00 - Alice's security code with Bob changed. Tap to learn more.
+03/12/24, 09:05 - Bob: Hey, I got a notification that our security code changed. Did you get a new phone?
+03/12/24, 09:08 - Alice: Yes! Just upgraded yesterday. Everything is working now though 📱
+03/12/24, 09:10 - Bob: Nice! What did you get?
+03/12/24, 09:15 - Alice: The latest model. Camera is amazing! Here's a quick test shot:
+03/12/24, 09:15 - Alice: IMG-20241203-WA0003.jpg (file attached)
+03/12/24, 09:18 - Bob: The quality is incredible! Great choice 👌
+03/12/24, 09:20 - Alice: Thanks! The voice recording is also much better. Listen to this:
+03/12/24, 09:20 - Alice: PTT-20241203-WA0004.opus (file attached)
+03/12/24, 09:25 - Bob: Crystal clear! Definitely an upgrade from your old phone.
+03/12/24, 09:28 - Alice: Right? I'm so happy with it! Anyway, see you tomorrow at 2! 😊
+03/12/24, 09:30 - Bob: Absolutely! Looking forward to it! 🙌
+04/12/24, 13:55 - Bob: On my way! Running 5 minutes late 🏃
+04/12/24, 14:00 - Alice: No worries! I just arrived. I'll grab a table 🪑
+04/12/24, 14:02 - Bob: Perfect! Be there soon!
+04/12/24, 14:08 - Bob: I'm here! I see you by the window 👋
+04/12/24, 16:30 - Alice: That was so much fun! We should do this more often 😄
+04/12/24, 16:32 - Bob: Agreed! Best Saturday in a while. Thanks for hanging out!
+04/12/24, 16:35 - Alice: Thank YOU for finding that café! The latte was amazing ☕✨
+04/12/24, 16:38 - Bob: Told you it was the best! Same time next week? 😏
+04/12/24, 16:40 - Alice: Absolutely! It's a plan 📆
+04/12/24, 16:42 - Bob: Great! Have a lovely rest of your weekend! 🌟
+04/12/24, 16:45 - Alice: You too! Talk soon! 💫

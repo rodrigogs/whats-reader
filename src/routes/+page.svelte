@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
+	import { tick } from 'svelte';
 	import { appState, type ChatData } from '$lib/state.svelte';
 	import { parseZipFile, readFileAsArrayBuffer } from '$lib/parser';
 	import { ChatList, ChatView, ChatStats, FileDropZone, SearchBar } from '$lib/components';
@@ -162,7 +163,7 @@
 		showBookmarks = !showBookmarks;
 	}
 
-	function handleNavigateToBookmark(messageId: string, chatId: string) {
+	async function handleNavigateToBookmark(messageId: string, chatId: string) {
 		// Find and select the chat if different from current
 		const chatIndex = appState.chats.findIndex(c => c.title === chatId);
 		const needsChatSwitch = chatIndex !== -1 && chatIndex !== appState.selectedChatIndex;
@@ -171,14 +172,20 @@
 			appState.selectChat(chatIndex);
 		}
 		
-		// Clear any previous scroll target, then set new one
+		// Clear any previous scroll target
 		scrollToMessageId = null;
 		
-		// Use longer timeout when switching chats to allow messages to load
-		const delay = needsChatSwitch ? 300 : 50;
-		setTimeout(() => {
-			scrollToMessageId = messageId;
-		}, delay);
+		// Wait for Svelte to process the null value
+		await tick();
+		
+		// Use longer delay when switching chats to allow messages to load
+		const delay = needsChatSwitch ? 300 : 0;
+		if (delay > 0) {
+			await new Promise(resolve => setTimeout(resolve, delay));
+		}
+		
+		// Set the new scroll target
+		scrollToMessageId = messageId;
 	}
 
 	function selectPerspective(participant: string | null) {
@@ -223,11 +230,31 @@
 <div class="h-screen flex flex-col bg-gray-100 dark:bg-gray-950">
 	<!-- Electron drag region for macOS titlebar (only shown in Electron) -->
 	{#if isElectron}
-		<div class="electron-drag h-8 flex-shrink-0 bg-[var(--color-whatsapp-dark-green)]"></div>
+		<div class="electron-drag h-[38px] flex-shrink-0 bg-[var(--color-whatsapp-dark-green)] flex items-center justify-end px-3">
+			<!-- Dark mode toggle in title bar -->
+			{#if !appState.hasChats || !appState.selectedChat}
+				<button
+					onclick={toggleDarkMode}
+					class="electron-no-drag p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+					aria-label="Toggle dark mode"
+					title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+				>
+					{#if isDarkMode}
+						<svg class="w-4 h-4 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+						</svg>
+					{:else}
+						<svg class="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+						</svg>
+					{/if}
+				</button>
+			{/if}
+		</div>
 	{/if}
 
-	<!-- Dark mode toggle button (top right corner) - only shown when no chat is open -->
-	{#if !appState.hasChats || !appState.selectedChat}
+	<!-- Dark mode toggle button (top right corner) - only shown when no chat is open AND not in Electron -->
+	{#if (!appState.hasChats || !appState.selectedChat) && !isElectron}
 		<button
 			onclick={toggleDarkMode}
 			class="fixed top-4 right-4 z-50 p-2 rounded-full bg-gray-200/80 dark:bg-gray-800/80 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors backdrop-blur-sm cursor-pointer"
@@ -330,7 +357,7 @@
 
 			<!-- Sidebar -->
 			<div
-				class="sidebar-panel w-80 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col {showSidebar ? 'sidebar-open fixed md:relative inset-y-0 left-0 z-40' : 'sidebar-closed'} md:flex"
+				class="sidebar-panel w-80 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col {showSidebar ? 'sidebar-open' : 'sidebar-closed'}"
 			>
 				<!-- Import button -->
 				<div class="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -381,10 +408,15 @@
 				<div class="flex-1 flex flex-col overflow-hidden">
 					<!-- Chat header -->
 					<div class="h-16 px-4 flex items-center gap-4 bg-[var(--color-whatsapp-dark-green)] text-white shadow-md">
-						<!-- Toggle sidebar on mobile -->
-						<button class="md:hidden" onclick={() => (showSidebar = true)} aria-label="Open sidebar">
-							<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+						<!-- Toggle sidebar button -->
+						<button 
+							class="p-1.5 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+							onclick={toggleSidebar}
+							aria-label={showSidebar ? 'Hide sidebar' : 'Show sidebar'}
+							title={showSidebar ? 'Hide sidebar' : 'Show sidebar'}
+						>
+							<svg class="w-6 h-6 transition-transform {showSidebar ? '' : 'rotate-180'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
 							</svg>
 						</button>
 

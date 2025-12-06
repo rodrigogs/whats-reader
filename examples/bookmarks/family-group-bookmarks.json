@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "exportedAt": "2024-12-05T12:00:00.000Z",
+  "bookmarks": [
+    {
+      "id": "bm_example_001",
+      "messageId": "61ehgh",
+      "chatId": "Family Group 👨‍👩‍👧‍👦",
+      "comment": "The start of our family group! 💕 Such a great idea to stay connected.",
+      "createdAt": "2024-12-05T10:00:00.000Z",
+      "messagePreview": "Welcome to our family chat everyone! 🎉 Let's use this to stay connected and plan our get-togethers.",
+      "sender": "Mom",
+      "messageTimestamp": "2024-12-01T09:10:00.000Z"
+    },
+    {
+      "id": "bm_example_002",
+      "messageId": "zf9yma",
+      "chatId": "Family Group 👨‍👩‍👧‍👦",
+      "comment": "Dad's pool video! 😂 Never gets old. Need to watch this again.",
+      "createdAt": "2024-12-05T10:05:00.000Z",
+      "messagePreview": "Hey everyone, I am sharing a video from our last vacation. Good memories!",
+      "sender": "Dad",
+      "messageTimestamp": "2024-12-02T14:30:00.000Z"
+    },
+    {
+      "id": "bm_example_003",
+      "messageId": "34hlro",
+      "chatId": "Family Group 👨‍👩‍👧‍👦",
+      "comment": "Sunday dinner planning - remember to bring dessert next time!",
+      "createdAt": "2024-12-05T10:10:00.000Z",
+      "messagePreview": "Alright family, planning Sunday dinner! 🍽️ Who's coming?",
+      "sender": "Mom",
+      "messageTimestamp": "2024-12-03T18:00:00.000Z"
+    },
+    {
+      "id": "bm_example_004",
+      "messageId": "66s62k",
+      "chatId": "Family Group 👨‍👩‍👧‍👦",
+      "comment": "Beautiful hiking photo! We should plan a family hiking trip.",
+      "createdAt": "2024-12-05T10:15:00.000Z",
+      "messagePreview": "Here's another photo from today's hike! 🏔️",
+      "sender": "Sarah",
+      "messageTimestamp": "2024-12-04T11:30:00.000Z"
+    }
+  ]
+}

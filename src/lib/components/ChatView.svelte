@@ -58,10 +58,20 @@
 	const bookmarkedMessageIds = $derived(bookmarksState.bookmarksByMessageId);
 
 	// Reference to message elements for scrolling
-	let messageRefs = $state<Map<string, HTMLElement>>(new Map());
+	let messageRefs = new Map<string, HTMLElement>();
 	let chatContainer: HTMLElement;
 	let hasScrolledToBottom = $state(false);
 	let isLoadingMore = $state(false);
+	
+	// Action to register message refs
+	function registerMessageRef(node: HTMLElement, messageId: string) {
+		messageRefs.set(messageId, node);
+		return {
+			destroy() {
+				messageRefs.delete(messageId);
+			}
+		};
+	}
 	
 	// Track if we should trigger the highlight animation (after scroll completes)
 	let highlightReady = $state(false);
@@ -121,12 +131,17 @@
 		});
 	}
 
+	// Track previous chatId to detect actual changes
+	let previousChatId = $state<string | null>(null);
+	
 	// Reset chunks when chat changes
 	$effect(() => {
-		const _ = chatId;
-		loadedChunksFromEnd = INITIAL_CHUNKS;
-		hasScrolledToBottom = false;
-		messageRefs.clear();
+		if (previousChatId !== null && previousChatId !== chatId) {
+			loadedChunksFromEnd = INITIAL_CHUNKS;
+			hasScrolledToBottom = false;
+			messageRefs.clear();
+		}
+		previousChatId = chatId;
 	});
 
 	// Scroll to bottom when messages first load
@@ -179,18 +194,19 @@
 
 	// Scroll to specific message (from bookmark navigation)
 	$effect(() => {
-		if (!scrollToMessageId) return;
+		const targetId = scrollToMessageId;
+		if (!targetId) return;
 		
 		// First ensure the message chunk is loaded
-		ensureMessageLoaded(scrollToMessageId);
+		ensureMessageLoaded(targetId);
 		
 		const scrollToMessage = () => {
-			if (messageRefs.has(scrollToMessageId)) {
-				const element = messageRefs.get(scrollToMessageId);
+			if (messageRefs.has(targetId)) {
+				const element = messageRefs.get(targetId);
 				
 				highlightReady = false;
 				highlightedId = null;
-				pendingHighlightId = scrollToMessageId;
+				pendingHighlightId = targetId;
 				isNavigationScroll = true;
 				
 				element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -204,15 +220,23 @@
 			return false;
 		};
 		
+		// Try immediately
 		if (scrollToMessage()) return;
 		
-		requestAnimationFrame(() => {
+		// If not found, wait for DOM to update with loaded chunks
+		// Use multiple attempts with increasing delays
+		const attempts = [0, 50, 150, 300];
+		let attemptIndex = 0;
+		
+		const tryScroll = () => {
 			if (scrollToMessage()) return;
-			
-			setTimeout(() => {
-				scrollToMessage();
-			}, 100);
-		});
+			attemptIndex++;
+			if (attemptIndex < attempts.length) {
+				setTimeout(tryScroll, attempts[attemptIndex]);
+			}
+		};
+		
+		requestAnimationFrame(tryScroll);
 	});
 
 	// Ensure a specific message ID is loaded (expand chunks if needed)
@@ -304,16 +328,7 @@
 			<!-- Message -->
 			{@const message = item.message}
 			<div
-				bind:this={
-					() => messageRefs.get(message.id) ?? null,
-					(el: HTMLElement | null) => {
-						if (el) {
-							messageRefs.set(message.id, el);
-						} else {
-							messageRefs.delete(message.id);
-						}
-					}
-				}
+				use:registerMessageRef={message.id}
 			>
 				<MessageBubble
 					{message}

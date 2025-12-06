@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "exportedAt": "2024-12-05T12:00:00.000Z",
+  "bookmarks": [
+    {
+      "id": "bm_example_101",
+      "messageId": "s7v65x",
+      "chatId": "Alice",
+      "comment": "First message! This is when we reconnected after a long time.",
+      "createdAt": "2024-12-05T11:00:00.000Z",
+      "messagePreview": "Hey Bob! 👋 How are you doing?",
+      "sender": "Alice",
+      "messageTimestamp": "2024-12-01T10:05:00.000Z"
+    },
+    {
+      "id": "bm_example_102",
+      "messageId": "85cp40",
+      "chatId": "Alice",
+      "comment": "Amazing sunrise photo! Need to visit Alice's place to see this view.",
+      "createdAt": "2024-12-05T11:05:00.000Z",
+      "messagePreview": "Hey! Check out this photo from my balcony this morning. Beautiful sunrise! 🌅",
+      "sender": "Alice",
+      "messageTimestamp": "2024-12-02T15:00:00.000Z"
+    },
+    {
+      "id": "bm_example_103",
+      "messageId": "xk02xg",
+      "chatId": "Alice",
+      "comment": "Great coffee date! The Cozy Bean café is now our spot ☕",
+      "createdAt": "2024-12-05T11:10:00.000Z",
+      "messagePreview": "That was so much fun! We should do this more often 😄",
+      "sender": "Alice",
+      "messageTimestamp": "2024-12-04T16:30:00.000Z"
+    }
+  ]
+}

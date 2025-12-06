@@ -23,4 +23,7 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+# Example data (built from source)
+examples/chats/*.zip
+
 .bkp

@@ -198,9 +198,28 @@ body {
 
 /* Sidebar slide animation */
 .sidebar-panel {
-	transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+	transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+				transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+				opacity 0.25s ease,
+				margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	overflow: hidden;
 }
 
+/* Desktop sidebar collapse */
+@media (min-width: 768px) {
+	.sidebar-panel.sidebar-open {
+		width: 20rem; /* w-80 */
+	}
+	
+	.sidebar-panel.sidebar-closed {
+		width: 0;
+		margin-left: -1px; /* Hide border */
+		opacity: 0;
+		pointer-events: none;
+	}
+}
+
+/* Mobile sidebar - slide overlay */
 @media (max-width: 767px) {
 	.sidebar-panel {
 		transform: translateX(-100%);
@@ -209,6 +228,7 @@ body {
 		inset: 0 auto 0 0;
 		z-index: 40;
 		display: flex !important;
+		width: 20rem; /* w-80 */
 	}
 	
 	.sidebar-panel.sidebar-open {
