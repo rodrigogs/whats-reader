@@ -68,33 +68,62 @@ Voice messages can be transcribed using [Whisper](https://openai.com/research/wh
 
 ## Quick Start
 
+### Prerequisites
+
+You need [Node.js](https://nodejs.org/) installed (version 18 or later). Download it from [nodejs.org](https://nodejs.org/) and run the installer.
+
+To check if you have it:
+```bash
+node --version
+```
+
+### Running the app
+
+1. Download this project (click the green "Code" button above, then "Download ZIP") and unzip it
+2. Open a terminal in the project folder
+3. Run these commands:
+
 ```bash
 npm install
 npm run dev
 ```
 
-Open [localhost:5173](http://localhost:5173) and drop your `.zip` file.
+4. Open [localhost:5173](http://localhost:5173) in your browser
+5. Drag and drop your WhatsApp `.zip` file into the page
 
-For the desktop app:
+### Desktop app (optional)
+
+If you prefer a standalone app instead of using your browser:
 
 ```bash
-npm run electron:dev    # dev mode
-npm run electron:build  # build for your OS
+npm run electron:dev    # run in dev mode
+npm run electron:build  # create an installer for your OS
 ```
 
 ---
 
 ## How to Export from WhatsApp
 
-### iOS
-1. Open a chat → tap the name at the top
-2. Scroll down → **Export Chat** → **Attach Media**
-3. Save the `.zip`
+First, you need to export a chat from WhatsApp on your phone. This creates a `.zip` file containing your messages and media.
+
+### iPhone
+1. Open WhatsApp and go to any chat
+2. Tap the contact or group name at the top of the screen
+3. Scroll down and tap **Export Chat**
+4. Choose **Attach Media** to include photos, videos, and voice messages
+5. Save the file (you can AirDrop it to your Mac, save to Files, or email it to yourself)
 
 ### Android
-1. Open a chat → **⋮** → **More** → **Export chat**
-2. Select **Include media**
-3. Save the `.zip`
+1. Open WhatsApp and go to any chat
+2. Tap the three dots **⋮** in the top right corner
+3. Tap **More** → **Export chat**
+4. Choose **Include media**
+5. Save or share the `.zip` file to your computer
+
+### Tips
+- Large chats may take a few minutes to export
+- The file will be named something like `WhatsApp Chat with John.zip`
+- Both individual and group chats work
 
 ---
 
@@ -106,16 +135,11 @@ npm run electron:build  # build for your OS
 
 ## Contributing
 
-Bug reports, feature ideas, and PRs are welcome. 
+Found a bug or have an idea? [Open an issue](https://github.com/rodrigogs/whats-reader/issues) on GitHub.
 
-```bash
-git clone https://github.com/rodrigogs/whats-reader.git
-cd whats-reader
-npm install
-npm run dev
-```
+Want to contribute code? Fork the repo, make your changes, and open a pull request.
 
-There are example chat files in `examples/chats/` if you need test data.
+There are example chat files in `examples/chats/` you can use for testing.
 
 ---
 
