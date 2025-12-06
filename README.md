@@ -1,12 +1,12 @@
-<h1 align="center">WhatsApp Backup Reader</h1>
+<h1 align="center">📱 WhatsApp Backup Reader</h1>
 
 <p align="center">
-  <img src="static/favicon.svg" width="120" height="120" alt="WhatsApp Backup Reader" />
+  <img src="static/favicon.svg" width="100" height="100" alt="WhatsApp Backup Reader" />
 </p>
 
 <p align="center">
-  <strong>Read your WhatsApp exports offline, with AI-powered voice transcription.</strong><br>
-  Your data stays on your device. Nothing is uploaded anywhere.
+  <strong>Browse your WhatsApp exports with a familiar interface — completely offline.</strong><br>
+  🔒 Your data never leaves your device. Zero uploads, zero tracking, zero cloud.
 </p>
 
 <p align="center">
@@ -17,30 +17,45 @@
 </p>
 
 <p align="center">
-  <a href="#features">Features</a> •
-  <a href="#quick-start">Quick Start</a> •
-  <a href="#how-to-export-from-whatsapp">Export Guide</a> •
-  <a href="#contributing">Contributing</a>
+  <a href="#-features">Features</a> •
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-how-to-export-from-whatsapp">Export Guide</a> •
+  <a href="#-contributing">Contributing</a>
 </p>
 
 ---
 
-## What it does
+## ✨ What it does
 
-Drop a WhatsApp `.zip` export and get a familiar chat interface to browse your messages, media, and voice notes. The app handles large backups (10,000+ messages, 500+ media files) smoothly thanks to chunked rendering and lazy loading.
+Drop a WhatsApp `.zip` export and instantly browse your messages, media, and voice notes in a familiar chat interface. The app handles **massive backups** (10,000+ messages, 500+ media files) smoothly thanks to chunked rendering and lazy loading.
 
-**Voice transcription** uses [Whisper](https://openai.com/research/whisper) running entirely in your browser via WebGPU/WASM. No API calls, no cloud, no cost.
+**🎤 Voice transcription** uses [Whisper](https://openai.com/research/whisper) running entirely in your browser via WebGPU/WASM — no API calls, no cloud, no cost. Your audio never leaves your device.
 
 <details>
-<summary><strong>Screenshots</strong> (click to expand)</summary>
+<summary><strong>📸 Screenshots</strong> (click to expand)</summary>
+<br>
 
-> _Coming soon_
+| Start Screen | Chat View |
+|:---:|:---:|
+| <img src="examples/images/1-start.png" width="400" /> | <img src="examples/images/2-chats.png" width="400" /> |
+
+| Chat Options | Perspective Mode |
+|:---:|:---:|
+| <img src="examples/images/3-chat-options.png" width="400" /> | <img src="examples/images/4-view-as.png" width="400" /> |
+
+| Bookmarks | Statistics |
+|:---:|:---:|
+| <img src="examples/images/5-bookmarks.png" width="400" /> | <img src="examples/images/6-statistics.png" width="400" /> |
+
+| Voice Transcription |
+|:---:|
+| <img src="examples/images/7-audio-transcription.png" width="400" /> |
 
 </details>
 
 ---
 
-## Features
+## 🚀 Features
 
 | Feature | Description |
 |---------|-------------|
@@ -57,9 +72,9 @@ Drop a WhatsApp `.zip` export and get a familiar chat interface to browse your m
 
 ---
 
-## Quick Start
+## ⚡ Quick Start
 
-### Web Version
+### Web Version (Recommended)
 
 ```bash
 npm install
@@ -80,9 +95,9 @@ npm run electron:build:linux  # Linux only
 
 ---
 
-## Try It Out
+## 🧪 Try It Out
 
-Don't have a WhatsApp export? Use our example files to test the app:
+Don't have a WhatsApp export handy? Use our example files to test the app:
 
 ```bash
 cd examples/chats
@@ -97,7 +112,7 @@ See [`examples/README.md`](examples/README.md) for more details.
 
 ---
 
-## How to Export from WhatsApp
+## 📤 How to Export from WhatsApp
 
 ### iOS
 1. Open any chat in WhatsApp
@@ -119,7 +134,7 @@ See [`examples/README.md`](examples/README.md) for more details.
 
 ---
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 | Category | Technology |
 |----------|------------|
@@ -132,7 +147,7 @@ See [`examples/README.md`](examples/README.md) for more details.
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 whats-reader/
@@ -151,20 +166,20 @@ whats-reader/
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Here's how you can help:
 
-- 🐛 **Report bugs** — [Open an issue](../../issues) with steps to reproduce
-- 💡 **Suggest features** — Share your ideas in [Discussions](../../discussions)
+- 🐛 **Report bugs** — [Open an issue](https://github.com/rodrigogs/whats-reader/issues) with steps to reproduce
+- 💡 **Suggest features** — Share your ideas in [Discussions](https://github.com/rodrigogs/whats-reader/discussions)
 - 🔧 **Submit PRs** — Fork the repo, make your changes, and open a pull request
 - 📖 **Improve docs** — Help make the README and code comments clearer
-- 🌍 **Translations** — Help support more WhatsApp export formats (different locales)
+- 🌍 **Locale Support** — Help parse WhatsApp exports from different regions/languages
 
 ### Development Setup
 
 ```bash
-git clone https://github.com/yourusername/whats-reader.git
+git clone https://github.com/rodrigogs/whats-reader.git
 cd whats-reader
 npm install
 npm run dev
@@ -182,4 +197,10 @@ cd examples/chats
 
 ## License
 
-MIT © [Rodrigo Gomes](https://github.com/yourusername)
+MIT © [Rodrigo Gomes](https://github.com/rodrigogs)
+
+---
+
+<p align="center">
+  Made with ❤️ for privacy enthusiasts
+</p>
