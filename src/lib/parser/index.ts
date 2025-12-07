@@ -16,3 +16,5 @@ export {
   preloadMedia,
   readFileAsArrayBuffer,
 } from "./zip-parser";
+export type { ContactInfo } from "./vcf-parser";
+export { formatPhoneNumber, isPhoneNumber, parseVcf } from "./vcf-parser";

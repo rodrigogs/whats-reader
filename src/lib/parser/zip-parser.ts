@@ -7,6 +7,7 @@
 
 import JSZip from "jszip";
 import { type ChatMessage, type ParsedChat, parseChat } from "./chat-parser";
+import { parseVcf, type ContactInfo } from "./vcf-parser";
 
 export interface MediaFile {
   name: string;
@@ -23,6 +24,9 @@ export interface MediaFile {
 export interface ParsedZipChat extends ParsedChat {
   mediaFiles: MediaFile[];
   hasMedia: boolean;
+  // Contact information extracted from VCF files
+  // Key is the contact name (normalized to lowercase for lookup)
+  contacts: Map<string, ContactInfo>;
   // Reference to zip for lazy loading
   _zip?: JSZip;
 }
@@ -83,6 +87,8 @@ export async function parseZipFile(
   let chatContent = "";
   let chatFilename = "WhatsApp Chat";
   const mediaFiles: MediaFile[] = [];
+  const contacts = new Map<string, ContactInfo>();
+  const vcfEntries: Array<{ filename: string; entry: JSZip.JSZipObject }> = [];
 
   // Get all file entries for progress tracking
   const fileEntries = Object.entries(contents.files).filter(
@@ -91,7 +97,7 @@ export async function parseZipFile(
   const totalFiles = fileEntries.length;
   let processedFiles = 0;
 
-  // First pass: find the chat text file and catalog media files (without loading them)
+  // First pass: find the chat text file, catalog VCF files, and catalog media files
   for (const [path, zipEntry] of fileEntries) {
     const filename = path.split("/").pop() || path;
 
@@ -99,6 +105,9 @@ export async function parseZipFile(
       // This is likely the chat file - load it immediately (it's small)
       chatContent = await zipEntry.async("string");
       chatFilename = filename;
+    } else if (filename.toLowerCase().endsWith(".vcf")) {
+      // This is a vCard file - save for parsing
+      vcfEntries.push({ filename, entry: zipEntry });
     } else {
       // This is a media file - catalog it but don't load yet
       const mediaType = getMediaType(filename);
@@ -116,9 +125,28 @@ export async function parseZipFile(
     }
 
     processedFiles++;
-    // Report progress: 30-80% for file enumeration
-    const enumerationProgress = 30 + (processedFiles / totalFiles) * 50;
+    // Report progress: 30-70% for file enumeration
+    const enumerationProgress = 30 + (processedFiles / totalFiles) * 40;
     onProgress?.({ stage: "extracting", progress: enumerationProgress });
+  }
+
+  // Parse VCF files to extract contact information
+  for (let i = 0; i < vcfEntries.length; i++) {
+    const { entry } = vcfEntries[i];
+    try {
+      const vcfContent = await entry.async("string");
+      const contactInfo = parseVcf(vcfContent);
+      if (contactInfo) {
+        // Store by lowercase name for case-insensitive lookup
+        contacts.set(contactInfo.name.toLowerCase(), contactInfo);
+      }
+    } catch (e) {
+      // Ignore VCF parsing errors - file might be corrupted
+      console.warn(`Failed to parse VCF file: ${entry.name}`, e);
+    }
+    // Report progress: 70-80% for VCF parsing
+    const vcfProgress = 70 + ((i + 1) / vcfEntries.length) * 10;
+    onProgress?.({ stage: "extracting", progress: vcfProgress });
   }
 
   if (!chatContent) {
@@ -145,6 +173,7 @@ export async function parseZipFile(
     messages: enhancedMessages,
     mediaFiles,
     hasMedia: mediaFiles.length > 0,
+    contacts,
     _zip: zip,
   };
 }

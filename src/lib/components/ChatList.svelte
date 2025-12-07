@@ -3,6 +3,13 @@ import { floating } from '$lib/actions/floating';
 import type { ChatData } from '$lib/state.svelte';
 import { getAvailableLanguages } from '$lib/transcription.svelte';
 
+interface LoadingChat {
+	id: string;
+	filename: string;
+	progress: number;
+	stage: 'reading' | 'extracting' | 'parsing';
+}
+
 interface Props {
 	chats: ChatData[];
 	selectedIndex: number | null;
@@ -12,6 +19,7 @@ interface Props {
 	onLanguageChange?: (chatTitle: string, language: string) => void;
 	autoLoadMediaByChat?: Map<string, boolean>;
 	onAutoLoadMediaChange?: (chatTitle: string, enabled: boolean) => void;
+	loadingChats?: LoadingChat[];
 }
 
 let {
@@ -23,7 +31,14 @@ let {
 	onLanguageChange,
 	autoLoadMediaByChat = new Map(),
 	onAutoLoadMediaChange,
+	loadingChats = [],
 }: Props = $props();
+
+const stageLabels = {
+	reading: 'Reading file...',
+	extracting: 'Extracting...',
+	parsing: 'Parsing messages...',
+};
 
 // Context menu state
 let contextMenuIndex = $state<number | null>(null);
@@ -135,12 +150,49 @@ function getLastMessage(chat: ChatData): string {
 <div class="flex flex-col h-full bg-white dark:bg-gray-900">
 	<!-- Chat list -->
 	<div class="flex-1 overflow-y-auto">
-		{#if chats.length === 0}
+		{#if chats.length === 0 && loadingChats.length === 0}
 			<div class="p-4 text-center text-gray-500 dark:text-gray-400">
 				<p>No chats loaded</p>
 				<p class="text-sm mt-1">Import a WhatsApp export to get started</p>
 			</div>
 		{:else}
+			<!-- Loading chat placeholders -->
+			{#each loadingChats as loadingChat (loadingChat.id)}
+				<div
+					class="w-full p-4 flex items-start gap-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50"
+				>
+					<!-- Animated avatar skeleton -->
+					<div class="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0 overflow-hidden">
+						<svg class="w-6 h-6 text-gray-400 dark:text-gray-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+						</svg>
+					</div>
+
+					<!-- Loading info -->
+					<div class="flex-1 min-w-0 text-left">
+						<div class="flex items-center justify-between">
+							<h3 class="font-semibold text-gray-800 dark:text-white truncate">
+								{loadingChat.filename}
+							</h3>
+							<span class="text-xs text-[var(--color-whatsapp-teal)] flex-shrink-0 ml-2">
+								{Math.round(loadingChat.progress)}%
+							</span>
+						</div>
+						<p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+							{stageLabels[loadingChat.stage]}
+						</p>
+						<!-- Progress bar -->
+						<div class="mt-2 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+							<div 
+								class="h-full bg-[var(--color-whatsapp-teal)] rounded-full transition-all duration-300 ease-out"
+								style="width: {loadingChat.progress}%"
+							></div>
+						</div>
+					</div>
+				</div>
+			{/each}
+
+			<!-- Loaded chats -->
 			{#each chats as chat, index}
 				<div
 					class="w-full p-4 flex items-start gap-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-b border-gray-100 dark:border-gray-800 cursor-pointer {selectedIndex === index ? 'bg-gray-100 dark:bg-gray-800' : ''}"

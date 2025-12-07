@@ -54,9 +54,9 @@ function handleClickOutside() {
 <div class="locale-switcher relative">
 	<button
 		onclick={toggleDropdown}
-		class="flex items-center justify-center text-xs font-medium uppercase transition-colors {variant === 'header' 
-			? 'p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white' 
-			: 'p-1.5 rounded bg-gray-100/80 dark:bg-gray-800/80 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 backdrop-blur-sm'}"
+		class="flex items-center justify-center text-xs font-medium uppercase transition-colors p-1.5 rounded-full cursor-pointer {variant === 'header' 
+			? 'bg-white/10 hover:bg-white/20 text-white/80 hover:text-white' 
+			: 'bg-gray-100/80 dark:bg-gray-800/80 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 backdrop-blur-sm'}"
 		aria-haspopup="listbox"
 		aria-expanded={dropdownOpen}
 		aria-label="Change language"
@@ -72,7 +72,7 @@ function handleClickOutside() {
 			{#each locales as locale (locale)}
 				<button
 					onclick={(e) => { e.stopPropagation(); handleLocaleChange(locale); }}
-					class="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between gap-2 transition-colors {locale === currentLocale ? 'text-[var(--color-whatsapp-teal)] font-medium' : 'text-gray-700 dark:text-gray-300'}"
+					class="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between gap-2 transition-colors cursor-pointer {locale === currentLocale ? 'text-[var(--color-whatsapp-teal)] font-medium' : 'text-gray-700 dark:text-gray-300'}"
 					role="option"
 					aria-selected={locale === currentLocale}
 				>

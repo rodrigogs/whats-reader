@@ -72,6 +72,14 @@
   "stats_messages_by_participant": "Messages by Participant",
   "stats_activity_by_hour": "Activity by Hour",
   
+  "participants_title": "Participants",
+  "participants_members": "{count} members",
+  "participants_close": "Close participants",
+  "participants_messages": "messages",
+  "participants_phone_number": "Phone number",
+  "participants_contact_name": "Contact name",
+  "participants_phone_from_vcf": "Phone from shared contact",
+  
   "media_photo": "Photo",
   "media_video": "Video",
   "media_audio": "Voice Message",

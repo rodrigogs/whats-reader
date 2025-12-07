@@ -122,27 +122,29 @@ function handleKeydown(e: KeyboardEvent) {
 <svelte:window onkeydown={handleKeydown} />
 
 <div class="flex flex-col h-full bg-white dark:bg-gray-800">
-	<!-- Header -->
-	<div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-		<div class="flex items-center gap-2">
-			<svg class="w-5 h-5 text-[var(--color-whatsapp-teal)]" fill="currentColor" viewBox="0 0 24 24">
-				<path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
-			</svg>
-			<h2 class="font-semibold text-gray-900 dark:text-gray-100">Bookmarks</h2>
-			<span class="text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
-				{displayedBookmarks.length}
-			</span>
+	<!-- Header - matches Import Chat bar height (p-3 + h-10 inner) -->
+	<div class="p-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+		<div class="flex items-center justify-between h-10">
+			<div class="flex items-center gap-2">
+				<svg class="w-5 h-5 text-[var(--color-whatsapp-teal)]" fill="currentColor" viewBox="0 0 24 24">
+					<path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+				</svg>
+				<h2 class="font-semibold text-gray-900 dark:text-gray-100">Bookmarks</h2>
+				<span class="text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
+					{displayedBookmarks.length}
+				</span>
+			</div>
+			<button
+				type="button"
+				class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+				onclick={onClose}
+				aria-label="Close bookmarks panel"
+			>
+				<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
 		</div>
-		<button
-			type="button"
-			class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-			onclick={onClose}
-			aria-label="Close bookmarks panel"
-		>
-			<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-			</svg>
-		</button>
 	</div>
 
 	<!-- Filter tabs -->

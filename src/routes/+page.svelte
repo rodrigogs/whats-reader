@@ -41,9 +41,48 @@ function toggleDarkMode() {
 let showStats = $state(false);
 let showSidebar = $state(true);
 let showBookmarks = $state(false);
+let showParticipants = $state(false);
+let participantStats = $state<Map<string, number> | null>(null);
 let scrollToMessageId = $state<string | null>(null);
+
+// Compute participant stats when modal opens (not during render)
+function openParticipantsModal() {
+	if (!appState.selectedChat) return;
+	
+	// Pre-compute message counts in a single pass
+	const counts = new Map<string, number>();
+	for (const msg of appState.selectedChat.messages) {
+		if (msg.sender) {
+			counts.set(msg.sender, (counts.get(msg.sender) || 0) + 1);
+		}
+	}
+	participantStats = counts;
+	showParticipants = true;
+}
+
+function closeParticipantsModal() {
+	showParticipants = false;
+	participantStats = null;
+}
 let showPerspectiveDropdown = $state(false);
 let perspectiveSearchQuery = $state('');
+
+// Loading chats state - shows placeholder items while importing
+interface LoadingChat {
+	id: string;
+	filename: string;
+	progress: number;
+	stage: 'reading' | 'extracting' | 'parsing';
+}
+let loadingChats = $state<LoadingChat[]>([]);
+
+// Derived loading state for FileDropZone (empty state)
+const isLoadingFiles = $derived(loadingChats.length > 0);
+const loadingFilesProgress = $derived.by(() => {
+	if (loadingChats.length === 0) return 0;
+	const total = loadingChats.reduce((sum, lc) => sum + lc.progress, 0);
+	return total / loadingChats.length;
+});
 let perspectiveButtonRef = $state<HTMLButtonElement | null>(null);
 let perspectiveSearchInputRef = $state<HTMLInputElement | null>(null);
 
@@ -71,67 +110,77 @@ const autoLoadMediaForCurrentChat = $derived.by(() => {
 });
 
 async function handleFilesSelected(files: FileList) {
-	appState.setLoading(true);
 	appState.clearError();
-	appState.setLoadingProgress(0);
 
-	try {
-		const totalFiles = files.length;
-		let processedFiles = 0;
+	for (const file of files) {
+		if (!file.name.endsWith('.zip')) {
+			appState.setError(m.error_unsupported_file({ filename: file.name }));
+			continue;
+		}
 
-		for (const file of files) {
-			if (!file.name.endsWith('.zip')) {
-				throw new Error(m.error_unsupported_file({ filename: file.name }));
+		// Create a loading placeholder for this file
+		const loadingId = crypto.randomUUID();
+		const filename = file.name.replace(/\.zip$/i, '').replace(/^WhatsApp Chat (with |com )/i, '');
+		
+		loadingChats = [...loadingChats, {
+			id: loadingId,
+			filename,
+			progress: 0,
+			stage: 'reading'
+		}];
+
+		// Process file asynchronously
+		(async () => {
+			try {
+				// Read file (0-10% of progress)
+				const buffer = await readFileAsArrayBuffer(file, (readProgress) => {
+					loadingChats = loadingChats.map(lc => 
+						lc.id === loadingId 
+							? { ...lc, progress: readProgress * 0.1, stage: 'reading' as const }
+							: lc
+					);
+				});
+
+				// Parse ZIP file using Web Worker
+				const chatData: ChatData = await parseZipFile(
+					buffer,
+					async ({ stage, progress }) => {
+						const STAGE_PROGRESS = {
+							reading: { offset: 0.0, weight: 0.1 },
+							extracting: { offset: 0.1, weight: 0.5 },
+							parsing: { offset: 0.6, weight: 0.4 },
+						} as const;
+
+						const { offset: stageOffset, weight: stageWeight } =
+							STAGE_PROGRESS[stage] ?? STAGE_PROGRESS.extracting;
+
+						const overallProgress = 10 + (stageOffset + (progress / 100) * stageWeight) * 90;
+						
+						loadingChats = loadingChats.map(lc => 
+							lc.id === loadingId 
+								? { ...lc, progress: overallProgress, stage }
+								: lc
+						);
+					},
+				);
+
+				// Remove loading placeholder and add actual chat
+				loadingChats = loadingChats.filter(lc => lc.id !== loadingId);
+				appState.addChat(chatData);
+
+				// On mobile, collapse sidebar after loading chats
+				if (browser && window.innerWidth < 768) {
+					showSidebar = false;
+				}
+			} catch (error) {
+				console.error('Error parsing file:', error);
+				// Remove loading placeholder on error
+				loadingChats = loadingChats.filter(lc => lc.id !== loadingId);
+				appState.setError(
+					error instanceof Error ? error.message : 'Failed to parse file',
+				);
 			}
-
-			const fileBaseProgress = (processedFiles / totalFiles) * 100;
-			const fileWeight = 100 / totalFiles;
-
-			// Read file (0-10% of file progress)
-			const buffer = await readFileAsArrayBuffer(file, (readProgress) => {
-				const overallProgress =
-					fileBaseProgress + (readProgress / 100) * (fileWeight * 0.1);
-				appState.setLoadingProgress(overallProgress);
-			});
-
-			// Parse ZIP file using Web Worker (10-100% of file progress)
-			// The worker handles all heavy processing without blocking the UI
-			const chatData: ChatData = await parseZipFile(
-				buffer,
-				async ({ stage, progress }) => {
-					// Progress stages: Reading (0-10%), Extracting (10-60%), Parsing (60-100%)
-					const STAGE_PROGRESS = {
-						reading: { offset: 0.0, weight: 0.1 },
-						extracting: { offset: 0.1, weight: 0.5 },
-						parsing: { offset: 0.6, weight: 0.4 },
-					} as const;
-
-					const { offset: stageOffset, weight: stageWeight } =
-						STAGE_PROGRESS[stage] ?? STAGE_PROGRESS.extracting;
-
-					const overallProgress =
-						fileBaseProgress +
-						(stageOffset + (progress / 100) * stageWeight) * fileWeight;
-					appState.setLoadingProgress(overallProgress);
-				},
-			);
-
-			appState.addChat(chatData);
-			processedFiles++;
-			appState.setLoadingProgress((processedFiles / totalFiles) * 100);
-		}
-
-		// On mobile, collapse sidebar after loading chats
-		if (browser && window.innerWidth < 768) {
-			showSidebar = false;
-		}
-	} catch (error) {
-		console.error('Error parsing file:', error);
-		appState.setError(
-			error instanceof Error ? error.message : 'Failed to parse file',
-		);
-	} finally {
-		appState.setLoading(false);
+		})();
 	}
 }
 
@@ -262,8 +311,8 @@ const currentUser = $derived.by(() => {
 				<LocaleSwitcher variant={isElectron ? 'header' : 'default'} />
 				<button
 					onclick={toggleDarkMode}
-					class="p-1.5 rounded transition-colors cursor-pointer {isElectron 
-						? 'rounded-full bg-white/10 hover:bg-white/20' 
+					class="p-1.5 rounded-full transition-colors cursor-pointer {isElectron 
+						? 'bg-white/10 hover:bg-white/20' 
 						: 'bg-gray-100/80 dark:bg-gray-800/80 hover:bg-gray-200 dark:hover:bg-gray-700 backdrop-blur-sm'}"
 					aria-label={m.toggle_dark_mode()}
 					title={isDarkMode ? m.theme_switch_to_light() : m.theme_switch_to_dark()}
@@ -301,7 +350,7 @@ const currentUser = $derived.by(() => {
 
 				<!-- Drop zone -->
 				<div class="w-full">
-					<FileDropZone onFilesSelected={handleFilesSelected} isLoading={appState.isLoading} loadingProgress={appState.loadingProgress} />
+					<FileDropZone onFilesSelected={handleFilesSelected} isLoading={isLoadingFiles} loadingProgress={loadingFilesProgress} />
 				</div>
 
 				{#if appState.error}
@@ -366,9 +415,6 @@ const currentUser = $derived.by(() => {
 				class="sidebar-panel w-80 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col {showSidebar ? 'sidebar-open' : 'sidebar-closed'}"
 			>
 				<!-- Sidebar header - empty green bar to match main header -->
-				{#if isElectron}
-					<div class="electron-drag h-[38px] flex-shrink-0 bg-[var(--color-whatsapp-dark-green)]"></div>
-				{/if}
 				<div class="h-16 bg-[var(--color-whatsapp-dark-green)] flex-shrink-0"></div>
 				
 				<!-- Chats title bar - matches search bar styling exactly -->
@@ -404,6 +450,7 @@ const currentUser = $derived.by(() => {
 						onLanguageChange={handleLanguageChange}
 						{autoLoadMediaByChat}
 						onAutoLoadMediaChange={handleAutoLoadMediaChange}
+						{loadingChats}
 					/>
 				</div>
 			</div>
@@ -421,7 +468,7 @@ const currentUser = $derived.by(() => {
 			{#if appState.selectedChat}
 				<div class="flex-1 flex flex-col overflow-hidden">
 					<!-- Chat header -->
-					<div class="h-16 px-4 flex items-center gap-4 bg-[var(--color-whatsapp-dark-green)] text-white shadow-md">
+					<div class="h-16 px-4 flex items-center gap-4 bg-[var(--color-whatsapp-dark-green)] text-white shadow-md flex-shrink-0">
 						<!-- Avatar -->
 						<div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-semibold">
 							{appState.selectedChat.title.charAt(0).toUpperCase()}
@@ -430,12 +477,17 @@ const currentUser = $derived.by(() => {
 						<!-- Chat info -->
 						<div class="flex-1 min-w-0">
 							<h2 class="font-semibold truncate">{appState.selectedChat.title}</h2>
-							<p class="text-xs text-white/70 truncate">
+							<button
+								type="button"
+								class="text-xs text-white/70 hover:text-white truncate block max-w-full text-left cursor-pointer transition-colors"
+								onclick={openParticipantsModal}
+								title="Click to see all participants"
+							>
 								{appState.selectedChat.participants.slice(0, 5).join(', ')}
 								{#if appState.selectedChat.participants.length > 5}
 									{m.perspective_more_participants({ count: appState.selectedChat.participants.length - 5 })}
 								{/if}
-							</p>
+							</button>
 						</div>
 
 						<!-- Actions -->
@@ -548,6 +600,8 @@ const currentUser = $derived.by(() => {
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
 								</svg>
 							</button>
+							<!-- Language switcher -->
+							<LocaleSwitcher variant="header" />
 							<!-- Dark mode toggle in header -->
 							<button
 								class="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
@@ -565,8 +619,6 @@ const currentUser = $derived.by(() => {
 									</svg>
 								{/if}
 							</button>
-							<!-- Language switcher -->
-							<LocaleSwitcher variant="header" />
 						</div>
 					</div>
 
@@ -646,15 +698,21 @@ const currentUser = $derived.by(() => {
 				</div>
 
 				<!-- Bookmarks panel (slide from right) -->
-				{#if showBookmarks}
-					<div class="w-80 flex-shrink-0 border-l border-gray-200 dark:border-gray-700">
+				<div
+					class="bookmarks-panel w-80 flex-shrink-0 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col {showBookmarks ? 'bookmarks-open' : 'bookmarks-closed'}"
+				>
+					<!-- Bookmarks header - matches sidebar header -->
+					<div class="h-16 bg-[var(--color-whatsapp-dark-green)] flex-shrink-0"></div>
+					
+					<!-- Bookmarks content -->
+					<div class="flex-1 overflow-hidden">
 						<BookmarksPanel
 							currentChatId={appState.selectedChat.title}
 							onNavigateToMessage={handleNavigateToBookmark}
 							onClose={() => showBookmarks = false}
 						/>
 					</div>
-				{/if}
+				</div>
 
 				<!-- Stats modal -->
 				{#if showStats}
@@ -663,14 +721,102 @@ const currentUser = $derived.by(() => {
 						onClose={() => (showStats = false)}
 					/>
 				{/if}
+
+				<!-- Participants modal -->
+				{#if showParticipants && appState.selectedChat && participantStats}
+					<!-- Backdrop -->
+					<button
+						type="button"
+						class="fixed inset-0 bg-black/50 z-50 cursor-default"
+						onclick={closeParticipantsModal}
+						aria-label={m.participants_close()}
+					></button>
+					
+					<!-- Modal -->
+					<div class="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[480px] md:max-h-[80vh] bg-white dark:bg-gray-800 rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden">
+						<!-- Header -->
+						<div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-[var(--color-whatsapp-dark-green)] text-white">
+							<div class="flex items-center gap-3">
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+								</svg>
+								<div>
+									<h2 class="font-semibold">{m.participants_title()}</h2>
+									<p class="text-xs text-white/70">{m.participants_members({ count: appState.selectedChat.participants.length })}</p>
+								</div>
+							</div>
+							<button
+								type="button"
+								class="p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+								onclick={closeParticipantsModal}
+								aria-label={m.participants_close()}
+							>
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+								</svg>
+							</button>
+						</div>
+						
+						<!-- Participants list -->
+						<div class="flex-1 overflow-y-auto">
+							{#each appState.selectedChat.participants as participant}
+								{@const messageCount = participantStats.get(participant) || 0}
+								{@const isPhoneNumber = /\+?\d[\d\s\-()]{8,}/.test(participant)}
+								{@const contactInfo = appState.selectedChat.contacts?.get(participant.toLowerCase())}
+								{@const phoneFromVcf = contactInfo?.phoneNumber}
+								<div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700/50 last:border-b-0">
+									<!-- Avatar -->
+									<div class="w-10 h-10 rounded-full bg-[var(--color-whatsapp-teal)] flex items-center justify-center text-white font-semibold flex-shrink-0">
+										{participant.charAt(0).toUpperCase()}
+									</div>
+									
+									<!-- Participant info -->
+									<div class="flex-1 min-w-0">
+										<p class="font-medium text-gray-900 dark:text-white truncate">
+											{participant}
+										</p>
+										{#if phoneFromVcf}
+											<!-- Phone number from VCF file -->
+											<p class="text-xs text-[var(--color-whatsapp-teal)] font-medium">
+												{phoneFromVcf}
+											</p>
+											<p class="text-xs text-gray-400 dark:text-gray-500">
+												{m.participants_phone_from_vcf()}
+											</p>
+										{:else if isPhoneNumber}
+											<p class="text-xs text-gray-500 dark:text-gray-400">
+												{m.participants_phone_number()}
+											</p>
+										{:else}
+											<p class="text-xs text-gray-500 dark:text-gray-400">
+												{m.participants_contact_name()}
+											</p>
+										{/if}
+									</div>
+									
+									<!-- Message count for this participant -->
+									{#if messageCount > 0}
+										<div class="text-right flex-shrink-0">
+											<p class="text-sm font-medium text-[var(--color-whatsapp-teal)]">{messageCount}</p>
+											<p class="text-xs text-gray-400">{m.participants_messages()}</p>
+										</div>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					</div>
+				{/if}
 			{:else}
 				<!-- No chat selected -->
-				<div class="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-					<div class="text-center text-gray-500 dark:text-gray-400">
-						<svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-						</svg>
-						<p>{m.chat_select()}</p>
+				<div class="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
+					<div class="h-16 bg-[var(--color-whatsapp-dark-green)] flex-shrink-0"></div>
+					<div class="flex-1 flex items-center justify-center">
+						<div class="text-center text-gray-500 dark:text-gray-400">
+							<svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+							</svg>
+							<p>{m.chat_select()}</p>
+						</div>
 					</div>
 				</div>
 			{/if}
