@@ -1,6 +1,7 @@
 <script lang="ts">
 import { onMount } from 'svelte';
 import type { ChatData } from '$lib/state.svelte';
+import * as m from '$lib/paraglide/messages';
 
 interface Props {
 	chat: ChatData;
@@ -116,11 +117,11 @@ const maxHourCount = $derived(stats ? Math.max(...stats.messagesByHour) : 0);
 	>
 		<!-- Header -->
 		<div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-			<h2 id="stats-title" class="text-xl font-bold text-gray-800 dark:text-white">Chat Statistics</h2>
+			<h2 id="stats-title" class="text-xl font-bold text-gray-800 dark:text-white">{m.stats_title()}</h2>
 			<button
 				class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
 				onclick={onClose}
-				aria-label="Close"
+				aria-label={m.stats_close()}
 			>
 				<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -134,7 +135,7 @@ const maxHourCount = $derived(stats ? Math.max(...stats.messagesByHour) : 0);
 				<!-- Loading state -->
 				<div class="flex flex-col items-center justify-center py-16">
 					<div class="w-12 h-12 border-4 border-gray-200 dark:border-gray-700 border-t-[var(--color-whatsapp-teal)] rounded-full animate-spin mb-4"></div>
-					<p class="text-gray-500 dark:text-gray-400">Computing statistics...</p>
+					<p class="text-gray-500 dark:text-gray-400">{m.stats_computing()}</p>
 				</div>
 			{:else if error}
 				<!-- Error state -->
@@ -151,31 +152,31 @@ const maxHourCount = $derived(stats ? Math.max(...stats.messagesByHour) : 0);
 						<div class="text-2xl font-bold text-[var(--color-whatsapp-teal)]">
 							{chat.messageCount.toLocaleString()}
 						</div>
-						<div class="text-sm text-gray-500 dark:text-gray-400">Messages</div>
+						<div class="text-sm text-gray-500 dark:text-gray-400">{m.stats_messages()}</div>
 					</div>
 					<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
 						<div class="text-2xl font-bold text-[var(--color-whatsapp-teal)]">
 							{chat.participants.length}
 						</div>
-						<div class="text-sm text-gray-500 dark:text-gray-400">Participants</div>
+						<div class="text-sm text-gray-500 dark:text-gray-400">{m.stats_participants()}</div>
 					</div>
 					<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
 						<div class="text-2xl font-bold text-[var(--color-whatsapp-teal)]">
 							{stats.avgMessagesPerDay}
 						</div>
-						<div class="text-sm text-gray-500 dark:text-gray-400">Avg/Day</div>
+						<div class="text-sm text-gray-500 dark:text-gray-400">{m.stats_avg_day()}</div>
 					</div>
 					<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
 						<div class="text-2xl font-bold text-[var(--color-whatsapp-teal)]">
 							{chat.mediaCount}
 						</div>
-						<div class="text-sm text-gray-500 dark:text-gray-400">Media</div>
+						<div class="text-sm text-gray-500 dark:text-gray-400">{m.stats_media()}</div>
 					</div>
 				</div>
 
 				<!-- Duration -->
 				<div class="mb-8">
-					<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Duration</h3>
+					<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">{m.stats_duration()}</h3>
 					<p class="text-gray-600 dark:text-gray-300">
 						{formatDuration(chat.startDate, chat.endDate)}
 					</p>
@@ -188,7 +189,7 @@ const maxHourCount = $derived(stats ? Math.max(...stats.messagesByHour) : 0);
 
 				<!-- Messages by participant -->
 				<div class="mb-8">
-					<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Messages by Participant</h3>
+					<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">{m.stats_messages_by_participant()}</h3>
 					<div class="space-y-3">
 						{#each participantEntries as [name, count] (name)}
 							<div>
@@ -209,7 +210,7 @@ const maxHourCount = $derived(stats ? Math.max(...stats.messagesByHour) : 0);
 
 				<!-- Most active hour -->
 				<div class="mb-8">
-					<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Most Active Hour</h3>
+					<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">{m.stats_busiest_hour()}</h3>
 					<p class="text-gray-600 dark:text-gray-300">
 						{formatHour(stats.mostActiveHour)}
 					</p>
@@ -217,7 +218,7 @@ const maxHourCount = $derived(stats ? Math.max(...stats.messagesByHour) : 0);
 
 				<!-- Activity by hour -->
 				<div>
-					<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Activity by Hour</h3>
+					<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">{m.stats_activity_by_hour()}</h3>
 					<div class="flex items-end gap-0.5 h-24">
 						{#each stats.messagesByHour as count, hour (hour)}
 							{@const height = maxHourCount > 0 ? (count / maxHourCount) * 100 : 0}

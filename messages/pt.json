@@ -34,6 +34,7 @@
   "search_result_of": "{current} de {total}",
   "search_previous": "Resultado anterior",
   "search_next": "Próximo resultado",
+  "search_clear": "Limpar busca",
   
   "perspective_view_as": "Ver como",
   "perspective_select": "Selecionar perspectiva",
@@ -51,6 +52,7 @@
   "bookmarks_delete": "Excluir",
   "bookmarks_comment_placeholder": "Adicione uma nota (opcional)...",
   "bookmarks_empty": "Nenhum marcador ainda",
+  "bookmarks_empty_current_chat": "Nenhum marcador nesta conversa",
   "bookmarks_empty_hint": "Clique no ícone de marcador em qualquer mensagem para salvá-la aqui",
   "bookmarks_all_chats": "Todas as conversas",
   "bookmarks_current_chat": "Conversa atual",
@@ -58,12 +60,20 @@
   "bookmarks_import": "Importar",
   "bookmarks_import_success": "{count} marcadores importados",
   "bookmarks_from_chat": "De: {chat}",
+  "bookmarks_close": "Fechar painel de marcadores",
+  "bookmarks_close_modal": "Fechar",
+  "bookmarks_note_placeholder": "Adicione uma nota a este marcador...",
   
-  "stats_title": "Estatísticas",
+  "stats_title": "Estatísticas da Conversa",
   "stats_view": "Ver estatísticas",
   "stats_close": "Fechar",
-  "stats_total_messages": "Total de Mensagens",
+  "stats_computing": "Calculando estatísticas...",
+  "stats_messages": "Mensagens",
   "stats_participants": "Participantes",
+  "stats_avg_day": "Média/Dia",
+  "stats_media": "Mídia",
+  "stats_duration": "Duração",
+  "stats_total_messages": "Total de Mensagens",
   "stats_media_shared": "Mídias Compartilhadas",
   "stats_date_range": "Período",
   "stats_avg_per_day": "Média por dia",
@@ -98,8 +108,10 @@
   
   "transcription_title": "Transcrição",
   "transcription_transcribe": "Transcrever áudio",
+  "transcription_transcribe_title": "Transcrever esta mensagem de voz usando IA",
   "transcription_show": "Mostrar transcrição",
   "transcription_hide": "Ocultar transcrição",
+  "transcription_hide_title": "Ocultar transcrição",
   "transcription_loading_model": "Carregando modelo de IA... {progress}%",
   "transcription_transcribing": "Transcrevendo...",
   "transcription_retry": "Tentar novamente",
@@ -111,6 +123,9 @@
   "auto_load_media": "Carregar Mídia Automaticamente",
   
   "context_menu_remove": "Remover Conversa",
+  "context_menu_close": "Fechar menu de contexto",
+  
+  "participants_view_all": "Clique para ver todos os participantes",
   
   "export_instructions_title": "Como exportar sua conversa do WhatsApp",
   "export_step_1": "Abra o WhatsApp no seu celular",
@@ -142,5 +157,6 @@
   "language_chinese": "中文",
   "language_korean": "한국어",
   "language_russian": "Русский",
-  "language_auto": "Detectar automaticamente"
+  "language_auto": "Detectar automaticamente",
+  "language_change": "Mudar idioma"
 }

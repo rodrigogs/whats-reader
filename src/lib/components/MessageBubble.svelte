@@ -11,6 +11,7 @@ import {
 	transcribeAudio,
 } from '$lib/transcription.svelte';
 import BookmarkModal from './BookmarkModal.svelte';
+import * as m from '$lib/paraglide/messages';
 
 interface MessageWithMedia extends ChatMessage {
 	mediaFile?: MediaFile;
@@ -363,7 +364,7 @@ async function transcribeVoiceMessage() {
 														type="button"
 														class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
 														onclick={() => showTranscription = false}
-														title="Hide transcription"
+													title={m.transcription_hide_title()}
 													>
 														<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 															<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -380,9 +381,9 @@ async function transcribeVoiceMessage() {
 												<div class="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-[var(--color-whatsapp-teal)]"></div>
 												<span class="text-xs">
 													{#if transcriptionState.isModelLoading}
-														Loading AI model... {transcriptionState.modelLoadProgress}%
-													{:else}
-														Transcribing...
+													{m.transcription_loading_model({ progress: transcriptionState.modelLoadProgress })}
+												{:else}
+													{m.transcription_transcribing()}
 													{/if}
 												</span>
 											</div>
@@ -400,7 +401,7 @@ async function transcribeVoiceMessage() {
 													class="text-xs text-[var(--color-whatsapp-teal)] hover:underline cursor-pointer"
 													onclick={transcribeVoiceMessage}
 												>
-													Retry
+												{m.transcription_retry()}
 												</button>
 											</div>
 										{:else if transcription}
@@ -413,7 +414,7 @@ async function transcribeVoiceMessage() {
 												<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 												</svg>
-												Show transcription
+											{m.transcription_show()}
 											</button>
 										{:else}
 											<!-- Transcribe button -->
@@ -421,12 +422,12 @@ async function transcribeVoiceMessage() {
 												type="button"
 												class="flex items-center gap-1 text-xs text-[var(--color-whatsapp-teal)] hover:underline cursor-pointer"
 												onclick={transcribeVoiceMessage}
-												title="Transcribe this voice message using AI"
-											>
-												<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-												</svg>
-												Transcribe audio
+											title={m.transcription_transcribe_title()}
+										>
+											<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+											</svg>
+											{m.transcription_transcribe()}
 											</button>
 										{/if}
 									</div>
@@ -457,7 +458,7 @@ async function transcribeVoiceMessage() {
 							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 							</svg>
-							<span class="text-sm">Failed to load</span>
+							<span class="text-sm">{m.media_failed()}</span>
 						</div>
 					{:else}
 						<!-- Click to load -->
@@ -469,28 +470,28 @@ async function transcribeVoiceMessage() {
 								<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
 								</svg>
-								<span class="text-sm">Click to load image</span>
+								<span class="text-sm">{m.media_load_image()}</span>
 							{:else if message.mediaType === 'video'}
 								<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 								</svg>
-								<span class="text-sm">Click to load video</span>
+								<span class="text-sm">{m.media_load_video()}</span>
 							{:else if message.mediaType === 'audio'}
 								<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
 								</svg>
-								<span class="text-sm">Click to load audio</span>
+								<span class="text-sm">{m.media_load_audio()}</span>
 							{:else if message.mediaType === 'sticker'}
 								<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 								</svg>
-								<span class="text-sm">Click to load sticker</span>
+								<span class="text-sm">{m.media_load_sticker()}</span>
 							{:else}
 								<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 								</svg>
-								<span class="text-sm">Click to load file</span>
+								<span class="text-sm">{m.media_load_file()}</span>
 							{/if}
 						</button>
 					{/if}
@@ -501,37 +502,37 @@ async function transcribeVoiceMessage() {
 							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
 							</svg>
-							<span class="text-sm italic">Photo</span>
+							<span class="text-sm italic">{m.media_photo()}</span>
 						{:else if message.mediaType === 'video'}
 							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
 							</svg>
-							<span class="text-sm italic">Video</span>
+							<span class="text-sm italic">{m.media_video()}</span>
 						{:else if message.mediaType === 'audio'}
 							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
 							</svg>
-							<span class="text-sm italic">Voice Message</span>
+							<span class="text-sm italic">{m.media_audio()}</span>
 						{:else if message.mediaType === 'document'}
 							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 							</svg>
-							<span class="text-sm italic">Document</span>
+							<span class="text-sm italic">{m.media_document()}</span>
 						{:else if message.mediaType === 'sticker'}
 							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 							</svg>
-							<span class="text-sm italic">Sticker</span>
+							<span class="text-sm italic">{m.media_sticker()}</span>
 						{:else if message.mediaType === 'contact'}
 							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
 							</svg>
-							<span class="text-sm italic">Contact</span>
+							<span class="text-sm italic">{m.media_contact()}</span>
 						{:else}
 							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
 							</svg>
-							<span class="text-sm italic">Attachment</span>
+							<span class="text-sm italic">{m.media_attachment()}</span>
 						{/if}
 					</div>
 				{/if}

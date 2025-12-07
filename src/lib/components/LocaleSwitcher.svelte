@@ -6,6 +6,7 @@ import {
 	locales,
 	setLocale,
 } from '$lib/paraglide/runtime';
+import * as m from '$lib/paraglide/messages';
 
 const LOCALE_STORAGE_KEY = 'locale';
 
@@ -59,7 +60,7 @@ function handleClickOutside() {
 			: 'bg-gray-100/80 dark:bg-gray-800/80 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 backdrop-blur-sm'}"
 		aria-haspopup="listbox"
 		aria-expanded={dropdownOpen}
-		aria-label="Change language"
+		aria-label={m.language_change()}
 	>
 		<span class="w-4 h-4 flex items-center justify-center text-[10px] font-semibold">{currentLocale.toUpperCase()}</span>
 	</button>

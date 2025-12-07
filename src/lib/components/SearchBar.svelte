@@ -1,5 +1,6 @@
 <script lang="ts">
 import { onDestroy } from 'svelte';
+import * as m from '$lib/paraglide/messages';
 
 interface Props {
 	value: string;
@@ -99,7 +100,7 @@ onDestroy(() => {
 		<button
 			class="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
 			onclick={handleClear}
-			aria-label="Clear search"
+			aria-label={m.search_clear()}
 		>
 			<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />

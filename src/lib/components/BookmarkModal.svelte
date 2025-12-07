@@ -1,6 +1,7 @@
 <script lang="ts">
 import { untrack } from 'svelte';
 import { type Bookmark, bookmarksState } from '$lib/bookmarks.svelte';
+import * as m from '$lib/paraglide/messages';
 
 // Data needed to create a new bookmark
 interface NewBookmarkData {
@@ -129,7 +130,7 @@ const displayPreview = $derived(
 					type="button"
 					class="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer"
 					onclick={onClose}
-					aria-label="Close"
+					aria-label={m.bookmarks_close_modal()}
 				>
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -163,7 +164,7 @@ const displayPreview = $derived(
 					id="comment"
 					rows="4"
 					class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--color-whatsapp-teal)] focus:border-transparent resize-none"
-					placeholder="Add a note to this bookmark..."
+					placeholder={m.bookmarks_note_placeholder()}
 				></textarea>
 				<p class="mt-1 text-xs text-gray-400">
 					Press <kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">⌘</kbd>+<kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">Enter</kbd> to save

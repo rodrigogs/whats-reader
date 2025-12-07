@@ -34,6 +34,7 @@
   "search_result_of": "{current} of {total}",
   "search_previous": "Previous match",
   "search_next": "Next match",
+  "search_clear": "Clear search",
   
   "perspective_view_as": "View as",
   "perspective_select": "Select perspective",
@@ -51,6 +52,7 @@
   "bookmarks_delete": "Delete",
   "bookmarks_comment_placeholder": "Add a note (optional)...",
   "bookmarks_empty": "No bookmarks yet",
+  "bookmarks_empty_current_chat": "No bookmarks in this chat",
   "bookmarks_empty_hint": "Click the bookmark icon on any message to save it here",
   "bookmarks_all_chats": "All chats",
   "bookmarks_current_chat": "Current chat",
@@ -58,12 +60,20 @@
   "bookmarks_import": "Import",
   "bookmarks_import_success": "Imported {count} bookmarks",
   "bookmarks_from_chat": "From: {chat}",
+  "bookmarks_close": "Close bookmarks panel",
+  "bookmarks_close_modal": "Close",
+  "bookmarks_note_placeholder": "Add a note to this bookmark...",
   
-  "stats_title": "Statistics",
+  "stats_title": "Chat Statistics",
   "stats_view": "View statistics",
   "stats_close": "Close",
-  "stats_total_messages": "Total Messages",
+  "stats_computing": "Computing statistics...",
+  "stats_messages": "Messages",
   "stats_participants": "Participants",
+  "stats_avg_day": "Avg/Day",
+  "stats_media": "Media",
+  "stats_duration": "Duration",
+  "stats_total_messages": "Total Messages",
   "stats_media_shared": "Media Shared",
   "stats_date_range": "Date Range",
   "stats_avg_per_day": "Avg. per day",
@@ -98,8 +108,10 @@
   
   "transcription_title": "Transcription",
   "transcription_transcribe": "Transcribe audio",
+  "transcription_transcribe_title": "Transcribe this voice message using AI",
   "transcription_show": "Show transcription",
   "transcription_hide": "Hide transcription",
+  "transcription_hide_title": "Hide transcription",
   "transcription_loading_model": "Loading AI model... {progress}%",
   "transcription_transcribing": "Transcribing...",
   "transcription_retry": "Retry",
@@ -111,6 +123,9 @@
   "auto_load_media": "Auto-load Media",
   
   "context_menu_remove": "Remove Chat",
+  "context_menu_close": "Close context menu",
+  
+  "participants_view_all": "Click to see all participants",
   
   "export_instructions_title": "How to export your WhatsApp chat",
   "export_step_1": "Open WhatsApp on your phone",
@@ -142,5 +157,6 @@
   "language_chinese": "中文",
   "language_korean": "한국어",
   "language_russian": "Русский",
-  "language_auto": "Auto-detect"
+  "language_auto": "Auto-detect",
+  "language_change": "Change language"
 }

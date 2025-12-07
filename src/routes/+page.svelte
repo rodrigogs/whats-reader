@@ -481,7 +481,7 @@ const currentUser = $derived.by(() => {
 								type="button"
 								class="text-xs text-white/70 hover:text-white truncate block max-w-full text-left cursor-pointer transition-colors"
 								onclick={openParticipantsModal}
-								title="Click to see all participants"
+							title={m.participants_view_all()}
 							>
 								{appState.selectedChat.participants.slice(0, 5).join(', ')}
 								{#if appState.selectedChat.participants.length > 5}

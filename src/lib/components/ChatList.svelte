@@ -2,6 +2,7 @@
 import { floating } from '$lib/actions/floating';
 import type { ChatData } from '$lib/state.svelte';
 import { getAvailableLanguages } from '$lib/transcription.svelte';
+import * as m from '$lib/paraglide/messages';
 
 interface LoadingChat {
 	id: string;
@@ -152,8 +153,8 @@ function getLastMessage(chat: ChatData): string {
 	<div class="flex-1 overflow-y-auto">
 		{#if chats.length === 0 && loadingChats.length === 0}
 			<div class="p-4 text-center text-gray-500 dark:text-gray-400">
-				<p>No chats loaded</p>
-				<p class="text-sm mt-1">Import a WhatsApp export to get started</p>
+			<p>{m.chats_no_loaded()}</p>
+			<p class="text-sm mt-1">{m.chats_import_hint()}</p>
 			</div>
 		{:else}
 			<!-- Loading chat placeholders -->
@@ -242,8 +243,8 @@ function getLastMessage(chat: ChatData): string {
 								e.stopPropagation();
 								onRemove(index);
 							}}
-							title="Remove chat"
-							aria-label="Remove chat"
+							title={m.chat_remove()}
+							aria-label={m.chat_remove()}
 						>
 							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -256,8 +257,8 @@ function getLastMessage(chat: ChatData): string {
 								e.stopPropagation();
 								openContextMenu(e, index, e.currentTarget as HTMLButtonElement);
 							}}
-							title="Chat options"
-							aria-label="Chat options"
+							title={m.chat_options()}
+							aria-label={m.chat_options()}
 						>
 							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
@@ -276,7 +277,7 @@ function getLastMessage(chat: ChatData): string {
 			type="button"
 			class="fixed inset-0 z-40 cursor-default"
 			onclick={closeContextMenu}
-			aria-label="Close context menu"
+			aria-label={m.context_menu_close()}
 		></button>
 		
 		<!-- Menu -->
@@ -346,7 +347,7 @@ function getLastMessage(chat: ChatData): string {
 						role="menu"
 					>
 						<div class="px-3 py-2 border-b border-gray-200 dark:border-gray-700">
-							<span class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Select Language</span>
+							<span class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{m.transcription_select_language()}</span>
 						</div>
 						{#each availableLanguages as lang}
 							{@const currentLang = getLanguageForChat(chats[contextMenuIndex]?.title || '')}

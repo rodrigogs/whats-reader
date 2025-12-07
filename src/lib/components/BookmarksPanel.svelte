@@ -1,6 +1,7 @@
 <script lang="ts">
 import { type Bookmark, bookmarksState } from '$lib/bookmarks.svelte';
 import BookmarkModal from './BookmarkModal.svelte';
+import * as m from '$lib/paraglide/messages';
 
 interface Props {
 	currentChatId?: string;
@@ -138,7 +139,7 @@ function handleKeydown(e: KeyboardEvent) {
 				type="button"
 				class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer"
 				onclick={onClose}
-				aria-label="Close bookmarks panel"
+				aria-label={m.bookmarks_close()}
 			>
 				<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -187,10 +188,10 @@ function handleKeydown(e: KeyboardEvent) {
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
 				</svg>
 				<p class="text-gray-500 dark:text-gray-400 text-sm">
-					{filterMode === 'current' ? 'No bookmarks in this chat' : 'No bookmarks yet'}
+					{filterMode === 'current' ? m.bookmarks_empty_current_chat() : m.bookmarks_empty()}
 				</p>
 				<p class="text-gray-400 dark:text-gray-500 text-xs mt-1">
-					Click the bookmark icon on any message to save it
+					{m.bookmarks_empty_hint()}
 				</p>
 			</div>
 		{:else}

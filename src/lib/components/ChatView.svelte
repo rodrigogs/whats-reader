@@ -4,6 +4,7 @@ import { bookmarksState } from '$lib/bookmarks.svelte';
 import type { ChatMessage } from '$lib/parser';
 import { groupMessagesByDate } from '$lib/parser';
 import MessageBubble from './MessageBubble.svelte';
+import * as m from '$lib/paraglide/messages';
 
 interface Props {
 	messages: ChatMessage[];
@@ -314,9 +315,9 @@ function handleScroll() {
 			<div class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
 				{#if isLoadingMore}
 					<div class="w-4 h-4 border-2 border-gray-300 border-t-[var(--color-whatsapp-teal)] rounded-full animate-spin"></div>
-					Loading older messages...
-				{:else}
-					<span class="opacity-60">Scroll up for older messages</span>
+				{m.messages_loading_older()}
+			{:else}
+				<span class="opacity-60">{m.messages_scroll_older()}</span>
 				{/if}
 			</div>
 		</div>
@@ -358,7 +359,7 @@ function handleScroll() {
 
 	{#if messages.length === 0}
 		<div class="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-			<p>No messages to display</p>
+			<p>{m.messages_no_display()}</p>
 		</div>
 	{/if}
 </div>
