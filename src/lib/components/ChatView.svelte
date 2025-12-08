@@ -1,9 +1,10 @@
 <script lang="ts">
-import { onDestroy, onMount } from 'svelte';
+import { onDestroy, onMount, tick } from 'svelte';
 import { bookmarksState } from '$lib/bookmarks.svelte';
 import * as m from '$lib/paraglide/messages';
 import type { ChatMessage } from '$lib/parser';
 import { groupMessagesByDate } from '$lib/parser';
+import type { FlatItem } from '$lib/parser/zip-parser';
 import MessageBubble from './MessageBubble.svelte';
 
 interface Props {
@@ -15,6 +16,9 @@ interface Props {
 	currentSearchResultId?: string | null;
 	scrollToMessageId?: string | null;
 	autoLoadMedia?: boolean;
+	precomputedMessageIndex?: Map<string, number>;
+	precomputedFlatItems?: FlatItem[];
+	precomputedMessagesById?: Map<string, ChatMessage>;
 }
 
 let {
@@ -26,6 +30,9 @@ let {
 	currentSearchResultId = null,
 	scrollToMessageId = null,
 	autoLoadMedia = false,
+	precomputedMessageIndex,
+	precomputedFlatItems,
+	precomputedMessagesById,
 }: Props = $props();
 
 // Performance optimization: chunk messages for progressive rendering
@@ -37,15 +44,91 @@ type RenderItem =
 	| { type: 'date'; date: string }
 	| { type: 'message'; message: ChatMessage };
 
-const flatItems = $derived.by(() => {
+// Check if precomputed data is available
+const hasPrecomputedData = $derived(
+	!!precomputedFlatItems && precomputedFlatItems.length > 0,
+);
+
+// Build a message lookup map - use precomputed if available, otherwise build lazily
+let cachedMessagesById: Map<string, ChatMessage> | null = null;
+let cachedMessagesChatId: string | null = null;
+let cacheBuiltFully = false;
+
+function getMessageById(id: string): ChatMessage | undefined {
+	// Use precomputed map if available (fast path - no iteration needed)
+	if (precomputedMessagesById) {
+		return precomputedMessagesById.get(id);
+	}
+
+	// Invalidate cache if chat changed
+	if (cachedMessagesChatId !== chatId) {
+		cachedMessagesById = new Map();
+		cachedMessagesChatId = chatId;
+		cacheBuiltFully = false;
+	}
+
+	// If we have it cached, return it
+	if (cachedMessagesById?.has(id)) {
+		return cachedMessagesById.get(id);
+	}
+
+	// If cache is fully built and we don't have it, it doesn't exist
+	if (cacheBuiltFully) {
+		return undefined;
+	}
+
+	// Build full cache on first miss - this only happens once per chat
+	// and only when precomputedMessagesById is not available
+	if (!cacheBuiltFully) {
+		for (const msg of messages) {
+			cachedMessagesById!.set(msg.id, msg);
+		}
+		cacheBuiltFully = true;
+	}
+
+	return cachedMessagesById!.get(id);
+}
+
+// Get the total number of items (for chunking calculations)
+const totalFlatItemsCount = $derived.by(() => {
+	if (precomputedFlatItems && precomputedFlatItems.length > 0) {
+		return precomputedFlatItems.length;
+	}
+	// Fallback: estimate based on messages (each message + ~1 date separator per day)
+	// This is an approximation but close enough for chunk calculations
+	return messages.length + Math.ceil(messages.length / 50); // rough estimate
+});
+
+// Get the message index map
+const messageIndexMap = $derived(
+	precomputedMessageIndex ?? new Map<string, number>(),
+);
+
+// Fallback: compute full flat items only when precomputed data is NOT available
+const fallbackFlatItems = $derived.by(() => {
+	// Only compute if we don't have precomputed data
+	if (precomputedFlatItems && precomputedFlatItems.length > 0) {
+		return null;
+	}
+
 	const grouped = groupMessagesByDate(messages);
 	const items: RenderItem[] = [];
+	const indexMap = new Map<string, number>();
+
 	for (const [date, dayMessages] of grouped.entries()) {
 		items.push({ type: 'date', date });
 		for (const message of dayMessages) {
+			indexMap.set(message.id, items.length);
 			items.push({ type: 'message', message });
 		}
 	}
+
+	// Update the cached index map if we computed it
+	if (!precomputedMessageIndex) {
+		// We can't mutate messageIndexMap derived, but the fallback case is rare
+		// The index will be available via precomputed in most cases
+	}
+
 	return items;
 });
 
@@ -53,12 +136,56 @@ const flatItems = $derived.by(() => {
 let loadedChunksFromEnd = $state(INITIAL_CHUNKS);
 
 // Calculate which items to render (from end of list)
+// This only resolves the items we actually need to display
 const renderedItems = $derived.by(() => {
-	const totalItems = flatItems.length;
+	const totalItems = totalFlatItemsCount;
 	const itemsToRender = Math.min(totalItems, loadedChunksFromEnd * CHUNK_SIZE);
 	const startIdx = Math.max(0, totalItems - itemsToRender);
+
+	// If we have precomputed data, only resolve the slice we need
+	if (precomputedFlatItems && precomputedFlatItems.length > 0) {
+		const slice = precomputedFlatItems.slice(startIdx);
+		const items: RenderItem[] = [];
+		let skippedCount = 0;
+		const skippedIds: string[] = [];
+
+		for (const item of slice) {
+			if (item.type === 'date') {
+				items.push({ type: 'date', date: item.date });
+			} else {
+				const message = getMessageById(item.messageId);
+				if (message) {
+					items.push({ type: 'message', message });
+				} else {
+					skippedCount++;
+					if (skippedIds.length < 5) {
+						skippedIds.push(item.messageId);
+					}
+				}
+			}
+		}
+
+		// Only log if messages were skipped
+		if (skippedCount > 0) {
+			console.warn(
+				'[renderedItems] Skipped',
+				skippedCount,
+				'messages because getMessageById returned undefined',
+			);
+			console.warn('[renderedItems] First few skipped IDs:', skippedIds);
+		}
+
+		return {
+			items,
+			startIndex: startIdx,
+			hasMore: startIdx > 0,
+		};
+	}
+
+	// Fallback: use computed flat items
+	const fallback = fallbackFlatItems ?? [];
 	return {
-		items: flatItems.slice(startIdx),
+		items: fallback.slice(startIdx),
 		startIndex: startIdx,
 		hasMore: startIdx > 0,
 	};
@@ -129,7 +256,7 @@ function loadMoreMessages() {
 	// Load more chunks
 	loadedChunksFromEnd = Math.min(
 		loadedChunksFromEnd + 2, // Load 2 more chunks
-		Math.ceil(flatItems.length / CHUNK_SIZE),
+		Math.ceil(totalFlatItemsCount / CHUNK_SIZE),
 	);
 
 	// After DOM updates, restore scroll position
@@ -149,7 +276,9 @@ $effect(() => {
 	if (previousChatId !== null && previousChatId !== chatId) {
 		loadedChunksFromEnd = INITIAL_CHUNKS;
 		hasScrolledToBottom = false;
-		messageRefs.clear();
+		// DON'T clear messageRefs here - let the destroy() callbacks handle cleanup
+		// and the new elements will register themselves
+		lastProcessedScrollId = null; // Reset so bookmarks work after chat switch
 	}
 	previousChatId = chatId;
 });
@@ -180,37 +309,51 @@ onDestroy(() => {
 // Ensure message is loaded when navigating to search result
 $effect(() => {
 	if (currentSearchResultId) {
-		ensureMessageLoaded(currentSearchResultId);
+		// Capture current values to ensure deriveds are evaluated
+		const currentIndexMap = messageIndexMap;
+		const currentFlatItemsLength = totalFlatItemsCount;
+		const messageIndex = currentIndexMap.get(currentSearchResultId);
+
+		if (messageIndex !== undefined) {
+			const itemsFromEnd = currentFlatItemsLength - messageIndex;
+			const chunksNeeded = Math.ceil(itemsFromEnd / CHUNK_SIZE);
+
+			if (chunksNeeded > loadedChunksFromEnd) {
+				loadedChunksFromEnd = chunksNeeded + 1;
+			}
+		}
 	}
 });
 
 // Scroll to current search result when it changes
 $effect(() => {
-	if (currentSearchResultId && messageRefs.has(currentSearchResultId)) {
-		const element = messageRefs.get(currentSearchResultId);
-
-		highlightReady = false;
-		highlightedId = null;
-		pendingHighlightId = currentSearchResultId;
-		isNavigationScroll = true;
-
-		element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-		setTimeout(() => {
-			isNavigationScroll = false;
-		}, 500);
-	}
-});
-
-// Scroll to specific message (from bookmark navigation)
-$effect(() => {
-	const targetId = scrollToMessageId;
+	const targetId = currentSearchResultId;
 	if (!targetId) return;
 
-	// First ensure the message chunk is loaded
-	ensureMessageLoaded(targetId);
+	// Capture current values to ensure deriveds are evaluated
+	const currentIndexMap = messageIndexMap;
+	const currentFlatItemsLength = totalFlatItemsCount;
 
-	const scrollToMessage = () => {
+	// Run async navigation
+	(async () => {
+		// Check if we need to expand chunks
+		const messageIndex = currentIndexMap.get(targetId);
+		let chunksExpanded = false;
+
+		if (messageIndex !== undefined) {
+			const itemsFromEnd = currentFlatItemsLength - messageIndex;
+			const chunksNeeded = Math.ceil(itemsFromEnd / CHUNK_SIZE);
+
+			if (chunksNeeded > loadedChunksFromEnd) {
+				loadedChunksFromEnd = chunksNeeded + 1;
+				chunksExpanded = true;
+			}
+		}
+
+		if (chunksExpanded) {
+			await tick(); // Wait for DOM update
+		}
+
 		if (messageRefs.has(targetId)) {
 			const element = messageRefs.get(targetId);
 
@@ -224,48 +367,115 @@ $effect(() => {
 			setTimeout(() => {
 				isNavigationScroll = false;
 			}, 500);
-
-			return true;
 		}
-		return false;
-	};
-
-	// Try immediately
-	if (scrollToMessage()) return;
-
-	// If not found, wait for DOM to update with loaded chunks
-	// Use multiple attempts with increasing delays
-	const attempts = [0, 50, 150, 300];
-	let attemptIndex = 0;
-
-	const tryScroll = () => {
-		if (scrollToMessage()) return;
-		attemptIndex++;
-		if (attemptIndex < attempts.length) {
-			setTimeout(tryScroll, attempts[attemptIndex]);
-		}
-	};
-
-	requestAnimationFrame(tryScroll);
+	})();
 });
 
-// Ensure a specific message ID is loaded (expand chunks if needed)
-function ensureMessageLoaded(messageId: string) {
-	// Find the message index in flatItems
-	const messageIndex = flatItems.findIndex(
-		(item) => item.type === 'message' && item.message.id === messageId,
-	);
+// Track last processed scroll to avoid duplicate processing
+let lastProcessedScrollId: string | null = null;
 
-	if (messageIndex === -1) return;
-
-	// Calculate how many chunks we need from the end
-	const itemsFromEnd = flatItems.length - messageIndex;
-	const chunksNeeded = Math.ceil(itemsFromEnd / CHUNK_SIZE);
-
-	if (chunksNeeded > loadedChunksFromEnd) {
-		loadedChunksFromEnd = chunksNeeded + 1; // Add buffer
+// Reset tracking when scrollToMessageId is cleared (allows re-navigation to same message)
+$effect(() => {
+	if (scrollToMessageId === null) {
+		lastProcessedScrollId = null;
 	}
+});
+
+// Robust scroll-to-message function with retry mechanism
+// This handles timing issues where DOM refs might not be available immediately
+async function scrollToMessageWithRetry(targetId: string): Promise<boolean> {
+	const maxRetries = 30; // 30 * 50ms = 1.5 seconds max
+	const retryDelay = 50;
+
+	for (let attempt = 0; attempt < maxRetries; attempt++) {
+		// 1. Check if target exists in current chat's index
+		const messageIndex = messageIndexMap.get(targetId);
+
+		if (messageIndex === undefined) {
+			// Message not in this chat - nothing we can do
+			console.log('[scrollToMessage] Message not in index, attempt:', attempt);
+			// Give it a few attempts in case chat is still switching
+			if (attempt < 5) {
+				await new Promise((resolve) => setTimeout(resolve, retryDelay));
+				continue;
+			}
+			return false;
+		}
+
+		// 2. Ensure enough chunks are loaded to include the target message
+		const itemsFromEnd = totalFlatItemsCount - messageIndex;
+		const chunksNeeded = Math.ceil(itemsFromEnd / CHUNK_SIZE);
+
+		if (chunksNeeded > loadedChunksFromEnd) {
+			loadedChunksFromEnd = chunksNeeded + 1;
+			await tick(); // Wait for DOM update after chunk expansion
+		}
+
+		// 3. Check if message ref exists in DOM
+		if (messageRefs.has(targetId)) {
+			const element = messageRefs.get(targetId);
+
+			if (element && chatContainer) {
+				// Success! Perform scroll and highlight
+				highlightReady = false;
+				highlightedId = null;
+				pendingHighlightId = targetId;
+				isNavigationScroll = true;
+
+				const elementRect = element.getBoundingClientRect();
+				const containerRect = chatContainer.getBoundingClientRect();
+				const elementOffsetTop =
+					elementRect.top - containerRect.top + chatContainer.scrollTop;
+				const scrollToPosition =
+					elementOffsetTop - containerRect.height / 2 + elementRect.height / 2;
+
+				chatContainer.scrollTo({
+					top: scrollToPosition,
+					behavior: 'smooth',
+				});
+
+				setTimeout(() => {
+					isNavigationScroll = false;
+				}, 500);
+
+				console.log('[scrollToMessage] Success on attempt:', attempt);
+				return true;
+			}
+		}
+
+		// 4. Ref not ready yet, wait and retry
+		console.log(
+			'[scrollToMessage] Ref not ready, attempt:',
+			attempt,
+			'refsSize:',
+			messageRefs.size,
+		);
+		await new Promise((resolve) => setTimeout(resolve, retryDelay));
+	}
+
+	console.log(
+		'[scrollToMessage] Failed after',
+		maxRetries,
+		'attempts for:',
+		targetId,
+	);
+	return false;
 }
+
+// Simple effect that triggers the retry-based scroll
+$effect(() => {
+	const targetId = scrollToMessageId;
+
+	if (!targetId || targetId === lastProcessedScrollId) return;
+
+	// Mark as processed immediately to prevent duplicate attempts
+	lastProcessedScrollId = targetId;
+
+	console.log('[Scroll Effect] Starting scroll to:', targetId);
+
+	// Fire and forget - the retry mechanism handles all timing
+	scrollToMessageWithRetry(targetId);
+});
 
 // Handle scroll end to trigger highlight
 function handleScrollEnd() {

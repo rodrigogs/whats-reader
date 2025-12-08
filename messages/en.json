@@ -63,6 +63,7 @@
   "bookmarks_close": "Close bookmarks panel",
   "bookmarks_close_modal": "Close",
   "bookmarks_note_placeholder": "Add a note to this bookmark...",
+  "bookmarks_indexing": "Indexing...",
   
   "stats_title": "Chat Statistics",
   "stats_view": "View statistics",

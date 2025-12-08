@@ -185,6 +185,51 @@ async function handleFilesSelected(files: FileList) {
 				loadingChats = loadingChats.filter((lc) => lc.id !== loadingId);
 				appState.addChat(chatData);
 
+				// Start background indexing for bookmark navigation and flat items
+				const indexWorker = new Worker(
+					new URL('$lib/workers/index-worker.ts', import.meta.url),
+					{ type: 'module' },
+				);
+
+				indexWorker.onmessage = (
+					event: MessageEvent<{
+						chatTitle: string;
+						indexEntries: [string, number][];
+						flatItems: Array<
+							| { type: 'date'; date: string }
+							| { type: 'message'; messageId: string }
+						>;
+					}>,
+				) => {
+					const { chatTitle, indexEntries, flatItems } = event.data;
+					const messageIndex = new Map(indexEntries);
+					appState.updateChatMessageIndex(chatTitle, messageIndex);
+					appState.updateChatFlatItems(chatTitle, flatItems);
+					indexWorker.terminate();
+				};
+
+				indexWorker.onerror = (err) => {
+					console.error('Index worker error:', err);
+					indexWorker.terminate();
+				};
+
+				// Send messages to worker for indexing
+				const serializedMessages = chatData.messages.map((m) => ({
+					id: m.id,
+					timestamp: m.timestamp.toISOString(),
+					sender: m.sender,
+					content: m.content,
+					isSystemMessage: m.isSystemMessage,
+					isMediaMessage: m.isMediaMessage,
+					mediaType: m.mediaType,
+					rawLine: m.rawLine,
+				}));
+
+				indexWorker.postMessage({
+					messages: serializedMessages,
+					chatTitle: chatData.title,
+				});
+
 				// On mobile, collapse sidebar after loading chats
 				if (browser && window.innerWidth < 768) {
 					showSidebar = false;
@@ -451,6 +496,7 @@ const currentUser = $derived.by(() => {
 			<!-- Sidebar -->
 			<div
 				class="sidebar-panel w-80 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col {showSidebar ? 'sidebar-open' : 'sidebar-closed'}"
+				class:electron-mac={isElectronMac}
 			>
 				<!-- Sidebar header - empty green bar to match main header -->
 				<div class="h-16 bg-[var(--color-whatsapp-dark-green)] flex-shrink-0"></div>
@@ -638,8 +684,25 @@ const currentUser = $derived.by(() => {
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
 								</svg>
 							</button>
-							<!-- Spacer for fixed settings buttons (language/dark mode now at top-right) -->
-							<div class="w-20"></div>
+							<LocaleSwitcher variant="header" />
+							<button
+								onclick={toggleDarkMode}
+								class="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+								aria-label={m.toggle_dark_mode()}
+								title={isDarkMode ? m.theme_switch_to_light() : m.theme_switch_to_dark()}
+							>
+								{#if isDarkMode}
+									<!-- Sun icon -->
+									<svg class="w-5 h-5 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+									</svg>
+								{:else}
+									<!-- Moon icon -->
+									<svg class="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+									</svg>
+								{/if}
+							</button>
 						</div>
 					</div>
 
@@ -715,12 +778,16 @@ const currentUser = $derived.by(() => {
 						currentSearchResultId={appState.currentSearchResultId}
 						{scrollToMessageId}
 						autoLoadMedia={autoLoadMediaForCurrentChat}
+						precomputedMessageIndex={appState.selectedChat.messageIndex}
+						precomputedFlatItems={appState.selectedChat.flatItems}
+						precomputedMessagesById={appState.selectedChat.messagesById}
 					/>
 				</div>
 
 				<!-- Bookmarks panel (slide from right) -->
 				<div
 					class="bookmarks-panel w-80 flex-shrink-0 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col {showBookmarks ? 'bookmarks-open' : 'bookmarks-closed'}"
+					class:electron-mac={isElectronMac}
 				>
 					<!-- Bookmarks header - matches sidebar header -->
 					<div class="h-16 bg-[var(--color-whatsapp-dark-green)] flex-shrink-0"></div>
@@ -731,6 +798,7 @@ const currentUser = $derived.by(() => {
 							currentChatId={appState.selectedChat.title}
 							onNavigateToMessage={handleNavigateToBookmark}
 							onClose={() => showBookmarks = false}
+							indexedChatTitles={appState.indexedChatTitles}
 						/>
 					</div>
 				</div>

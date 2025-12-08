@@ -226,10 +226,17 @@ body {
 		transform: translateX(-100%);
 		opacity: 0;
 		position: fixed;
-		inset: 0 auto 0 0;
+		top: 0;
+		left: 0;
+		bottom: 0;
 		z-index: 40;
 		display: flex !important;
 		width: 20rem; /* w-80 */
+	}
+	
+	/* Account for Electron macOS titlebar */
+	.sidebar-panel.electron-mac {
+		top: 38px;
 	}
 	
 	.sidebar-panel.sidebar-open {
@@ -273,10 +280,17 @@ body {
 		transform: translateX(100%);
 		opacity: 0;
 		position: fixed;
-		inset: 0 0 0 auto;
+		top: 0;
+		right: 0;
+		bottom: 0;
 		z-index: 40;
 		display: flex !important;
 		width: 20rem; /* w-80 */
+	}
+	
+	/* Account for Electron macOS titlebar */
+	.bookmarks-panel.electron-mac {
+		top: 38px;
 	}
 	
 	.bookmarks-panel.bookmarks-open {

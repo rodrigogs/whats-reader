@@ -21,6 +21,19 @@ export interface MediaFile {
 	_loaded?: boolean;
 }
 
+// Serializable flat item types for pre-computed rendering list
+export interface DateFlatItem {
+	type: 'date';
+	date: string;
+}
+
+export interface MessageFlatItem {
+	type: 'message';
+	messageId: string;
+}
+
+export type FlatItem = DateFlatItem | MessageFlatItem;
+
 export interface ParsedZipChat extends ParsedChat {
 	mediaFiles: MediaFile[];
 	hasMedia: boolean;
@@ -29,6 +42,13 @@ export interface ParsedZipChat extends ParsedChat {
 	contacts: Map<string, ContactInfo>;
 	// Reference to zip for lazy loading
 	_zip?: JSZip;
+	// Pre-computed message index for bookmark navigation (messageId -> flatIndex)
+	// Built by index-worker after import for efficient O(1) lookups
+	messageIndex?: Map<string, number>;
+	// Pre-computed flat items list for rendering (avoids groupMessagesByDate on main thread)
+	flatItems?: FlatItem[];
+	// Pre-computed messages by ID map for O(1) lookups (built with flatItems)
+	messagesById?: Map<string, ChatMessage>;
 }
 
 // Keep track of loaded media to manage memory

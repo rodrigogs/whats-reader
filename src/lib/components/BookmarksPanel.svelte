@@ -7,9 +7,15 @@ interface Props {
 	currentChatId?: string;
 	onNavigateToMessage: (messageId: string, chatId: string) => void;
 	onClose: () => void;
+	indexedChatTitles?: Set<string>;
 }
 
-let { currentChatId, onNavigateToMessage, onClose }: Props = $props();
+let {
+	currentChatId,
+	onNavigateToMessage,
+	onClose,
+	indexedChatTitles = new Set(),
+}: Props = $props();
 
 let filterMode = $state<'all' | 'current'>('all');
 let editingBookmark = $state<Bookmark | null>(null);
@@ -98,7 +104,12 @@ async function handleImport(e: Event) {
 
 	try {
 		const result = await bookmarksState.importFromFile(file);
-		importSuccess = `Imported ${result.imported} bookmark${result.imported !== 1 ? 's' : ''}`;
+		// Build success message
+		let message = `Imported ${result.imported} bookmark${result.imported !== 1 ? 's' : ''}`;
+		if (result.skipped > 0) {
+			message += ` (${result.skipped} duplicate${result.skipped !== 1 ? 's' : ''} skipped)`;
+		}
+		importSuccess = message;
 
 		// Clear success message after 3 seconds
 		setTimeout(() => {
@@ -237,16 +248,26 @@ function handleKeydown(e: KeyboardEvent) {
 										
 										<!-- Expanded actions -->
 										{#if isExpanded}
+											{@const isIndexed = indexedChatTitles.has(bookmark.chatId)}
 											<div class="flex items-center gap-2 mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
 												<button
 													type="button"
-													class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[var(--color-whatsapp-teal)] hover:brightness-110 hover:shadow-md rounded-lg transition-all cursor-pointer"
+													class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[var(--color-whatsapp-teal)] rounded-lg transition-all cursor-pointer {isIndexed ? 'hover:brightness-110 hover:shadow-md' : 'opacity-50 cursor-not-allowed'}"
 													onclick={(e) => handleNavigateClick(e, bookmark)}
+													disabled={!isIndexed}
+													title={isIndexed ? undefined : m.bookmarks_indexing()}
 												>
-													<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-													</svg>
-													Go to
+													{#if !isIndexed}
+														<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+															<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+															<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+														</svg>
+													{:else}
+														<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+															<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+														</svg>
+													{/if}
+													{isIndexed ? 'Go to' : m.bookmarks_indexing()}
 												</button>
 												<button
 													type="button"
