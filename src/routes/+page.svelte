@@ -20,6 +20,13 @@ import { setTranscriptionLanguage } from '$lib/transcription.svelte';
 const isElectron =
 	browser && typeof window !== 'undefined' && 'electronAPI' in window;
 
+// Detect if running in Electron on macOS (only macOS needs custom titlebar)
+const isElectronMac =
+	isElectron &&
+	typeof window !== 'undefined' &&
+	(window as Window & { electronAPI?: { platform?: string } }).electronAPI
+		?.platform === 'darwin';
+
 // Dark mode state - check if dark class is on html element
 let isDarkMode = $state(
 	browser ? document.documentElement.classList.contains('dark') : true,
@@ -298,8 +305,8 @@ const currentUser = $derived.by(() => {
 </script>
 
 <div class="h-screen flex flex-col bg-gray-100 dark:bg-gray-950">
-	<!-- Electron drag region for macOS titlebar (only shown in Electron) -->
-	{#if isElectron}
+	<!-- Electron drag region for macOS titlebar (only shown in Electron on macOS) -->
+	{#if isElectronMac}
 		<div class="electron-drag h-[38px] flex-shrink-0 bg-[var(--color-whatsapp-dark-green)]"></div>
 	{/if}
 
@@ -307,7 +314,7 @@ const currentUser = $derived.by(() => {
 		<!-- Empty state - show file upload -->
 		<div class="flex-1 overflow-auto">
 			<!-- Language selector and Dark mode toggle (top right) -->
-			<div class="absolute top-4 right-4 z-50 flex items-center gap-1.5" class:top-[54px]={isElectron}>
+		<div class="absolute top-4 right-4 z-50 flex items-center gap-1.5" class:top-[54px]={isElectronMac}>
 				<LocaleSwitcher variant={isElectron ? 'header' : 'default'} />
 				<button
 					onclick={toggleDarkMode}
