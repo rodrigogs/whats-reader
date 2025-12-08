@@ -78,11 +78,17 @@
 			"target": [
 				{
 					"target": "dmg",
-					"arch": ["x64", "arm64"]
+					"arch": [
+						"x64",
+						"arm64"
+					]
 				},
 				{
 					"target": "zip",
-					"arch": ["x64", "arm64"]
+					"arch": [
+						"x64",
+						"arm64"
+					]
 				}
 			]
 		},
@@ -91,11 +97,17 @@
 			"target": [
 				{
 					"target": "nsis",
-					"arch": ["x64", "arm64"]
+					"arch": [
+						"x64",
+						"arm64"
+					]
 				},
 				{
 					"target": "portable",
-					"arch": ["x64", "arm64"]
+					"arch": [
+						"x64",
+						"arm64"
+					]
 				}
 			]
 		},
@@ -104,15 +116,24 @@
 			"target": [
 				{
 					"target": "AppImage",
-					"arch": ["x64", "arm64"]
+					"arch": [
+						"x64",
+						"arm64"
+					]
 				},
 				{
 					"target": "deb",
-					"arch": ["x64", "arm64"]
+					"arch": [
+						"x64",
+						"arm64"
+					]
 				},
 				{
 					"target": "rpm",
-					"arch": ["x64", "arm64"]
+					"arch": [
+						"x64",
+						"arm64"
+					]
 				}
 			],
 			"category": "Utility"
