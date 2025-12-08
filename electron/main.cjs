@@ -1,4 +1,11 @@
-const { app, BrowserWindow, ipcMain, dialog, protocol, Menu } = require('electron');
+const {
+	app,
+	BrowserWindow,
+	ipcMain,
+	dialog,
+	protocol,
+	Menu,
+} = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
@@ -25,7 +32,11 @@ const createWindow = () => {
 		},
 		titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
 		backgroundColor: '#ECE5DD',
-		icon: path.join(__dirname, '../static', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
+		icon: path.join(
+			__dirname,
+			'../static',
+			process.platform === 'win32' ? 'icon.ico' : 'icon.png',
+		),
 		// Hide menu bar on Windows
 		autoHideMenuBar: true,
 	};
