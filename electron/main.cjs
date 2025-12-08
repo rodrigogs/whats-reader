@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, protocol } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol, Menu } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
@@ -25,12 +25,19 @@ const createWindow = () => {
 		},
 		titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
 		backgroundColor: '#ECE5DD',
-		icon: path.join(__dirname, '../static/favicon.png'),
+		icon: path.join(__dirname, '../static', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
+		// Hide menu bar on Windows
+		autoHideMenuBar: true,
 	};
 
 	// Only apply trafficLightPosition on macOS
 	if (process.platform === 'darwin') {
 		windowOptions.trafficLightPosition = { x: 15, y: 12 };
+	}
+
+	// Remove menu bar completely on Windows
+	if (process.platform === 'win32') {
+		Menu.setApplicationMenu(null);
 	}
 
 	// Create the browser window.
