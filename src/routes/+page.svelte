@@ -320,33 +320,34 @@ const currentUser = $derived.by(() => {
 		<div class="electron-drag h-[38px] flex-shrink-0 bg-[var(--color-whatsapp-dark-green)]"></div>
 	{/if}
 
+	<!-- Fixed settings buttons (always visible at top-right, never scroll) -->
+	<div class="fixed top-4 right-4 z-[60] flex items-center gap-1.5" class:top-[54px]={isElectronMac}>
+		<LocaleSwitcher variant={appState.hasChats || isElectron ? 'header' : 'default'} />
+		<button
+			onclick={toggleDarkMode}
+			class="p-1.5 rounded-full transition-colors cursor-pointer {appState.hasChats || isElectron 
+				? 'bg-white/10 hover:bg-white/20' 
+				: 'bg-gray-100/80 dark:bg-gray-800/80 hover:bg-gray-200 dark:hover:bg-gray-700 backdrop-blur-sm'}"
+			aria-label={m.toggle_dark_mode()}
+			title={isDarkMode ? m.theme_switch_to_light() : m.theme_switch_to_dark()}
+		>
+			{#if isDarkMode}
+				<!-- Sun icon -->
+				<svg class="w-4 h-4 {appState.hasChats || isElectron ? 'text-yellow-300' : 'text-yellow-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+				</svg>
+			{:else}
+				<!-- Moon icon -->
+				<svg class="w-4 h-4 {appState.hasChats || isElectron ? 'text-white/80' : 'text-gray-600 dark:text-gray-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+				</svg>
+			{/if}
+		</button>
+	</div>
+
 	{#if !appState.hasChats}
 		<!-- Empty state - show file upload -->
 		<div class="flex-1 overflow-auto">
-			<!-- Language selector and Dark mode toggle (fixed top right) -->
-			<div class="fixed top-4 right-4 z-50 flex items-center gap-1.5" class:top-[54px]={isElectronMac}>
-				<LocaleSwitcher variant={isElectron ? 'header' : 'default'} />
-				<button
-					onclick={toggleDarkMode}
-					class="p-1.5 rounded-full transition-colors cursor-pointer {isElectron 
-						? 'bg-white/10 hover:bg-white/20' 
-						: 'bg-gray-100/80 dark:bg-gray-800/80 hover:bg-gray-200 dark:hover:bg-gray-700 backdrop-blur-sm'}"
-					aria-label={m.toggle_dark_mode()}
-					title={isDarkMode ? m.theme_switch_to_light() : m.theme_switch_to_dark()}
-				>
-				{#if isDarkMode}
-					<!-- Sun icon -->
-					<svg class="w-4 h-4 {isElectron ? 'text-yellow-300' : 'text-yellow-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-					</svg>
-				{:else}
-					<!-- Moon icon -->
-					<svg class="w-4 h-4 {isElectron ? 'text-white/80' : 'text-gray-600 dark:text-gray-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-					</svg>
-				{/if}
-			</button>
-			</div>
 			
 			<div class="min-h-full flex items-center justify-center p-8">
 				<div class="max-w-lg w-full flex flex-col items-center">
@@ -617,25 +618,8 @@ const currentUser = $derived.by(() => {
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
 								</svg>
 							</button>
-							<!-- Language switcher -->
-							<LocaleSwitcher variant="header" />
-							<!-- Dark mode toggle in header -->
-							<button
-								class="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
-								onclick={toggleDarkMode}
-								title={isDarkMode ? m.theme_switch_to_light() : m.theme_switch_to_dark()}
-								aria-label={m.toggle_dark_mode()}
-							>
-								{#if isDarkMode}
-									<svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-									</svg>
-								{:else}
-									<svg class="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-									</svg>
-								{/if}
-							</button>
+							<!-- Spacer for fixed settings buttons (language/dark mode now at top-right) -->
+							<div class="w-20"></div>
 						</div>
 					</div>
 
