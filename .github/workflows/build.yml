@@ -39,6 +39,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Update package.json version
+        run: npm version ${{ inputs.version }} --no-git-tag-version --allow-same-version
+
       - name: Build app
         run: npm run build
 
