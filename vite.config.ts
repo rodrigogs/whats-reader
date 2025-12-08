@@ -8,7 +8,9 @@ export default defineConfig({
 		paraglideVitePlugin({
 			project: './project.inlang',
 			outdir: './src/lib/paraglide',
-			strategy: ['url', 'cookie', 'baseLocale'],
+			// Use localStorage and cookie for locale persistence (not URL)
+			// URL-based locale doesn't work well with GitHub Pages base path
+			strategy: ['localStorage', 'cookie', 'baseLocale'],
 		}),
 		tailwindcss(),
 		sveltekit(),

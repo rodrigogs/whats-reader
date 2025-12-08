@@ -33,7 +33,7 @@ if (browser) {
 }
 
 function handleLocaleChange(locale: Locale) {
-	setLocale(locale);
+	setLocale(locale, { reload: false });
 	if (browser) {
 		localStorage.setItem(LOCALE_STORAGE_KEY, locale);
 	}

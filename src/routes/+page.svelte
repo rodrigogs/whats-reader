@@ -323,8 +323,8 @@ const currentUser = $derived.by(() => {
 	{#if !appState.hasChats}
 		<!-- Empty state - show file upload -->
 		<div class="flex-1 overflow-auto">
-			<!-- Language selector and Dark mode toggle (top right) -->
-		<div class="absolute top-4 right-4 z-50 flex items-center gap-1.5" class:top-[54px]={isElectronMac}>
+			<!-- Language selector and Dark mode toggle (fixed top right) -->
+			<div class="fixed top-4 right-4 z-50 flex items-center gap-1.5" class:top-[54px]={isElectronMac}>
 				<LocaleSwitcher variant={isElectron ? 'header' : 'default'} />
 				<button
 					onclick={toggleDarkMode}
