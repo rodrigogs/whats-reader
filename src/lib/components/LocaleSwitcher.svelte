@@ -33,10 +33,20 @@ if (browser) {
 }
 
 function handleLocaleChange(locale: Locale) {
-	setLocale(locale, { reload: false });
+	// Skip if already on this locale
+	if (locale === getLocale()) {
+		dropdownOpen = false;
+		return;
+	}
+	
+	// Save to localStorage first (Paraglide also saves to its own key and cookie)
 	if (browser) {
 		localStorage.setItem(LOCALE_STORAGE_KEY, locale);
 	}
+	
+	// Use setLocale which will save to PARAGLIDE_LOCALE localStorage and cookie,
+	// then reload the page to reflect the new locale (required for static sites)
+	setLocale(locale);
 	dropdownOpen = false;
 }
 
