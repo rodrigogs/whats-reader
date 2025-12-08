@@ -2,11 +2,19 @@
 	"name": "whats-reader",
 	"productName": "WhatsApp Backup Reader",
 	"description": "A desktop app to read and visualize WhatsApp chat exports",
-	"private": true,
 	"version": "0.1.0",
 	"type": "module",
 	"main": "electron/main.cjs",
 	"author": "Rodrigo Gomes",
+	"license": "AGPL-3.0",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/rodrigogs/whats-reader.git"
+	},
+	"bugs": {
+		"url": "https://github.com/rodrigogs/whats-reader/issues"
+	},
+	"homepage": "https://github.com/rodrigogs/whats-reader#readme",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -29,6 +37,8 @@
 		"@biomejs/biome": "2.3.8",
 		"@inlang/cli": "^3.0.0",
 		"@inlang/paraglide-js": "2.6.0",
+		"@semantic-release/changelog": "^6.0.3",
+		"@semantic-release/git": "^10.0.1",
 		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/kit": "^2.48.5",
@@ -38,6 +48,7 @@
 		"electron": "^39.2.5",
 		"electron-builder": "^26.0.12",
 		"electron-squirrel-startup": "^1.0.1",
+		"semantic-release": "^24.2.9",
 		"svelte": "^5.43.8",
 		"svelte-check": "^4.3.4",
 		"tailwindcss": "^4.1.17",
