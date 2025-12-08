@@ -2,7 +2,7 @@
 	"name": "whats-reader",
 	"productName": "WhatsApp Backup Reader",
 	"description": "A desktop app to read and visualize WhatsApp chat exports",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"type": "module",
 	"main": "electron/main.cjs",
 	"author": {

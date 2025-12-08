@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/rodrigogs/whats-reader/compare/v1.0.1...v1.0.2) (2025-12-08)
+
+
+### Bug Fixes
+
+* update electron:dev script to use cross-env for setting NODE_ENV ([65a1683](https://github.com/rodrigogs/whats-reader/commit/65a1683e4b5620da8e3b8ac0f53fedc88fb26260))
+
 ## [1.0.1](https://github.com/rodrigogs/whats-reader/compare/v1.0.0...v1.0.1) (2025-12-08)
 
 
