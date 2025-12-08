@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/rodrigogs/whats-reader/compare/v1.0.0...v1.0.1) (2025-12-08)
+
+
+### Bug Fixes
+
+* add author email for deb builds and disable electron-builder auto-publish ([25fd8cb](https://github.com/rodrigogs/whats-reader/commit/25fd8cb64b0dd2c24cbc7f110b904e58ee8d4b6f))
+
 # 1.0.0 (2025-12-08)
 
 
