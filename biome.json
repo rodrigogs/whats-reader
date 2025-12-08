@@ -82,6 +82,16 @@
 			"linter": {
 				"enabled": false
 			}
+		},
+		{
+			"includes": ["messages/**/*.json"],
+			"assist": {
+				"actions": {
+					"source": {
+						"organizeImports": "off"
+					}
+				}
+			}
 		}
 	],
 	"assist": {
