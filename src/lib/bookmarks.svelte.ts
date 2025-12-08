@@ -173,18 +173,33 @@ function createBookmarksState() {
 			URL.revokeObjectURL(url);
 		},
 
-		// Import bookmarks from JSON (always replaces current bookmarks)
-		importBookmarks(data: BookmarkExport): { imported: number } {
+		// Import bookmarks from JSON (merges with existing bookmarks)
+		importBookmarks(data: BookmarkExport): {
+			imported: number;
+			skipped: number;
+		} {
 			if (!data || data.version !== 1 || !Array.isArray(data.bookmarks)) {
 				throw new Error('Invalid bookmark export format');
 			}
 
-			bookmarks = data.bookmarks;
-			return { imported: data.bookmarks.length };
+			// Merge: add new bookmarks, skip duplicates (by messageId)
+			const existingIds = new Set(bookmarks.map((b) => b.messageId));
+			const newBookmarks = data.bookmarks.filter(
+				(b) => !existingIds.has(b.messageId),
+			);
+			const skipped = data.bookmarks.length - newBookmarks.length;
+
+			if (newBookmarks.length > 0) {
+				bookmarks = [...bookmarks, ...newBookmarks];
+			}
+
+			return { imported: newBookmarks.length, skipped };
 		},
 
 		// Import from file
-		async importFromFile(file: File): Promise<{ imported: number }> {
+		async importFromFile(
+			file: File,
+		): Promise<{ imported: number; skipped: number }> {
 			const text = await file.text();
 			const data = JSON.parse(text) as BookmarkExport;
 			return this.importBookmarks(data);
