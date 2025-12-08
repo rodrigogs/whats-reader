@@ -48,22 +48,16 @@ jobs:
       - name: Build Electron (macOS)
         if: matrix.platform == 'mac'
         run: npm run electron:build:mac -- --x64 --arm64
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Windows: Build for x64 and arm64
       - name: Build Electron (Windows)
         if: matrix.platform == 'win'
         run: npm run electron:build:win -- --x64 --arm64
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Linux: Build for x64
       - name: Build Electron (Linux)
         if: matrix.platform == 'linux'
         run: npm run electron:build:linux -- --x64
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Upload artifacts to release
       - name: Upload to Release
@@ -76,13 +70,26 @@ jobs:
             dist-electron/*.exe
             dist-electron/*.AppImage
             dist-electron/*.deb
-            dist-electron/*.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Upload artifacts for manual builds
-      - name: Upload Artifacts
+      # Upload artifacts for manual builds (to existing release)
+      - name: Upload to Existing Release
         if: github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ inputs.version }}
+          files: |
+            dist-electron/*.dmg
+            dist-electron/*.zip
+            dist-electron/*.exe
+            dist-electron/*.AppImage
+            dist-electron/*.deb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Upload artifacts as workflow artifacts (backup)
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.platform }}

@@ -5,7 +5,10 @@
 	"version": "1.0.0",
 	"type": "module",
 	"main": "electron/main.cjs",
-	"author": "Rodrigo Gomes",
+	"author": {
+		"name": "Rodrigo Gomes da Silva",
+		"email": "rodrigo.smscom@gmail.com"
+	},
 	"license": "AGPL-3.0",
 	"repository": {
 		"type": "git",
@@ -59,6 +62,7 @@
 	"build": {
 		"appId": "com.whatsapp.backup-reader",
 		"productName": "WhatsApp Backup Reader",
+		"publish": null,
 		"directories": {
 			"output": "dist-electron"
 		},
