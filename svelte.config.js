@@ -1,6 +1,9 @@
 import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
+// Use base path for GitHub Pages, empty for Electron
+const isGitHubPages = process.env.GITHUB_PAGES === 'true';
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	preprocess: vitePreprocess(),
@@ -13,10 +16,9 @@ const config = {
 			precompress: false,
 			strict: true,
 		}),
-		// Required for Electron - use relative paths
 		paths: {
-			base: '',
-			relative: true,
+			base: isGitHubPages ? '/whats-reader' : '',
+			relative: !isGitHubPages,
 		},
 	},
 };
