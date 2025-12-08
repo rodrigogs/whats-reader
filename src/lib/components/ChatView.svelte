@@ -1,10 +1,10 @@
 <script lang="ts">
 import { onDestroy, onMount } from 'svelte';
 import { bookmarksState } from '$lib/bookmarks.svelte';
+import * as m from '$lib/paraglide/messages';
 import type { ChatMessage } from '$lib/parser';
 import { groupMessagesByDate } from '$lib/parser';
 import MessageBubble from './MessageBubble.svelte';
-import * as m from '$lib/paraglide/messages';
 
 interface Props {
 	messages: ChatMessage[];

@@ -1,12 +1,12 @@
 <script lang="ts">
 import { browser } from '$app/environment';
+import * as m from '$lib/paraglide/messages';
 import {
 	getLocale,
 	type Locale,
 	locales,
 	setLocale,
 } from '$lib/paraglide/runtime';
-import * as m from '$lib/paraglide/messages';
 
 const LOCALE_STORAGE_KEY = 'locale';
 

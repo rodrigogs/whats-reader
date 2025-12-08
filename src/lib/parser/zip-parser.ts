@@ -5,66 +5,66 @@
  * Optimized for large backups with lazy loading of media files
  */
 
-import JSZip from "jszip";
-import { type ChatMessage, type ParsedChat, parseChat } from "./chat-parser";
-import { parseVcf, type ContactInfo } from "./vcf-parser";
+import JSZip from 'jszip';
+import { type ChatMessage, type ParsedChat, parseChat } from './chat-parser';
+import { type ContactInfo, parseVcf } from './vcf-parser';
 
 export interface MediaFile {
-  name: string;
-  path: string;
-  type: "image" | "video" | "audio" | "document" | "other";
-  size: number;
-  blob?: Blob;
-  url?: string;
-  // For lazy loading
-  _zipEntry?: JSZip.JSZipObject;
-  _loaded?: boolean;
+	name: string;
+	path: string;
+	type: 'image' | 'video' | 'audio' | 'document' | 'other';
+	size: number;
+	blob?: Blob;
+	url?: string;
+	// For lazy loading
+	_zipEntry?: JSZip.JSZipObject;
+	_loaded?: boolean;
 }
 
 export interface ParsedZipChat extends ParsedChat {
-  mediaFiles: MediaFile[];
-  hasMedia: boolean;
-  // Contact information extracted from VCF files
-  // Key is the contact name (normalized to lowercase for lookup)
-  contacts: Map<string, ContactInfo>;
-  // Reference to zip for lazy loading
-  _zip?: JSZip;
+	mediaFiles: MediaFile[];
+	hasMedia: boolean;
+	// Contact information extracted from VCF files
+	// Key is the contact name (normalized to lowercase for lookup)
+	contacts: Map<string, ContactInfo>;
+	// Reference to zip for lazy loading
+	_zip?: JSZip;
 }
 
 // Keep track of loaded media to manage memory
 const loadedMediaCache = new Map<string, { url: string; refCount: number }>();
 const MAX_CACHED_MEDIA = 50; // Maximum number of media files to keep in memory
 
-function getMediaType(filename: string): MediaFile["type"] {
-  const ext = filename.toLowerCase().split(".").pop() || "";
+function getMediaType(filename: string): MediaFile['type'] {
+	const ext = filename.toLowerCase().split('.').pop() || '';
 
-  const imageExts = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"];
-  const videoExts = ["mp4", "mov", "avi", "mkv", "3gp", "webm"];
-  const audioExts = ["opus", "mp3", "wav", "aac", "m4a", "ogg"];
-  const docExts = [
-    "pdf",
-    "doc",
-    "docx",
-    "xls",
-    "xlsx",
-    "ppt",
-    "pptx",
-    "txt",
-    "vcf",
-    "xml",
-  ];
+	const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+	const videoExts = ['mp4', 'mov', 'avi', 'mkv', '3gp', 'webm'];
+	const audioExts = ['opus', 'mp3', 'wav', 'aac', 'm4a', 'ogg'];
+	const docExts = [
+		'pdf',
+		'doc',
+		'docx',
+		'xls',
+		'xlsx',
+		'ppt',
+		'pptx',
+		'txt',
+		'vcf',
+		'xml',
+	];
 
-  if (imageExts.includes(ext)) return "image";
-  if (videoExts.includes(ext)) return "video";
-  if (audioExts.includes(ext)) return "audio";
-  if (docExts.includes(ext)) return "document";
+	if (imageExts.includes(ext)) return 'image';
+	if (videoExts.includes(ext)) return 'video';
+	if (audioExts.includes(ext)) return 'audio';
+	if (docExts.includes(ext)) return 'document';
 
-  return "other";
+	return 'other';
 }
 
 export interface ParseProgress {
-  stage: "reading" | "extracting" | "parsing";
-  progress: number; // 0-100
+	stage: 'reading' | 'extracting' | 'parsing';
+	progress: number; // 0-100
 }
 
 /**
@@ -72,204 +72,204 @@ export interface ParseProgress {
  * Uses lazy loading for media files to handle large backups efficiently
  */
 export async function parseZipFile(
-  file: File | ArrayBuffer,
-  onProgress?: (progress: ParseProgress) => void,
+	file: File | ArrayBuffer,
+	onProgress?: (progress: ParseProgress) => void,
 ): Promise<ParsedZipChat> {
-  const zip = new JSZip();
+	const zip = new JSZip();
 
-  onProgress?.({ stage: "extracting", progress: 0 });
+	onProgress?.({ stage: 'extracting', progress: 0 });
 
-  // Load ZIP (JSZip doesn't support progress callback for loadAsync)
-  const contents = await zip.loadAsync(file);
+	// Load ZIP (JSZip doesn't support progress callback for loadAsync)
+	const contents = await zip.loadAsync(file);
 
-  onProgress?.({ stage: "extracting", progress: 30 });
+	onProgress?.({ stage: 'extracting', progress: 30 });
 
-  let chatContent = "";
-  let chatFilename = "WhatsApp Chat";
-  const mediaFiles: MediaFile[] = [];
-  const contacts = new Map<string, ContactInfo>();
-  const vcfEntries: Array<{ filename: string; entry: JSZip.JSZipObject }> = [];
+	let chatContent = '';
+	let chatFilename = 'WhatsApp Chat';
+	const mediaFiles: MediaFile[] = [];
+	const contacts = new Map<string, ContactInfo>();
+	const vcfEntries: Array<{ filename: string; entry: JSZip.JSZipObject }> = [];
 
-  // Get all file entries for progress tracking
-  const fileEntries = Object.entries(contents.files).filter(
-    ([, entry]) => !entry.dir,
-  );
-  const totalFiles = fileEntries.length;
-  let processedFiles = 0;
+	// Get all file entries for progress tracking
+	const fileEntries = Object.entries(contents.files).filter(
+		([, entry]) => !entry.dir,
+	);
+	const totalFiles = fileEntries.length;
+	let processedFiles = 0;
 
-  // First pass: find the chat text file, catalog VCF files, and catalog media files
-  for (const [path, zipEntry] of fileEntries) {
-    const filename = path.split("/").pop() || path;
+	// First pass: find the chat text file, catalog VCF files, and catalog media files
+	for (const [path, zipEntry] of fileEntries) {
+		const filename = path.split('/').pop() || path;
 
-    if (filename.endsWith(".txt") && !filename.startsWith(".")) {
-      // This is likely the chat file - load it immediately (it's small)
-      chatContent = await zipEntry.async("string");
-      chatFilename = filename;
-    } else if (filename.toLowerCase().endsWith(".vcf")) {
-      // This is a vCard file - save for parsing
-      vcfEntries.push({ filename, entry: zipEntry });
-    } else {
-      // This is a media file - catalog it but don't load yet
-      const mediaType = getMediaType(filename);
+		if (filename.endsWith('.txt') && !filename.startsWith('.')) {
+			// This is likely the chat file - load it immediately (it's small)
+			chatContent = await zipEntry.async('string');
+			chatFilename = filename;
+		} else if (filename.toLowerCase().endsWith('.vcf')) {
+			// This is a vCard file - save for parsing
+			vcfEntries.push({ filename, entry: zipEntry });
+		} else {
+			// This is a media file - catalog it but don't load yet
+			const mediaType = getMediaType(filename);
 
-      if (mediaType !== "other" || !filename.startsWith(".")) {
-        mediaFiles.push({
-          name: filename,
-          path,
-          type: mediaType,
-          size: 0, // Will be set when loaded
-          _zipEntry: zipEntry,
-          _loaded: false,
-        });
-      }
-    }
+			if (mediaType !== 'other' || !filename.startsWith('.')) {
+				mediaFiles.push({
+					name: filename,
+					path,
+					type: mediaType,
+					size: 0, // Will be set when loaded
+					_zipEntry: zipEntry,
+					_loaded: false,
+				});
+			}
+		}
 
-    processedFiles++;
-    // Report progress: 30-70% for file enumeration
-    const enumerationProgress = 30 + (processedFiles / totalFiles) * 40;
-    onProgress?.({ stage: "extracting", progress: enumerationProgress });
-  }
+		processedFiles++;
+		// Report progress: 30-70% for file enumeration
+		const enumerationProgress = 30 + (processedFiles / totalFiles) * 40;
+		onProgress?.({ stage: 'extracting', progress: enumerationProgress });
+	}
 
-  // Parse VCF files to extract contact information
-  for (let i = 0; i < vcfEntries.length; i++) {
-    const { entry } = vcfEntries[i];
-    try {
-      const vcfContent = await entry.async("string");
-      const contactInfo = parseVcf(vcfContent);
-      if (contactInfo) {
-        // Store by lowercase name for case-insensitive lookup
-        contacts.set(contactInfo.name.toLowerCase(), contactInfo);
-      }
-    } catch (e) {
-      // Ignore VCF parsing errors - file might be corrupted
-      console.warn(`Failed to parse VCF file: ${entry.name}`, e);
-    }
-    // Report progress: 70-80% for VCF parsing
-    const vcfProgress = 70 + ((i + 1) / vcfEntries.length) * 10;
-    onProgress?.({ stage: "extracting", progress: vcfProgress });
-  }
+	// Parse VCF files to extract contact information
+	for (let i = 0; i < vcfEntries.length; i++) {
+		const { entry } = vcfEntries[i];
+		try {
+			const vcfContent = await entry.async('string');
+			const contactInfo = parseVcf(vcfContent);
+			if (contactInfo) {
+				// Store by lowercase name for case-insensitive lookup
+				contacts.set(contactInfo.name.toLowerCase(), contactInfo);
+			}
+		} catch (e) {
+			// Ignore VCF parsing errors - file might be corrupted
+			console.warn(`Failed to parse VCF file: ${entry.name}`, e);
+		}
+		// Report progress: 70-80% for VCF parsing
+		const vcfProgress = 70 + ((i + 1) / vcfEntries.length) * 10;
+		onProgress?.({ stage: 'extracting', progress: vcfProgress });
+	}
 
-  if (!chatContent) {
-    throw new Error("No chat file found in ZIP archive");
-  }
+	if (!chatContent) {
+		throw new Error('No chat file found in ZIP archive');
+	}
 
-  onProgress?.({ stage: "parsing", progress: 0 });
+	onProgress?.({ stage: 'parsing', progress: 0 });
 
-  // Parse the chat content
-  const parsedChat = parseChat(chatContent, chatFilename);
+	// Parse the chat content
+	const parsedChat = parseChat(chatContent, chatFilename);
 
-  onProgress?.({ stage: "parsing", progress: 50 });
+	onProgress?.({ stage: 'parsing', progress: 50 });
 
-  // Try to match media files with messages (just references, no loading)
-  const enhancedMessages = matchMediaToMessages(
-    parsedChat.messages,
-    mediaFiles,
-  );
+	// Try to match media files with messages (just references, no loading)
+	const enhancedMessages = matchMediaToMessages(
+		parsedChat.messages,
+		mediaFiles,
+	);
 
-  onProgress?.({ stage: "parsing", progress: 100 });
+	onProgress?.({ stage: 'parsing', progress: 100 });
 
-  return {
-    ...parsedChat,
-    messages: enhancedMessages,
-    mediaFiles,
-    hasMedia: mediaFiles.length > 0,
-    contacts,
-    _zip: zip,
-  };
+	return {
+		...parsedChat,
+		messages: enhancedMessages,
+		mediaFiles,
+		hasMedia: mediaFiles.length > 0,
+		contacts,
+		_zip: zip,
+	};
 }
 
 /**
  * Try to match media files with their corresponding messages
  */
 function matchMediaToMessages(
-  messages: ChatMessage[],
-  mediaFiles: MediaFile[],
+	messages: ChatMessage[],
+	mediaFiles: MediaFile[],
 ): ChatMessage[] {
-  // Create a map of media files by name for quick lookup
-  const mediaMap = new Map<string, MediaFile>();
-  for (const media of mediaFiles) {
-    mediaMap.set(media.name.toLowerCase(), media);
-    // Also add without extension for partial matching
-    const nameWithoutExt = media.name.toLowerCase().replace(/\.[^.]+$/, "");
-    mediaMap.set(nameWithoutExt, media);
-  }
+	// Create a map of media files by name for quick lookup
+	const mediaMap = new Map<string, MediaFile>();
+	for (const media of mediaFiles) {
+		mediaMap.set(media.name.toLowerCase(), media);
+		// Also add without extension for partial matching
+		const nameWithoutExt = media.name.toLowerCase().replace(/\.[^.]+$/, '');
+		mediaMap.set(nameWithoutExt, media);
+	}
 
-  return messages.map((message) => {
-    if (!message.isMediaMessage) return message;
+	return messages.map((message) => {
+		if (!message.isMediaMessage) return message;
 
-    // Try to find a matching media file
-    const content = message.content.toLowerCase();
+		// Try to find a matching media file
+		const content = message.content.toLowerCase();
 
-    for (const [key, media] of mediaMap) {
-      if (content.includes(key) || content.includes(media.name.toLowerCase())) {
-        return {
-          ...message,
-          mediaFile: media,
-        } as ChatMessage & { mediaFile: MediaFile };
-      }
-    }
+		for (const [key, media] of mediaMap) {
+			if (content.includes(key) || content.includes(media.name.toLowerCase())) {
+				return {
+					...message,
+					mediaFile: media,
+				} as ChatMessage & { mediaFile: MediaFile };
+			}
+		}
 
-    return message;
-  });
+		return message;
+	});
 }
 
 /**
  * Read a file as ArrayBuffer with progress callback
  */
 export function readFileAsArrayBuffer(
-  file: File,
-  onProgress?: (progress: number) => void,
+	file: File,
+	onProgress?: (progress: number) => void,
 ): Promise<ArrayBuffer> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as ArrayBuffer);
-    reader.onerror = () => reject(reader.error);
-    if (onProgress) {
-      reader.onprogress = (event) => {
-        if (event.lengthComputable) {
-          onProgress((event.loaded / event.total) * 100);
-        }
-      };
-    }
-    reader.readAsArrayBuffer(file);
-  });
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => resolve(reader.result as ArrayBuffer);
+		reader.onerror = () => reject(reader.error);
+		if (onProgress) {
+			reader.onprogress = (event) => {
+				if (event.lengthComputable) {
+					onProgress((event.loaded / event.total) * 100);
+				}
+			};
+		}
+		reader.readAsArrayBuffer(file);
+	});
 }
 
 /**
  * Get MIME type from filename extension
  */
 function getMimeType(filename: string): string {
-  const ext = filename.toLowerCase().split(".").pop() || "";
-  const mimeTypes: Record<string, string> = {
-    // Images
-    jpg: "image/jpeg",
-    jpeg: "image/jpeg",
-    png: "image/png",
-    gif: "image/gif",
-    webp: "image/webp",
-    bmp: "image/bmp",
-    svg: "image/svg+xml",
-    // Videos
-    mp4: "video/mp4",
-    mov: "video/quicktime",
-    avi: "video/x-msvideo",
-    mkv: "video/x-matroska",
-    "3gp": "video/3gpp",
-    webm: "video/webm",
-    // Audio
-    opus: "audio/opus",
-    mp3: "audio/mpeg",
-    wav: "audio/wav",
-    aac: "audio/aac",
-    m4a: "audio/mp4",
-    ogg: "audio/ogg",
-    // Documents
-    pdf: "application/pdf",
-    txt: "text/plain",
-    xml: "application/xml",
-    vcf: "text/vcard",
-  };
-  return mimeTypes[ext] || "application/octet-stream";
+	const ext = filename.toLowerCase().split('.').pop() || '';
+	const mimeTypes: Record<string, string> = {
+		// Images
+		jpg: 'image/jpeg',
+		jpeg: 'image/jpeg',
+		png: 'image/png',
+		gif: 'image/gif',
+		webp: 'image/webp',
+		bmp: 'image/bmp',
+		svg: 'image/svg+xml',
+		// Videos
+		mp4: 'video/mp4',
+		mov: 'video/quicktime',
+		avi: 'video/x-msvideo',
+		mkv: 'video/x-matroska',
+		'3gp': 'video/3gpp',
+		webm: 'video/webm',
+		// Audio
+		opus: 'audio/opus',
+		mp3: 'audio/mpeg',
+		wav: 'audio/wav',
+		aac: 'audio/aac',
+		m4a: 'audio/mp4',
+		ogg: 'audio/ogg',
+		// Documents
+		pdf: 'application/pdf',
+		txt: 'text/plain',
+		xml: 'application/xml',
+		vcf: 'text/vcard',
+	};
+	return mimeTypes[ext] || 'application/octet-stream';
 }
 
 /**
@@ -277,84 +277,84 @@ function getMimeType(filename: string): string {
  * Returns the blob URL for the media file
  */
 export async function loadMediaFile(media: MediaFile): Promise<string> {
-  // Already loaded and cached
-  if (media.url && media._loaded) {
-    return media.url;
-  }
+	// Already loaded and cached
+	if (media.url && media._loaded) {
+		return media.url;
+	}
 
-  // Check if in cache
-  const cached = loadedMediaCache.get(media.path);
-  if (cached) {
-    cached.refCount++;
-    media.url = cached.url;
-    media._loaded = true;
-    return cached.url;
-  }
+	// Check if in cache
+	const cached = loadedMediaCache.get(media.path);
+	if (cached) {
+		cached.refCount++;
+		media.url = cached.url;
+		media._loaded = true;
+		return cached.url;
+	}
 
-  // Need to load from zip
-  if (!media._zipEntry) {
-    throw new Error(
-      `Cannot load media file: ${media.name} - no zip entry reference`,
-    );
-  }
+	// Need to load from zip
+	if (!media._zipEntry) {
+		throw new Error(
+			`Cannot load media file: ${media.name} - no zip entry reference`,
+		);
+	}
 
-  // Evict old entries if cache is full
-  if (loadedMediaCache.size >= MAX_CACHED_MEDIA) {
-    evictOldestFromCache();
-  }
+	// Evict old entries if cache is full
+	if (loadedMediaCache.size >= MAX_CACHED_MEDIA) {
+		evictOldestFromCache();
+	}
 
-  // Load the blob with correct MIME type
-  const arrayBuffer = await media._zipEntry.async("arraybuffer");
-  const mimeType = getMimeType(media.name);
-  const blob = new Blob([arrayBuffer], { type: mimeType });
-  const url = URL.createObjectURL(blob);
+	// Load the blob with correct MIME type
+	const arrayBuffer = await media._zipEntry.async('arraybuffer');
+	const mimeType = getMimeType(media.name);
+	const blob = new Blob([arrayBuffer], { type: mimeType });
+	const url = URL.createObjectURL(blob);
 
-  // Cache it
-  loadedMediaCache.set(media.path, { url, refCount: 1 });
+	// Cache it
+	loadedMediaCache.set(media.path, { url, refCount: 1 });
 
-  // Update media object
-  media.blob = blob;
-  media.url = url;
-  media.size = blob.size;
-  media._loaded = true;
+	// Update media object
+	media.blob = blob;
+	media.url = url;
+	media.size = blob.size;
+	media._loaded = true;
 
-  return url;
+	return url;
 }
 
 /**
  * Evict the oldest/least used entries from cache
  */
 function evictOldestFromCache(): void {
-  // Simple strategy: remove entries with lowest refCount
-  const entries = Array.from(loadedMediaCache.entries());
-  entries.sort((a, b) => a[1].refCount - b[1].refCount);
+	// Simple strategy: remove entries with lowest refCount
+	const entries = Array.from(loadedMediaCache.entries());
+	entries.sort((a, b) => a[1].refCount - b[1].refCount);
 
-  // Remove bottom 20%
-  const toRemove = Math.max(1, Math.floor(entries.length * 0.2));
-  for (let i = 0; i < toRemove; i++) {
-    const [path, { url }] = entries[i];
-    URL.revokeObjectURL(url);
-    loadedMediaCache.delete(path);
-  }
+	// Remove bottom 20%
+	const toRemove = Math.max(1, Math.floor(entries.length * 0.2));
+	for (let i = 0; i < toRemove; i++) {
+		const [path, { url }] = entries[i];
+		URL.revokeObjectURL(url);
+		loadedMediaCache.delete(path);
+	}
 }
 
 /**
  * Clean up media URLs when done
  */
 export function cleanupMediaUrls(mediaFiles: MediaFile[]): void {
-  for (const media of mediaFiles) {
-    if (media.url) {
-      URL.revokeObjectURL(media.url);
-      media.url = undefined;
-      media.blob = undefined;
-      media._loaded = false;
-    }
-  }
-  // Clear the cache
-  for (const { url } of loadedMediaCache.values()) {
-    URL.revokeObjectURL(url);
-  }
-  loadedMediaCache.clear();
+	for (const media of mediaFiles) {
+		if (media.url) {
+			URL.revokeObjectURL(media.url);
+			media.url = undefined;
+			media.blob = undefined;
+			media._loaded = false;
+		}
+	}
+	// Clear the cache
+	for (const { url } of loadedMediaCache.values()) {
+		URL.revokeObjectURL(url);
+	}
+	loadedMediaCache.clear();
 }
 
 /**
@@ -362,31 +362,31 @@ export function cleanupMediaUrls(mediaFiles: MediaFile[]): void {
  * Call this with the media files that are about to be visible
  */
 export async function preloadMedia(mediaFiles: MediaFile[]): Promise<void> {
-  // Limit concurrent loads to avoid overwhelming the browser
-  const BATCH_SIZE = 5;
+	// Limit concurrent loads to avoid overwhelming the browser
+	const BATCH_SIZE = 5;
 
-  for (let i = 0; i < mediaFiles.length; i += BATCH_SIZE) {
-    const batch = mediaFiles.slice(i, i + BATCH_SIZE);
-    await Promise.all(
-      batch
-        .filter((m) => !m._loaded && m._zipEntry)
-        .map((m) => loadMediaFile(m).catch(() => {})), // Ignore individual failures
-    );
-  }
+	for (let i = 0; i < mediaFiles.length; i += BATCH_SIZE) {
+		const batch = mediaFiles.slice(i, i + BATCH_SIZE);
+		await Promise.all(
+			batch
+				.filter((m) => !m._loaded && m._zipEntry)
+				.map((m) => loadMediaFile(m).catch(() => {})), // Ignore individual failures
+		);
+	}
 }
 
 /**
  * Get file size in human-readable format
  */
 export function formatFileSize(bytes: number): string {
-  const units = ["B", "KB", "MB", "GB"];
-  let size = bytes;
-  let unitIndex = 0;
+	const units = ['B', 'KB', 'MB', 'GB'];
+	let size = bytes;
+	let unitIndex = 0;
 
-  while (size >= 1024 && unitIndex < units.length - 1) {
-    size /= 1024;
-    unitIndex++;
-  }
+	while (size >= 1024 && unitIndex < units.length - 1) {
+		size /= 1024;
+		unitIndex++;
+	}
 
-  return `${size.toFixed(1)} ${units[unitIndex]}`;
+	return `${size.toFixed(1)} ${units[unitIndex]}`;
 }

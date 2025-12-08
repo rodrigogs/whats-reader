@@ -1,7 +1,7 @@
 <script lang="ts">
 import { onMount } from 'svelte';
-import type { ChatData } from '$lib/state.svelte';
 import * as m from '$lib/paraglide/messages';
+import type { ChatData } from '$lib/state.svelte';
 
 interface Props {
 	chat: ChatData;

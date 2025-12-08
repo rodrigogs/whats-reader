@@ -1,6 +1,7 @@
 <script lang="ts">
 import type { Bookmark } from '$lib/bookmarks.svelte';
 import { bookmarksState } from '$lib/bookmarks.svelte';
+import * as m from '$lib/paraglide/messages';
 import type { ChatMessage } from '$lib/parser';
 import { formatTime, loadMediaFile } from '$lib/parser';
 import type { MediaFile } from '$lib/parser/zip-parser';
@@ -11,7 +12,6 @@ import {
 	transcribeAudio,
 } from '$lib/transcription.svelte';
 import BookmarkModal from './BookmarkModal.svelte';
-import * as m from '$lib/paraglide/messages';
 
 interface MessageWithMedia extends ChatMessage {
 	mediaFile?: MediaFile;

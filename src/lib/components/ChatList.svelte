@@ -1,8 +1,8 @@
 <script lang="ts">
 import { floating } from '$lib/actions/floating';
+import * as m from '$lib/paraglide/messages';
 import type { ChatData } from '$lib/state.svelte';
 import { getAvailableLanguages } from '$lib/transcription.svelte';
-import * as m from '$lib/paraglide/messages';
 
 interface LoadingChat {
 	id: string;

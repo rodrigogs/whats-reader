@@ -1,7 +1,7 @@
 <script lang="ts">
 import { type Bookmark, bookmarksState } from '$lib/bookmarks.svelte';
-import BookmarkModal from './BookmarkModal.svelte';
 import * as m from '$lib/paraglide/messages';
+import BookmarkModal from './BookmarkModal.svelte';
 
 interface Props {
 	currentChatId?: string;

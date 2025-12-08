@@ -55,7 +55,7 @@ let scrollToMessageId = $state<string | null>(null);
 // Compute participant stats when modal opens (not during render)
 function openParticipantsModal() {
 	if (!appState.selectedChat) return;
-	
+
 	// Pre-compute message counts in a single pass
 	const counts = new Map<string, number>();
 	for (const msg of appState.selectedChat.messages) {
@@ -127,24 +127,33 @@ async function handleFilesSelected(files: FileList) {
 
 		// Create a loading placeholder for this file
 		const loadingId = crypto.randomUUID();
-		const filename = file.name.replace(/\.zip$/i, '').replace(/^WhatsApp Chat (with |com )/i, '');
-		
-		loadingChats = [...loadingChats, {
-			id: loadingId,
-			filename,
-			progress: 0,
-			stage: 'reading'
-		}];
+		const filename = file.name
+			.replace(/\.zip$/i, '')
+			.replace(/^WhatsApp Chat (with |com )/i, '');
+
+		loadingChats = [
+			...loadingChats,
+			{
+				id: loadingId,
+				filename,
+				progress: 0,
+				stage: 'reading',
+			},
+		];
 
 		// Process file asynchronously
 		(async () => {
 			try {
 				// Read file (0-10% of progress)
 				const buffer = await readFileAsArrayBuffer(file, (readProgress) => {
-					loadingChats = loadingChats.map(lc => 
-						lc.id === loadingId 
-							? { ...lc, progress: readProgress * 0.1, stage: 'reading' as const }
-							: lc
+					loadingChats = loadingChats.map((lc) =>
+						lc.id === loadingId
+							? {
+									...lc,
+									progress: readProgress * 0.1,
+									stage: 'reading' as const,
+								}
+							: lc,
 					);
 				});
 
@@ -161,18 +170,19 @@ async function handleFilesSelected(files: FileList) {
 						const { offset: stageOffset, weight: stageWeight } =
 							STAGE_PROGRESS[stage] ?? STAGE_PROGRESS.extracting;
 
-						const overallProgress = 10 + (stageOffset + (progress / 100) * stageWeight) * 90;
-						
-						loadingChats = loadingChats.map(lc => 
-							lc.id === loadingId 
+						const overallProgress =
+							10 + (stageOffset + (progress / 100) * stageWeight) * 90;
+
+						loadingChats = loadingChats.map((lc) =>
+							lc.id === loadingId
 								? { ...lc, progress: overallProgress, stage }
-								: lc
+								: lc,
 						);
 					},
 				);
 
 				// Remove loading placeholder and add actual chat
-				loadingChats = loadingChats.filter(lc => lc.id !== loadingId);
+				loadingChats = loadingChats.filter((lc) => lc.id !== loadingId);
 				appState.addChat(chatData);
 
 				// On mobile, collapse sidebar after loading chats
@@ -182,7 +192,7 @@ async function handleFilesSelected(files: FileList) {
 			} catch (error) {
 				console.error('Error parsing file:', error);
 				// Remove loading placeholder on error
-				loadingChats = loadingChats.filter(lc => lc.id !== loadingId);
+				loadingChats = loadingChats.filter((lc) => lc.id !== loadingId);
 				appState.setError(
 					error instanceof Error ? error.message : 'Failed to parse file',
 				);
