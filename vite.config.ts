@@ -10,7 +10,8 @@ export default defineConfig({
 			outdir: './src/lib/paraglide',
 			// Use localStorage and cookie for locale persistence (not URL)
 			// URL-based locale doesn't work well with GitHub Pages base path
-			strategy: ['localStorage', 'cookie', 'baseLocale'],
+			// preferredLanguage uses browser's navigator.language as fallback
+			strategy: ['localStorage', 'cookie', 'preferredLanguage', 'baseLocale'],
 		}),
 		tailwindcss(),
 		sveltekit(),
