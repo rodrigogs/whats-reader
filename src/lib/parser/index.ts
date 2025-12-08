@@ -9,7 +9,14 @@ export {
 } from './chat-parser';
 export type { ContactInfo } from './vcf-parser';
 export { formatPhoneNumber, isPhoneNumber, parseVcf } from './vcf-parser';
-export type { MediaFile, ParsedZipChat, ParseProgress } from './zip-parser';
+export type {
+	DateFlatItem,
+	FlatItem,
+	MediaFile,
+	MessageFlatItem,
+	ParsedZipChat,
+	ParseProgress,
+} from './zip-parser';
 export {
 	cleanupMediaUrls,
 	formatFileSize,
