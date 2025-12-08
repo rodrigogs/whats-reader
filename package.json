@@ -70,7 +70,14 @@
 		"files": [
 			"build/**/*",
 			"electron/**/*",
-			"static/**/*"
+			"!node_modules/**/*"
+		],
+		"compression": "maximum",
+		"electronLanguages": [
+			"en",
+			"en-US",
+			"pt",
+			"pt-BR"
 		],
 		"mac": {
 			"category": "public.app-category.utilities",
