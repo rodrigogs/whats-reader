@@ -26,6 +26,9 @@ export function createAppState() {
 	let loadingProgress = $state(0); // 0-100 for file processing
 	let error = $state<string | null>(null);
 
+	// Track which chats have been indexed for bookmark navigation
+	let indexedChatTitles = $state<Set<string>>(new Set());
+
 	// Search state - VS Code style (navigate through results, don't filter)
 	let isSearching = $state(false);
 	let searchProgress = $state(0); // 0-100
@@ -187,6 +190,9 @@ export function createAppState() {
 		get searchResultSet() {
 			return searchResultSet;
 		},
+		get indexedChatTitles() {
+			return indexedChatTitles;
+		},
 
 		// Derived getters
 		get selectedChat() {
@@ -207,11 +213,60 @@ export function createAppState() {
 		},
 
 		removeChat(index: number) {
+			const removedChat = chats[index];
 			chats = chats.filter((_, i) => i !== index);
 			if (selectedChatIndex === index) {
 				selectedChatIndex = chats.length > 0 ? 0 : null;
 			} else if (selectedChatIndex !== null && selectedChatIndex > index) {
 				selectedChatIndex--;
+			}
+			// Remove from indexed set if present
+			if (removedChat) {
+				const newSet = new Set(indexedChatTitles);
+				newSet.delete(removedChat.title);
+				indexedChatTitles = newSet;
+			}
+		},
+
+		/**
+		 * Update a chat's message index after worker completes indexing
+		 */
+		updateChatMessageIndex(
+			chatTitle: string,
+			messageIndex: Map<string, number>,
+		) {
+			const chatIndex = chats.findIndex((c) => c.title === chatTitle);
+			if (chatIndex !== -1) {
+				// Create a new chat object with the messageIndex to trigger reactivity
+				const updatedChat = { ...chats[chatIndex], messageIndex };
+				chats = chats.map((c, i) => (i === chatIndex ? updatedChat : c));
+				// Mark as indexed
+				indexedChatTitles = new Set([...indexedChatTitles, chatTitle]);
+			}
+		},
+
+		/**
+		 * Update a chat's flat items after worker completes processing
+		 * Also builds messagesById map for O(1) lookups
+		 */
+		updateChatFlatItems(
+			chatTitle: string,
+			flatItems: import('./parser/zip-parser').FlatItem[],
+		) {
+			const chatIndex = chats.findIndex((c) => c.title === chatTitle);
+			if (chatIndex !== -1) {
+				const chat = chats[chatIndex];
+				// Build messagesById map from messages array
+				const messagesById = new Map<
+					string,
+					import('./parser/chat-parser').ChatMessage
+				>();
+				for (const msg of chat.messages) {
+					messagesById.set(msg.id, msg);
+				}
+				// Create a new chat object with flatItems and messagesById to trigger reactivity
+				const updatedChat = { ...chat, flatItems, messagesById };
+				chats = chats.map((c, i) => (i === chatIndex ? updatedChat : c));
 			}
 		},
 
@@ -279,6 +334,7 @@ export function createAppState() {
 			currentSearchIndex = 0;
 			isSearching = false;
 			searchProgress = 0;
+			indexedChatTitles = new Set();
 		},
 	};
 }
