@@ -1,7 +1,7 @@
 <h1 align="center">WhatsApp Backup Reader</h1>
 
 <p align="center">
-  <img src="static/favicon.svg" width="100" height="100" alt="WhatsApp Backup Reader" />
+  <img src="src/lib/assets/favicon.svg" width="100" height="100" alt="WhatsApp Backup Reader" />
 </p>
 
 <p align="center">
@@ -9,11 +9,16 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/svelte-5-FF3E00?logo=svelte&logoColor=white" alt="Svelte 5" />
-  <img src="https://img.shields.io/badge/electron-39-47848F?logo=electron&logoColor=white" alt="Electron" />
-  <img src="https://img.shields.io/badge/AI-local_whisper-00A67E?logo=openai&logoColor=white" alt="Local AI" />
-  <img src="https://img.shields.io/badge/privacy-100%25_offline-blue" alt="Privacy" />
-  <img src="https://img.shields.io/badge/i18n-EN%20%7C%20PT-green" alt="Languages" />
+  <a href="https://github.com/rodrigogs/whats-reader/releases/latest"><img src="https://img.shields.io/github/v/release/rodrigogs/whats-reader?style=flat-square&color=blue" alt="Latest Release" /></a>
+  <a href="https://github.com/rodrigogs/whats-reader/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/rodrigogs/whats-reader/ci.yml?branch=main&style=flat-square&label=CI" alt="CI Status" /></a>
+  <a href="https://github.com/rodrigogs/whats-reader/blob/main/LICENSE"><img src="https://img.shields.io/github/license/rodrigogs/whats-reader?style=flat-square" alt="License" /></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Svelte-5-FF3E00?style=flat-square&logo=svelte&logoColor=white" alt="Svelte 5" />
+  <img src="https://img.shields.io/badge/Electron-39-47848F?style=flat-square&logo=electron&logoColor=white" alt="Electron 39" />
+  <img src="https://img.shields.io/badge/AI-Whisper_(local)-00A67E?style=flat-square&logo=openai&logoColor=white" alt="Local Whisper AI" />
+  <img src="https://img.shields.io/badge/Privacy-100%25_offline-4CAF50?style=flat-square&logo=shield&logoColor=white" alt="100% Offline" />
 </p>
 
 <p align="center">
@@ -138,31 +143,25 @@ First, you need to export a chat from WhatsApp on your phone. This creates a `.z
 
 ## Development
 
-### Project structure
-
-```
-src/
-├── lib/
-│   ├── components/    # Svelte components
-│   ├── paraglide/     # i18n generated files
-│   ├── actions/       # Svelte actions
-│   └── *.svelte.ts    # State and utilities
-├── routes/            # SvelteKit routes
-messages/              # Translation files (en.json, pt.json)
-electron/              # Electron main process
-static/                # Static assets
-```
-
 ### Scripts
 
-```bash
-npm run dev           # Start dev server
-npm run build         # Build for production
-npm run check         # Type check
-npm run lint          # Lint with Biome
-npm run lint:fix      # Auto-fix lint issues
-npm run format        # Format code
-```
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server at [localhost:5173](http://localhost:5173) |
+| `npm run build` | Build for production |
+| `npm run preview` | Preview production build |
+| `npm run check` | Type check with svelte-check |
+| `npm run check:watch` | Type check in watch mode |
+| `npm run lint` | Lint with Biome |
+| `npm run lint:fix` | Auto-fix lint issues |
+| `npm run format` | Format code with Biome |
+| `npm run electron` | Build and run Electron app |
+| `npm run electron:dev` | Run Electron in dev mode |
+| `npm run electron:build` | Build Electron installer |
+| `npm run electron:build:mac` | Build for macOS |
+| `npm run electron:build:win` | Build for Windows |
+| `npm run electron:build:linux` | Build for Linux |
+| `npm run machine-translate` | Auto-translate with inlang |
 
 ### Adding translations
 

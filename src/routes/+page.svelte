@@ -320,34 +320,31 @@ const currentUser = $derived.by(() => {
 		<div class="electron-drag h-[38px] flex-shrink-0 bg-[var(--color-whatsapp-dark-green)]"></div>
 	{/if}
 
-	<!-- Fixed settings buttons (always visible at top-right, never scroll) -->
-	<div class="fixed top-4 right-4 z-[60] flex items-center gap-1.5" class:top-[54px]={isElectronMac}>
-		<LocaleSwitcher variant={appState.hasChats || isElectron ? 'header' : 'default'} />
-		<button
-			onclick={toggleDarkMode}
-			class="p-1.5 rounded-full transition-colors cursor-pointer {appState.hasChats || isElectron 
-				? 'bg-white/10 hover:bg-white/20' 
-				: 'bg-gray-100/80 dark:bg-gray-800/80 hover:bg-gray-200 dark:hover:bg-gray-700 backdrop-blur-sm'}"
-			aria-label={m.toggle_dark_mode()}
-			title={isDarkMode ? m.theme_switch_to_light() : m.theme_switch_to_dark()}
-		>
-			{#if isDarkMode}
-				<!-- Sun icon -->
-				<svg class="w-4 h-4 {appState.hasChats || isElectron ? 'text-yellow-300' : 'text-yellow-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-				</svg>
-			{:else}
-				<!-- Moon icon -->
-				<svg class="w-4 h-4 {appState.hasChats || isElectron ? 'text-white/80' : 'text-gray-600 dark:text-gray-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-				</svg>
-			{/if}
-		</button>
-	</div>
-
 	{#if !appState.hasChats}
 		<!-- Empty state - show file upload -->
-		<div class="flex-1 overflow-auto">
+		<div class="relative flex-1 overflow-auto">
+			<!-- Settings buttons (top-right, scrolls with content) -->
+			<div class="absolute top-4 right-4 flex items-center gap-1.5 z-10">
+				<LocaleSwitcher variant="default" />
+				<button
+					onclick={toggleDarkMode}
+					class="p-1.5 rounded-full transition-colors cursor-pointer bg-gray-100/80 dark:bg-gray-800/80 hover:bg-gray-200 dark:hover:bg-gray-700 backdrop-blur-sm"
+					aria-label={m.toggle_dark_mode()}
+					title={isDarkMode ? m.theme_switch_to_light() : m.theme_switch_to_dark()}
+				>
+					{#if isDarkMode}
+						<!-- Sun icon -->
+						<svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+						</svg>
+					{:else}
+						<!-- Moon icon -->
+						<svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+						</svg>
+					{/if}
+				</button>
+			</div>
 			
 			<div class="min-h-full flex items-center justify-center p-8">
 				<div class="max-w-lg w-full flex flex-col items-center">
@@ -415,6 +412,29 @@ const currentUser = $derived.by(() => {
 	{:else}
 		<!-- Main app layout -->
 		<div class="flex-1 flex overflow-hidden">
+			<!-- Fixed settings buttons (always visible at top-right in app view) -->
+			<div class="fixed top-4 right-4 z-[60] flex items-center gap-1.5" class:top-[54px]={isElectronMac}>
+				<LocaleSwitcher variant="header" />
+				<button
+					onclick={toggleDarkMode}
+					class="p-1.5 rounded-full transition-colors cursor-pointer bg-white/10 hover:bg-white/20"
+					aria-label={m.toggle_dark_mode()}
+					title={isDarkMode ? m.theme_switch_to_light() : m.theme_switch_to_dark()}
+				>
+					{#if isDarkMode}
+						<!-- Sun icon -->
+						<svg class="w-4 h-4 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+						</svg>
+					{:else}
+						<!-- Moon icon -->
+						<svg class="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+						</svg>
+					{/if}
+				</button>
+			</div>
+
 			<!-- Sidebar toggle - Hamburger with smooth X morph animation -->
 			<button
 				class="hamburger-btn fixed bottom-4 left-4 z-50 w-11 h-11 rounded-full bg-[var(--color-whatsapp-teal)] text-white shadow-lg flex items-center justify-center {showSidebar ? 'is-active' : ''}"
