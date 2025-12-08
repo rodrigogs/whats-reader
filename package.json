@@ -1,23 +1,23 @@
 {
 	"name": "whats-reader",
 	"productName": "WhatsApp Backup Reader",
-	"description": "A desktop app to read and visualize WhatsApp chat exports",
 	"version": "1.0.2",
-	"type": "module",
-	"main": "electron/main.cjs",
+	"description": "A desktop app to read and visualize WhatsApp chat exports",
+	"license": "AGPL-3.0",
 	"author": {
 		"name": "Rodrigo Gomes da Silva",
 		"email": "rodrigo.smscom@gmail.com"
 	},
-	"license": "AGPL-3.0",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/rodrigogs/whats-reader.git"
 	},
+	"homepage": "https://github.com/rodrigogs/whats-reader#readme",
 	"bugs": {
 		"url": "https://github.com/rodrigogs/whats-reader/issues"
 	},
-	"homepage": "https://github.com/rodrigogs/whats-reader#readme",
+	"type": "module",
+	"main": "electron/main.cjs",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -36,28 +36,34 @@
 		"electron:build:linux": "npm run build && electron-builder --linux",
 		"machine-translate": "inlang machine translate --project project.inlang"
 	},
+	"dependencies": {
+		"@floating-ui/dom": "^1.7.4",
+		"@huggingface/transformers": "^3.8.1",
+		"jszip": "^3.10.1"
+	},
+	"overrides": {
+		"cookie": "^0.7.0"
+	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.8",
-		"@inlang/cli": "^3.0.0",
+		"@inlang/cli": "^3.0.12",
 		"@inlang/paraglide-js": "2.6.0",
 		"@semantic-release/changelog": "^6.0.3",
 		"@semantic-release/git": "^10.0.1",
-		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/adapter-static": "^3.0.10",
-		"@sveltejs/kit": "^2.48.5",
+		"@sveltejs/kit": "^2.49.1",
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",
 		"@tailwindcss/vite": "^4.1.17",
 		"concurrently": "^9.2.1",
 		"cross-env": "^10.1.0",
-		"electron": "^39.2.5",
+		"electron": "^39.2.6",
 		"electron-builder": "^26.0.12",
-		"electron-squirrel-startup": "^1.0.1",
-		"semantic-release": "^24.2.9",
-		"svelte": "^5.43.8",
+		"semantic-release": "^25.0.2",
+		"svelte": "^5.45.6",
 		"svelte-check": "^4.3.4",
 		"tailwindcss": "^4.1.17",
 		"typescript": "^5.9.3",
-		"vite": "^7.2.2",
+		"vite": "^7.2.7",
 		"wait-on": "^9.0.3"
 	},
 	"build": {
@@ -149,10 +155,5 @@
 			"oneClick": false,
 			"allowToChangeInstallationDirectory": true
 		}
-	},
-	"dependencies": {
-		"@floating-ui/dom": "^1.7.4",
-		"@huggingface/transformers": "^3.8.1",
-		"jszip": "^3.10.1"
 	}
 }
