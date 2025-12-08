@@ -52,10 +52,10 @@ jobs:
         if: matrix.platform == 'win'
         run: npm run electron:build:win -- --x64 --arm64
 
-      # Linux: Build for x64
+      # Linux: Build for x64 and arm64
       - name: Build Electron (Linux)
         if: matrix.platform == 'linux'
-        run: npm run electron:build:linux -- --x64
+        run: npm run electron:build:linux -- --x64 --arm64
 
       # Upload artifacts to release
       - name: Upload to Release
@@ -68,6 +68,7 @@ jobs:
             dist-electron/*.exe
             dist-electron/*.AppImage
             dist-electron/*.deb
+            dist-electron/*.rpm
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -82,4 +83,5 @@ jobs:
             dist-electron/*.exe
             dist-electron/*.AppImage
             dist-electron/*.deb
+            dist-electron/*.rpm
           retention-days: 7
