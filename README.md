@@ -63,14 +63,14 @@ Voice messages can be transcribed using [Whisper](https://openai.com/research/wh
 
 ## Features
 
-- **Voice transcription** — Transcribe audio with Whisper (runs locally, 12+ languages)
-- **Search** — Full-text search across messages and transcriptions
-- **Bookmarks** — Save messages with notes, export/import as JSON
-- **Perspective mode** — View the chat as any participant
-- **Statistics** — Message counts, activity charts, timeline
-- **Dark mode** — Follows system or toggle manually (preference saved)
-- **Multi-language UI** — English and Portuguese (more coming soon)
-- **Desktop app** — macOS, Windows, Linux via Electron
+- **Voice transcription**: Transcribe audio with Whisper (runs locally, 12+ languages)
+- **Search**: Full-text search across messages and transcriptions
+- **Bookmarks**: Save messages with notes, export/import as JSON
+- **Perspective mode**: View the chat as any participant
+- **Statistics**: Message counts, activity charts, timeline
+- **Dark mode**: Follows system or toggle manually (preference saved)
+- **Multi-language UI**: English and Portuguese (more coming soon)
+- **Desktop app**: macOS, Windows, Linux via Electron
 
 ---
 
@@ -148,16 +148,16 @@ This app is designed with privacy as the top priority. Your WhatsApp data never 
 
 ### Why it's secure
 
-- **100% Offline** — The app works entirely without internet. No servers, no cloud, no data transmission.
-- **Local processing** — All parsing, search, and analysis happens in your browser or Electron app.
-- **Local AI** — Voice transcription uses [Whisper](https://openai.com/research/whisper) running locally via WebGPU. No audio is sent to any server or API.
-- **No tracking** — Zero analytics, telemetry, or third-party scripts. No Google Analytics, no cookies.
-- **No account required** — No registration, no login, no personal data collected.
-- **Open source** — The entire codebase is public under [AGPL-3.0](LICENSE). Anyone can audit it.
+- **100% Offline**: The app works entirely without internet. No servers, no cloud, no data transmission.
+- **Local processing**: All parsing, search, and analysis happens in your browser or Electron app.
+- **Local AI**: Voice transcription uses [Whisper](https://openai.com/research/whisper) running locally via WebGPU. No audio is sent to any server or API.
+- **No tracking**: Zero analytics, telemetry, or third-party scripts. No Google Analytics, no cookies.
+- **No account required**: No registration, no login, no personal data collected.
+- **Open source**: The entire codebase is public under [AGPL-3.0](LICENSE). Anyone can audit it.
 
 ### How to verify
 
-Don't just trust us — verify it yourself:
+Don't just trust us. Verify it yourself:
 
 1. **Read the source code**  
    Browse the [GitHub repository](https://github.com/rodrigogs/whats-reader). The main logic is in `src/lib/` and `src/routes/`.
@@ -178,7 +178,7 @@ Don't just trust us — verify it yourself:
    ```
 
 5. **Audit the Electron app**  
-   The desktop app uses the same web code. Check `electron/main.cjs` and `electron/preload.cjs` — they only handle window management and file dialogs.
+   The desktop app uses the same web code. Check `electron/main.cjs` and `electron/preload.cjs`. They only handle window management and file dialogs.
 
 ---
 
@@ -215,12 +215,12 @@ Translation files are in `messages/`. To add a new language:
 
 ## Built with
 
-- [SvelteKit](https://kit.svelte.dev) + [Svelte 5](https://svelte.dev) — Framework
-- [Tailwind CSS 4](https://tailwindcss.com) — Styling
-- [Electron](https://electronjs.org) — Desktop app
-- [Transformers.js](https://huggingface.co/docs/transformers.js) — Whisper AI for transcription
-- [JSZip](https://stuk.github.io/jszip/) — ZIP file handling
-- [Paraglide JS](https://inlang.com/m/gerre34r/library-inlang-paraglideJs) — Internationalization
+- [SvelteKit](https://kit.svelte.dev) + [Svelte 5](https://svelte.dev) - Framework
+- [Tailwind CSS 4](https://tailwindcss.com) - Styling
+- [Electron](https://electronjs.org) - Desktop app
+- [Transformers.js](https://huggingface.co/docs/transformers.js) - Whisper AI for transcription
+- [JSZip](https://stuk.github.io/jszip/) - ZIP file handling
+- [Paraglide JS](https://inlang.com/m/gerre34r/library-inlang-paraglideJs) - Internationalization
 
 ---
 
@@ -236,4 +236,4 @@ There are example chat files in `examples/chats/` you can use for testing.
 
 ## License
 
-[AGPL-3.0](LICENSE) — You can use, modify, and distribute this software freely. If you modify it and run it as a service or distribute it, you must share your source code under the same license.
+[AGPL-3.0](LICENSE). You can use, modify, and distribute this software freely. If you modify it and run it as a service or distribute it, you must share your source code under the same license.

@@ -135,6 +135,13 @@
   "export_step_4": "Escolha \"Incluir mídia\" para backup completo",
   "export_step_5": "Salve o arquivo .zip e faça upload aqui",
   
+  "privacy_title": "Privacidade e Segurança",
+  "privacy_offline": "100% Offline – Funciona sem internet após carregar",
+  "privacy_local_processing": "Processamento Local – Seus arquivos nunca saem do dispositivo",
+  "privacy_local_ai": "IA Local – Transcrição de áudio roda inteiramente no seu dispositivo",
+  "privacy_no_tracking": "Sem Rastreamento – Zero analytics, telemetria ou serviços externos",
+  "privacy_open_source": "Código Aberto – Verifique você mesmo no GitHub",
+  
   "dropzone_title": "Solte a exportação do WhatsApp aqui",
   "dropzone_subtitle": "ou clique para procurar",
   "dropzone_formats": "Suporta arquivos .zip com mídia",
