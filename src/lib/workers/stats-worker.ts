@@ -1,10 +1,14 @@
 /**
  * Web Worker for computing chat statistics
- * This runs in a separate thread to prevent UI blocking
+ * Runs in a separate thread to prevent UI blocking
  */
 
+/**
+ * Simplified message format for statistics computation.
+ * Only includes fields needed for stats (subset of ChatMessage from chat-parser.ts)
+ */
 interface ChatMessage {
-	timestamp: string; // Serialized as ISO string since Date doesn't survive postMessage
+	timestamp: string; // ISO string (Date doesn't survive postMessage)
 	sender: string;
 	isSystemMessage: boolean;
 }
