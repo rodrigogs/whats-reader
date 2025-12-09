@@ -1,21 +1,152 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+# [1.4.0](https://github.com/rodrigogs/whats-reader/compare/v1.3.3...v1.4.0) (2025-12-09)
+
+### ✨ Features
+
+* redesign export instructions as collapsible accordion ([#8](https://github.com/rodrigogs/whats-reader/issues/8)) ([c6e1bd8](https://github.com/rodrigogs/whats-reader/commit/c6e1bd8009678d5bb8c471333bab193febdd4de6))
+
+## [1.3.3](https://github.com/rodrigogs/whats-reader/compare/v1.3.2...v1.3.3) (2025-12-09)
+
+### 🐛 Bug Fixes
+
+* trigger build workflow after release ([4d4ef5a](https://github.com/rodrigogs/whats-reader/commit/4d4ef5aeafcebb86347551778344d83c563dbd17))
+
+## [1.3.2](https://github.com/rodrigogs/whats-reader/compare/v1.3.1...v1.3.2) (2025-12-09)
+
+### 🐛 Bug Fixes
+
+* restore changelog and git plugins to semantic-release ([3e1fb9a](https://github.com/rodrigogs/whats-reader/commit/3e1fb9afd95d99e48f808cf8fa2392337cf4fd13))
+
+## [1.3.1](https://github.com/rodrigogs/whats-reader/compare/v1.3.0...v1.3.1) (2025-12-09)
+
+### 🐛 Bug Fixes
+
+* **Search freeze resolved**: Removed MiniSearch to eliminate ~5-10MB postMessage serialization that was freezing the browser
+* **Scroll to search results**: Added retry mechanism for scrolling to results (fixes system notification messages)
+* **TypeScript errors**: Fixed duplicate type identifiers and postMessage signatures in workers
+
+### ✨ Improvements
+
+* **Simplified search**: Uses fast \`string.includes()\` with bitmap results for O(1) match lookup
+* **Better UI**: Replaced floating hamburger button with discrete header toggle icon
+* **Cleaner code**: Unified duplicate types, removed outdated MiniSearch references
+
+### ♻️ Refactoring
+
+* Unified \`SerializedMessage\` and \`FlatItem\` types in index-worker
+* Renamed \`WorkerInput\` to unique names per worker to avoid conflicts
+* Removed ~65 lines of hamburger CSS animations
+
+# [1.3.0](https://github.com/rodrigogs/whats-reader/compare/v1.2.4...v1.3.0) (2025-12-08)
+
+### 🐛 Bug Fixes
+
+* add changelog and git plugins to semantic-release ([a78c934](https://github.com/rodrigogs/whats-reader/commit/a78c93462f1f120ade3f085582b47c02df255fee))
+* remove git plugin from semantic-release (conflicts with branch protection) ([54e21dc](https://github.com/rodrigogs/whats-reader/commit/54e21dc45cbf51de7f4b8a3add3dcaafc63938c1))
+
+### ✨ Features
+
+* use browser preferred language as default locale ([ea19ea8](https://github.com/rodrigogs/whats-reader/commit/ea19ea8de75ac7ec3eb65600e9798889ad89916e))
+
+## [1.2.4](https://github.com/rodrigogs/whats-reader/compare/v1.2.3...v1.2.4) (2025-12-08)
+
+### 🐛 Bug Fixes
+
+* update package.json version in build workflow before building ([49a6978](https://github.com/rodrigogs/whats-reader/commit/49a6978ad62a959e51f98ddde5058e255bdab0af))
+
+## [1.2.3](https://github.com/rodrigogs/whats-reader/compare/v1.2.2...v1.2.3) (2025-12-08)
+
+### 🐛 Bug Fixes
+
+* add npm plugin to semantic-release to update package.json version ([a30492f](https://github.com/rodrigogs/whats-reader/commit/a30492faad3b1f49673056e8cf1d31c74998a52c))
+
+## [1.2.2](https://github.com/rodrigogs/whats-reader/compare/v1.2.1...v1.2.2) (2025-12-08)
+
+### 🐛 Bug Fixes
+
+* update CI badge to use dev branch ([db945ee](https://github.com/rodrigogs/whats-reader/commit/db945ee2c7c4e7dd7dbc79b77ffe9d1f3625c4fa))
+
+## [1.2.1](https://github.com/rodrigogs/whats-reader/compare/v1.2.0...v1.2.1) (2025-12-08)
+
+### 🐛 Bug Fixes
+
+* improve empty state settings buttons positioning ([372a740](https://github.com/rodrigogs/whats-reader/commit/372a7408ba77f242feb7d5b0a32a2faa28365020))
+
+# [1.2.0](https://github.com/rodrigogs/whats-reader/compare/v1.1.6...v1.2.0) (2025-12-08)
+
+### ✨ Features
+
+* add FlatItem types for precomputed message indexing ([b002fb5](https://github.com/rodrigogs/whats-reader/commit/b002fb56f32d2c27ffeba9baeb25e29bab5f2053))
+* merge bookmarks on import instead of replacing ([26fb943](https://github.com/rodrigogs/whats-reader/commit/26fb943da1bc15c1caa08a5434c7249b277b9b3b))
+
+### ⚡ Performance Improvements
+
+* precompute message index via web worker for faster navigation ([4bb036e](https://github.com/rodrigogs/whats-reader/commit/4bb036e3bbd3fbcabe821998ed8bbd3d82036db5))
+
+## [1.1.6](https://github.com/rodrigogs/whats-reader/compare/v1.1.5...v1.1.6) (2025-12-08)
+
+### 🐛 Bug Fixes
+
+* regenerate package-lock.json for Node.js 24 compatibility ([cce6493](https://github.com/rodrigogs/whats-reader/commit/cce6493d25e8ff7505224aec87c4a15afdbb276e))
+
+## [1.1.5](https://github.com/rodrigogs/whats-reader/compare/v1.1.4...v1.1.5) (2025-12-08)
+
+### ⚡ Performance Improvements
+
+* optimize binary size by excluding unnecessary node_modules ([ffab963](https://github.com/rodrigogs/whats-reader/commit/ffab96378c02117346153e62a2f2f606e6521214))
+
+## [1.1.4](https://github.com/rodrigogs/whats-reader/compare/v1.1.3...v1.1.4) (2025-12-08)
+
+### 🐛 Bug Fixes
+
+* make language and dark mode buttons fixed position at top-right ([d8d6e5e](https://github.com/rodrigogs/whats-reader/commit/d8d6e5e1525f1acbc0df9499e86892f0c86f1ec0))
+
+## [1.1.3](https://github.com/rodrigogs/whats-reader/compare/v1.1.2...v1.1.3) (2025-12-08)
+
+### 🐛 Bug Fixes
+
+* reload page on locale change for proper UI update ([41c032d](https://github.com/rodrigogs/whats-reader/commit/41c032dcc81a6928697372b24434079268b1f01e))
+
+## [1.1.2](https://github.com/rodrigogs/whats-reader/compare/v1.1.1...v1.1.2) (2025-12-08)
+
+### 🐛 Bug Fixes
+
+* language switching and fixed position for settings buttons ([33ef476](https://github.com/rodrigogs/whats-reader/commit/33ef4764febe2ac2e6c0aaf6d247cfc25f7eb87a))
+
+## [1.1.1](https://github.com/rodrigogs/whats-reader/compare/v1.1.0...v1.1.1) (2025-12-08)
+
+### 🐛 Bug Fixes
+
+* configure base path for GitHub Pages deployment ([c77c8f3](https://github.com/rodrigogs/whats-reader/commit/c77c8f31fbdce40bfcaf5bacccbf9c8d168d47fb))
+
+# [1.1.0](https://github.com/rodrigogs/whats-reader/compare/v1.0.2...v1.1.0) (2025-12-08)
+
+### 🐛 Bug Fixes
+
+* remove git plugin from semantic-release to avoid branch protection issues ([defa594](https://github.com/rodrigogs/whats-reader/commit/defa59476790808df315d5dcbcdb173ff239f679))
+
+### ✨ Features
+
+* add support for all OS architectures in releases ([5e76828](https://github.com/rodrigogs/whats-reader/commit/5e76828dcc9ce28d643497524339892dacd02029))
+
 ## [1.0.2](https://github.com/rodrigogs/whats-reader/compare/v1.0.1...v1.0.2) (2025-12-08)
 
-
-### Bug Fixes
+### 🐛 Bug Fixes
 
 * update electron:dev script to use cross-env for setting NODE_ENV ([65a1683](https://github.com/rodrigogs/whats-reader/commit/65a1683e4b5620da8e3b8ac0f53fedc88fb26260))
 
 ## [1.0.1](https://github.com/rodrigogs/whats-reader/compare/v1.0.0...v1.0.1) (2025-12-08)
 
-
-### Bug Fixes
+### 🐛 Bug Fixes
 
 * add author email for deb builds and disable electron-builder auto-publish ([25fd8cb](https://github.com/rodrigogs/whats-reader/commit/25fd8cb64b0dd2c24cbc7f110b904e58ee8d4b6f))
 
 # 1.0.0 (2025-12-08)
 
-
-### Bug Fixes
+### 🐛 Bug Fixes
 
 * address code review feedback - prevent infinite loop and SSR check ([35cefe4](https://github.com/rodrigogs/whats-reader/commit/35cefe40a8986e406ac5f5607b1dd36e178a3996))
 * address PR review comments - improve code quality and fix bugs ([0afaa83](https://github.com/rodrigogs/whats-reader/commit/0afaa8324700e2222a5d0699bbe17de3dc0e7c49))
@@ -26,8 +157,7 @@
 * remove duplicate electron-drag bars causing chunky headers ([95d27d9](https://github.com/rodrigogs/whats-reader/commit/95d27d91f3dedf19d9cd5d232b560733721342e9))
 * use custom protocol for Electron production builds ([5cf7865](https://github.com/rodrigogs/whats-reader/commit/5cf786513fc57ad43c2b16905bd6553c35abdaad))
 
-
-### Features
+### ✨ Features
 
 * add app icons, favicon, and PWA manifest ([19384c0](https://github.com/rodrigogs/whats-reader/commit/19384c0d10739c3641f0024d02f76711d7096707))
 * add audio transcription with Web Worker, auto-load media, and floating menus ([754d31e](https://github.com/rodrigogs/whats-reader/commit/754d31eb7fd0ee81a9dbccba4eb3b7f57cb3a79f))
