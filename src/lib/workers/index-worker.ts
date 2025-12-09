@@ -34,7 +34,11 @@ interface IndexWorkerInput {
 	chatTitle: string;
 }
 
-// Serializable flat item types
+/**
+ * Serializable flat item types for rendering.
+ * These match DateFlatItem/MessageFlatItem in zip-parser.ts
+ * (duplicated here because workers can't easily import from main bundle)
+ */
 interface DateItem {
 	type: 'date';
 	date: string;
@@ -45,12 +49,12 @@ interface MessageItem {
 	messageId: string;
 }
 
-type SerializedFlatItem = DateItem | MessageItem;
+type FlatItem = DateItem | MessageItem;
 
 interface IndexWorkerOutput {
 	chatTitle: string;
 	indexEntries: [string, number][];
-	flatItems: SerializedFlatItem[];
+	flatItems: FlatItem[];
 	// Pre-serialized messages for search worker (avoids re-serialization on every search)
 	serializedMessages: SerializedMessage[];
 }
@@ -76,7 +80,7 @@ self.onmessage = (event: MessageEvent<IndexWorkerInput>) => {
 
 	// Build the flat items list and index simultaneously
 	const indexEntries: [string, number][] = [];
-	const flatItems: SerializedFlatItem[] = [];
+	const flatItems: FlatItem[] = [];
 	let flatIndex = 0;
 
 	for (const [date, dayMessages] of groups.entries()) {
