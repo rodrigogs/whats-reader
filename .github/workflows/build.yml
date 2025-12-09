@@ -36,7 +36,6 @@ jobs:
         id: version
         run: |
           if [ "${{ github.event_name }}" = "release" ]; then
-            # Extract version from tag (remove 'v' prefix)
             VERSION="${{ github.event.release.tag_name }}"
             VERSION="${VERSION#v}"
           else
@@ -48,7 +47,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "22"
           cache: "npm"
 
       - name: Install dependencies
@@ -60,22 +59,18 @@ jobs:
       - name: Build app
         run: npm run build
 
-      # macOS: Build for both architectures
       - name: Build Electron (macOS)
         if: matrix.platform == 'mac'
         run: npm run electron:build:mac -- --x64 --arm64
 
-      # Windows: Build for x64 and arm64
       - name: Build Electron (Windows)
         if: matrix.platform == 'win'
         run: npm run electron:build:win -- --x64 --arm64
 
-      # Linux: Build for x64 and arm64
       - name: Build Electron (Linux)
         if: matrix.platform == 'linux'
         run: npm run electron:build:linux -- --x64 --arm64
 
-      # Upload artifacts to release
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
         with:
@@ -90,7 +85,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Upload artifacts as workflow artifacts (backup)
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
