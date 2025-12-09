@@ -494,19 +494,6 @@ const currentUser = $derived.by(() => {
 	{:else}
 		<!-- Main app layout -->
 		<div class="flex-1 flex overflow-hidden">
-			<!-- Sidebar toggle - Hamburger with smooth X morph animation -->
-			<button
-				class="hamburger-btn fixed bottom-4 left-4 z-50 w-11 h-11 rounded-full bg-[var(--color-whatsapp-teal)] text-white shadow-lg flex items-center justify-center {showSidebar ? 'is-active' : ''}"
-				onclick={toggleSidebar}
-				aria-label={m.sidebar_toggle()}
-			>
-				<div class="hamburger-icon">
-					<span class="hamburger-line"></span>
-					<span class="hamburger-line"></span>
-					<span class="hamburger-line"></span>
-				</div>
-			</button>
-
 			<!-- Sidebar -->
 			<div
 				class="sidebar-panel w-80 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col {showSidebar ? 'sidebar-open' : 'sidebar-closed'}"
@@ -566,7 +553,27 @@ const currentUser = $derived.by(() => {
 			{#if appState.selectedChat}
 				<div class="flex-1 flex flex-col overflow-hidden">
 					<!-- Chat header -->
-					<div class="h-16 px-4 flex items-center gap-4 bg-[var(--color-whatsapp-dark-green)] text-white shadow-md flex-shrink-0">
+					<div class="h-16 px-4 flex items-center gap-3 bg-[var(--color-whatsapp-dark-green)] text-white shadow-md flex-shrink-0">
+						<!-- Sidebar toggle button -->
+						<button
+							class="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+							onclick={toggleSidebar}
+							aria-label={m.sidebar_toggle()}
+							title={m.sidebar_toggle()}
+						>
+							{#if showSidebar}
+								<!-- Close icon (arrow left) -->
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+								</svg>
+							{:else}
+								<!-- Menu icon (hamburger lines) -->
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+								</svg>
+							{/if}
+						</button>
+
 						<!-- Avatar -->
 						<div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-semibold">
 							{appState.selectedChat.title.charAt(0).toUpperCase()}
@@ -912,7 +919,27 @@ const currentUser = $derived.by(() => {
 			{:else}
 				<!-- No chat selected -->
 				<div class="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
-					<div class="h-16 bg-[var(--color-whatsapp-dark-green)] flex-shrink-0"></div>
+				<div class="h-16 px-4 flex items-center bg-[var(--color-whatsapp-dark-green)] flex-shrink-0">
+					<!-- Sidebar toggle button -->
+					<button
+						class="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer text-white"
+						onclick={toggleSidebar}
+						aria-label={m.sidebar_toggle()}
+						title={m.sidebar_toggle()}
+					>
+						{#if showSidebar}
+							<!-- Close icon (arrow left) -->
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+							</svg>
+						{:else}
+							<!-- Menu icon (hamburger lines) -->
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+							</svg>
+						{/if}
+					</button>
+				</div>
 					<div class="flex-1 flex items-center justify-center">
 						<div class="text-center text-gray-500 dark:text-gray-400">
 							<svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
