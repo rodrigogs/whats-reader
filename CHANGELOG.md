@@ -1,3 +1,15 @@
+# [1.5.0](https://github.com/rodrigogs/whats-reader/compare/v1.4.1...v1.5.0) (2025-12-09)
+
+
+### Bug Fixes
+
+* **ui:** make empty state page scrollable on small screens ([802123e](https://github.com/rodrigogs/whats-reader/commit/802123e460e983643cd36a72aacb1cd787d04b94))
+
+
+### Features
+
+* redesign export instructions as collapsible accordion ([d637cd8](https://github.com/rodrigogs/whats-reader/commit/d637cd82b21058f64e5c12987083e41bf43e56c9))
+
 ## [1.4.1](https://github.com/rodrigogs/whats-reader/compare/v1.4.0...v1.4.1) (2025-12-09)
 
 
