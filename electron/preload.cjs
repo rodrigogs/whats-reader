@@ -12,6 +12,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 	readDir: (dirPath) => ipcRenderer.invoke('fs:readDir', dirPath),
 	fileExists: (filePath) => ipcRenderer.invoke('fs:fileExists', filePath),
 
+	// External links
+	openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
+
 	// Platform info
 	platform: process.platform,
 	isElectron: true,

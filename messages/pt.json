@@ -159,5 +159,8 @@
   "language_korean": "한국어",
   "language_russian": "Русский",
   "language_auto": "Detectar automaticamente",
-  "language_change": "Mudar idioma"
+  "language_change": "Mudar idioma",
+  
+  "github_star_title": "Gostou do projeto?",
+  "github_star_cta": "Dê uma estrela no GitHub"
 }

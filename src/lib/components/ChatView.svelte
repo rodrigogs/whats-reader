@@ -12,7 +12,8 @@ interface Props {
 	chatId: string;
 	currentUser?: string;
 	searchQuery?: string;
-	searchResultSet?: Set<string>;
+	// O(1) lookup function to check if a message matches search
+	isSearchMatch?: (messageId: string) => boolean;
 	currentSearchResultId?: string | null;
 	scrollToMessageId?: string | null;
 	autoLoadMedia?: boolean;
@@ -21,12 +22,15 @@ interface Props {
 	precomputedMessagesById?: Map<string, ChatMessage>;
 }
 
+// Default no-op function for isSearchMatch
+const defaultIsSearchMatch = () => false;
+
 let {
 	messages,
 	chatId,
 	currentUser,
 	searchQuery = '',
-	searchResultSet = new Set(),
+	isSearchMatch = defaultIsSearchMatch,
 	currentSearchResultId = null,
 	scrollToMessageId = null,
 	autoLoadMedia = false,
@@ -334,39 +338,67 @@ $effect(() => {
 	const currentIndexMap = messageIndexMap;
 	const currentFlatItemsLength = totalFlatItemsCount;
 
-	// Run async navigation
+	// Run async navigation with retry mechanism
 	(async () => {
-		// Check if we need to expand chunks
-		const messageIndex = currentIndexMap.get(targetId);
-		let chunksExpanded = false;
+		const maxRetries = 20; // 20 * 50ms = 1 second max
+		const retryDelay = 50;
 
-		if (messageIndex !== undefined) {
-			const itemsFromEnd = currentFlatItemsLength - messageIndex;
-			const chunksNeeded = Math.ceil(itemsFromEnd / CHUNK_SIZE);
+		// Capture targetId at the start to detect if it changes during retries
+		const capturedTargetId = targetId;
 
-			if (chunksNeeded > loadedChunksFromEnd) {
-				loadedChunksFromEnd = chunksNeeded + 1;
-				chunksExpanded = true;
+		for (let attempt = 0; attempt < maxRetries; attempt++) {
+			// Check if currentSearchResultId changed during retry loop (race condition)
+			if (currentSearchResultId !== capturedTargetId) {
+				return; // Exit early, a newer navigation is in progress
 			}
-		}
 
-		if (chunksExpanded) {
-			await tick(); // Wait for DOM update
-		}
+			// Check if we need to expand chunks
+			const messageIndex = currentIndexMap.get(capturedTargetId);
 
-		if (messageRefs.has(targetId)) {
-			const element = messageRefs.get(targetId);
+			if (messageIndex !== undefined) {
+				const itemsFromEnd = currentFlatItemsLength - messageIndex;
+				const chunksNeeded = Math.ceil(itemsFromEnd / CHUNK_SIZE);
 
-			highlightReady = false;
-			highlightedId = null;
-			pendingHighlightId = targetId;
-			isNavigationScroll = true;
+				if (chunksNeeded > loadedChunksFromEnd) {
+					loadedChunksFromEnd = chunksNeeded + 1;
+					// Check again before async operation
+					if (currentSearchResultId !== capturedTargetId) {
+						return;
+					}
+					await tick(); // Wait for DOM update after chunk expansion
+				}
+			}
 
-			element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			// Check if message ref exists in DOM
+			if (messageRefs.has(capturedTargetId)) {
+				const element = messageRefs.get(capturedTargetId);
 
-			setTimeout(() => {
-				isNavigationScroll = false;
-			}, 500);
+				if (element) {
+					highlightReady = false;
+					highlightedId = null;
+					pendingHighlightId = capturedTargetId;
+					isNavigationScroll = true;
+
+					element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+					// Check again before async operation
+					if (currentSearchResultId !== capturedTargetId) {
+						return;
+					}
+
+					setTimeout(() => {
+						isNavigationScroll = false;
+					}, 500);
+
+					return; // Success, exit retry loop
+				}
+			}
+
+			// Ref not ready yet, check again before waiting
+			if (currentSearchResultId !== capturedTargetId) {
+				return;
+			}
+			await new Promise((resolve) => setTimeout(resolve, retryDelay));
 		}
 	})();
 });
@@ -547,6 +579,7 @@ function handleScroll() {
 		{:else}
 			<!-- Message -->
 			{@const message = item.message}
+			{@const matchResult = isSearchMatch(message.id)}
 			<div
 				use:registerMessageRef={message.id}
 			>
@@ -556,8 +589,8 @@ function handleScroll() {
 					{bookmarkedMessageIds}
 					isOwn={currentUser !== undefined && message.sender === currentUser}
 					showSender={true}
-					{searchQuery}
-					isSearchMatch={searchResultSet.has(message.id)}
+					searchQuery={searchQuery}
+					isSearchMatch={matchResult}
 					isCurrentSearchResult={message.id === currentSearchResultId}
 					triggerHighlight={highlightReady && message.id === highlightedId}
 					isHighlighted={message.id === persistentHighlightId}

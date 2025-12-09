@@ -2,8 +2,10 @@
  * Application state management using Svelte 5 runes
  */
 
-import type { ChatMessage } from './parser/chat-parser';
-import type { ParsedZipChat } from './parser/zip-parser';
+import type {
+	ParsedZipChat,
+	SerializedSearchMessage,
+} from './parser/zip-parser';
 import { getAllTranscriptions } from './transcription.svelte';
 
 // ChatData is now always a ParsedZipChat since we only support ZIP files
@@ -17,11 +19,17 @@ export interface AppState {
 	error: string | null;
 }
 
+// Debounce delay for search input (ms)
+const SEARCH_DEBOUNCE_MS = 150;
+
 // Create reactive state
 export function createAppState() {
 	let chats = $state<ChatData[]>([]);
 	let selectedChatIndex = $state<number | null>(null);
-	let searchQuery = $state('');
+	// inputSearchQuery: what user types (for SearchBar display)
+	// activeSearchQuery: query used for highlighting (only updates when results arrive)
+	let inputSearchQuery = $state('');
+	let activeSearchQuery = $state('');
 	let isLoading = $state(false);
 	let loadingProgress = $state(0); // 0-100 for file processing
 	let error = $state<string | null>(null);
@@ -32,10 +40,21 @@ export function createAppState() {
 	// Search state - VS Code style (navigate through results, don't filter)
 	let isSearching = $state(false);
 	let searchProgress = $state(0); // 0-100
-	let searchResultIds = $state<string[]>([]); // Ordered list of matching message IDs
+	let searchResultIds = $state<string[]>([]); // Ordered list of matching message IDs (first N for navigation)
+	let totalSearchMatches = $state(0); // Total number of matches (may be > searchResultIds.length)
 	let currentSearchIndex = $state(0); // Current position in search results
+
+	// Bitmap-based match lookup for O(1) performance
+	// This avoids creating a Set from thousands of IDs on every search
+	let searchMatchBitmap: Uint8Array | null = null;
+	let searchMessageIdToIndex: Map<string, number> | null = null;
+
 	let searchWorker: Worker | null = null;
-	let searchTimeoutId: ReturnType<typeof setTimeout> | null = null;
+	let searchWorkerReady = false;
+	let searchWorkerChatTitle: string | null = null; // Track which chat the worker is loaded for
+	let currentSearchId = 0; // For tracking/cancelling searches
+	let searchDebounceId: ReturnType<typeof setTimeout> | null = null;
+	let workerTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
 	// Derived values
 	const selectedChat = $derived(
@@ -50,27 +69,190 @@ export function createAppState() {
 		searchResultIds.length > 0 ? searchResultIds[currentSearchIndex] : null,
 	);
 
-	// Search results as a Set for fast lookup
-	const searchResultSet = $derived(new Set(searchResultIds));
+	// O(1) lookup function for checking if a message matches search
+	// Uses bitmap from worker - much faster than Set for large result sets
+	function isSearchMatch(messageId: string): boolean {
+		if (!searchMatchBitmap || !searchMessageIdToIndex) return false;
+		const idx = searchMessageIdToIndex.get(messageId);
+		if (idx === undefined) return false;
+		return searchMatchBitmap[idx] === 1;
+	}
 
 	const hasChats = $derived(chats.length > 0);
 
-	// Cleanup worker and pending timeouts
-	function cleanupSearchWorker() {
-		if (searchTimeoutId) {
-			clearTimeout(searchTimeoutId);
-			searchTimeoutId = null;
+	// Cleanup search debounce
+	function cleanupSearchDebounce() {
+		if (searchDebounceId) {
+			clearTimeout(searchDebounceId);
+			searchDebounceId = null;
+		}
+	}
+
+	// Terminate and cleanup worker
+	function terminateSearchWorker() {
+		cleanupSearchDebounce();
+		if (workerTimeoutId) {
+			clearTimeout(workerTimeoutId);
+			workerTimeoutId = null;
 		}
 		if (searchWorker) {
 			searchWorker.terminate();
 			searchWorker = null;
+			searchWorkerReady = false;
+			searchWorkerChatTitle = null;
 		}
 	}
 
-	// Perform search using Web Worker
-	function performSearch(query: string, messages: ChatMessage[]) {
-		cleanupSearchWorker();
+	// Initialize or reuse search worker for a chat
+	function ensureSearchWorker(chat: ChatData): Promise<void> {
+		return new Promise((resolve, reject) => {
+			let isSettled = false; // Track if promise is already settled
 
+			// If worker is already loaded for this chat, reuse it
+			if (
+				searchWorker &&
+				searchWorkerReady &&
+				searchWorkerChatTitle === chat.title
+			) {
+				resolve();
+				return;
+			}
+
+			// Terminate existing worker if it's for a different chat
+			if (searchWorker) {
+				searchWorker.terminate();
+			}
+
+			searchWorkerReady = false;
+			searchWorkerChatTitle = chat.title;
+
+			// Set timeout to reject if worker doesn't respond within 5 seconds
+			workerTimeoutId = setTimeout(() => {
+				if (isSettled) return;
+				isSettled = true;
+
+				// Terminate worker since initialization failed
+				if (searchWorker) {
+					searchWorker.terminate();
+					searchWorker = null;
+				}
+
+				searchWorkerReady = false;
+				searchWorkerChatTitle = null;
+				workerTimeoutId = null;
+
+				reject(
+					new Error('Search worker failed to initialize within 5 seconds'),
+				);
+			}, 5000);
+
+			searchWorker = new Worker(
+				new URL('./workers/search-worker.ts', import.meta.url),
+				{ type: 'module' },
+			);
+
+			searchWorker.onmessage = (
+				event: MessageEvent<{
+					type: 'progress' | 'complete' | 'ready' | 'cancelled';
+					searchId?: number;
+					matchingIds?: string[];
+					matchBitmap?: ArrayBuffer;
+					totalMatches?: number;
+					query?: string;
+					progress?: number;
+				}>,
+			) => {
+				const data = event.data;
+
+				if (data.type === 'ready') {
+					if (isSettled) return;
+					isSettled = true;
+
+					if (workerTimeoutId) {
+						clearTimeout(workerTimeoutId);
+						workerTimeoutId = null;
+					}
+					searchWorkerReady = true;
+					resolve();
+					return;
+				}
+
+				// Ignore results from old/cancelled searches
+				if (data.searchId !== undefined && data.searchId !== currentSearchId) {
+					return;
+				}
+
+				if (data.type === 'cancelled') {
+					// Search was cancelled, do nothing
+					return;
+				}
+
+				if (data.type === 'progress') {
+					searchProgress = data.progress ?? 0;
+				} else if (data.type === 'complete') {
+					// Use the transferred bitmap for O(1) match lookup
+					// This is MUCH faster than creating a Set from thousands of strings
+					if (data.matchBitmap) {
+						searchMatchBitmap = new Uint8Array(data.matchBitmap);
+					} else {
+						searchMatchBitmap = null;
+					}
+
+					searchResultIds = data.matchingIds ?? [];
+					totalSearchMatches = data.totalMatches ?? searchResultIds.length;
+					// Only update activeSearchQuery when results are ready
+					// This prevents UI thrashing during typing
+					activeSearchQuery = data.query ?? '';
+					currentSearchIndex = 0;
+					isSearching = false;
+					searchProgress = 100;
+				}
+			};
+
+			searchWorker.onerror = (err) => {
+				console.error('Search worker error:', err);
+				if (isSettled) return;
+				isSettled = true;
+
+				if (workerTimeoutId) {
+					clearTimeout(workerTimeoutId);
+					workerTimeoutId = null;
+				}
+				isSearching = false;
+				searchProgress = 0;
+				searchWorkerReady = false;
+				reject(err);
+			};
+
+			// Send simplified message data to worker (only id, content, sender)
+			// Use pre-computed serializedMessages if available (faster, avoids reactive proxy)
+			const messageData = chat.serializedMessages
+				? chat.serializedMessages.map((m) => ({
+						id: m.id,
+						content: m.content,
+						sender: m.sender,
+					}))
+				: chat.messages.map((m) => ({
+						id: m.id,
+						content: m.content,
+						sender: m.sender,
+					}));
+
+			// Build the ID-to-index map for bitmap lookup on main thread
+			searchMessageIdToIndex = new Map();
+			for (let i = 0; i < messageData.length; i++) {
+				searchMessageIdToIndex.set(messageData[i].id, i);
+			}
+
+			searchWorker.postMessage({
+				type: 'load-data',
+				messages: messageData,
+			});
+		});
+	}
+
+	// Perform search using Web Worker
+	async function performSearch(query: string, chat: ChatData) {
 		if (!query.trim()) {
 			searchResultIds = [];
 			currentSearchIndex = 0;
@@ -82,71 +264,26 @@ export function createAppState() {
 		isSearching = true;
 		searchProgress = 0;
 
-		const searchStartTime = Date.now();
-		const MIN_SEARCH_DISPLAY_TIME = 300; // Minimum time to show progress (ms)
-
-		searchWorker = new Worker(
-			new URL('./workers/search-worker.ts', import.meta.url),
-			{ type: 'module' },
-		);
-
-		searchWorker.onmessage = (
-			event: MessageEvent<{
-				type: 'progress' | 'complete';
-				matchingIds?: string[];
-				query: string;
-				progress?: number;
-			}>,
-		) => {
-			const data = event.data;
-
-			// Only process if this result matches current query
-			if (data.query !== searchQuery) return;
-
-			if (data.type === 'progress') {
-				searchProgress = data.progress ?? 0;
-			} else if (data.type === 'complete') {
-				const elapsed = Date.now() - searchStartTime;
-				const remainingTime = Math.max(0, MIN_SEARCH_DISPLAY_TIME - elapsed);
-
-				// Ensure progress indicator is visible for at least MIN_SEARCH_DISPLAY_TIME
-				searchTimeoutId = setTimeout(() => {
-					searchResultIds = data.matchingIds ?? [];
-					currentSearchIndex = 0;
-					isSearching = false;
-					searchProgress = 100;
-					searchWorker?.terminate();
-					searchWorker = null;
-					searchTimeoutId = null;
-				}, remainingTime);
-			}
-		};
-
-		searchWorker.onerror = (err) => {
-			console.error('Search worker error:', err);
+		// Ensure worker is ready
+		try {
+			await ensureSearchWorker(chat);
+		} catch (error) {
+			console.error('Failed to initialize search worker:', error);
 			isSearching = false;
 			searchProgress = 0;
-			searchWorker?.terminate();
-			searchWorker = null;
-		};
+			return;
+		}
 
-		// Serialize messages for the worker
-		const serializedMessages = messages.map((m) => ({
-			id: m.id,
-			timestamp: m.timestamp.toISOString(),
-			sender: m.sender,
-			content: m.content,
-			isSystemMessage: m.isSystemMessage,
-			isMediaMessage: m.isMediaMessage,
-			mediaType: m.mediaType,
-			rawLine: m.rawLine,
-		}));
+		// Increment search ID to invalidate any previous search
+		currentSearchId++;
 
 		// Include transcriptions for audio message search
 		const transcriptions = getAllTranscriptions();
 
-		searchWorker.postMessage({
-			messages: serializedMessages,
+		// Send lightweight search request (just query and transcriptions)
+		searchWorker?.postMessage({
+			type: 'search',
+			searchId: currentSearchId,
 			query,
 			transcriptions,
 		});
@@ -160,8 +297,13 @@ export function createAppState() {
 		get selectedChatIndex() {
 			return selectedChatIndex;
 		},
+		// inputSearchQuery: for SearchBar display (updates immediately)
 		get searchQuery() {
-			return searchQuery;
+			return inputSearchQuery;
+		},
+		// activeSearchQuery: for ChatView highlighting (only updates with results)
+		get activeSearchQuery() {
+			return activeSearchQuery;
 		},
 		get isLoading() {
 			return isLoading;
@@ -181,15 +323,18 @@ export function createAppState() {
 		get searchResultIds() {
 			return searchResultIds;
 		},
+		get totalSearchMatches() {
+			return totalSearchMatches;
+		},
 		get currentSearchIndex() {
 			return currentSearchIndex;
 		},
 		get currentSearchResultId() {
 			return currentSearchResultId;
 		},
-		get searchResultSet() {
-			return searchResultSet;
-		},
+		// O(1) match lookup function - replaces searchResultSet
+		// This is much faster than creating/updating a Set with thousands of IDs
+		isSearchMatch,
 		get indexedChatTitles() {
 			return indexedChatTitles;
 		},
@@ -270,11 +415,35 @@ export function createAppState() {
 			}
 		},
 
+		/**
+		 * Update a chat's serialized messages after worker completes processing
+		 * These are used by the search worker to avoid re-serializing on every search
+		 */
+		updateChatSerializedMessages(
+			chatTitle: string,
+			serializedMessages: SerializedSearchMessage[],
+		) {
+			const chatIndex = chats.findIndex((c) => c.title === chatTitle);
+			if (chatIndex !== -1) {
+				const chat = chats[chatIndex];
+				// Create a new chat object with serialized messages to trigger reactivity
+				const updatedChat = {
+					...chat,
+					serializedMessages,
+				};
+				chats = chats.map((c, i) => (i === chatIndex ? updatedChat : c));
+			}
+		},
+
 		selectChat(index: number | null) {
 			// Reset search when changing chats
-			cleanupSearchWorker();
-			searchQuery = '';
+			terminateSearchWorker();
+			inputSearchQuery = '';
+			activeSearchQuery = '';
 			searchResultIds = [];
+			searchMatchBitmap = null;
+			searchMessageIdToIndex = null;
+			totalSearchMatches = 0;
 			currentSearchIndex = 0;
 			isSearching = false;
 			searchProgress = 0;
@@ -282,10 +451,37 @@ export function createAppState() {
 		},
 
 		setSearchQuery(query: string) {
-			searchQuery = query;
-			if (selectedChat) {
-				performSearch(query, selectedChat.messages);
+			// Update input immediately for SearchBar display
+			inputSearchQuery = query;
+
+			// Clear any pending debounced search
+			cleanupSearchDebounce();
+
+			// Cancel any in-progress search
+			if (searchWorker && searchWorkerReady) {
+				currentSearchId++;
+				searchWorker.postMessage({ type: 'cancel' });
 			}
+
+			if (!query.trim()) {
+				// Clear results and active query immediately for empty query
+				activeSearchQuery = '';
+				searchResultIds = [];
+				searchMatchBitmap = null; // Clear bitmap
+				totalSearchMatches = 0;
+				currentSearchIndex = 0;
+				isSearching = false;
+				searchProgress = 0;
+				return;
+			}
+
+			// Debounce the search to avoid firing on every keystroke
+			searchDebounceId = setTimeout(() => {
+				searchDebounceId = null;
+				if (selectedChat) {
+					performSearch(query, selectedChat);
+				}
+			}, SEARCH_DEBOUNCE_MS);
 		},
 
 		// Navigate to next search result
@@ -324,13 +520,17 @@ export function createAppState() {
 		},
 
 		reset() {
-			cleanupSearchWorker();
+			terminateSearchWorker();
 			chats = [];
 			selectedChatIndex = null;
-			searchQuery = '';
+			inputSearchQuery = '';
+			activeSearchQuery = '';
 			isLoading = false;
 			error = null;
 			searchResultIds = [];
+			searchMatchBitmap = null;
+			searchMessageIdToIndex = null;
+			totalSearchMatches = 0;
 			currentSearchIndex = 0;
 			isSearching = false;
 			searchProgress = 0;

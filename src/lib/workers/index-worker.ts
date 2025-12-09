@@ -4,11 +4,17 @@
  * This worker builds:
  * 1. A map of messageId -> flatIndex for efficient bookmark navigation
  * 2. The flat items list with date separators for rendering
+ * 3. Pre-serialized messages for search worker
  *
- * Both operations account for date separators in the flat list structure used by ChatView.
+ * All operations are performed in a single worker pass for efficiency.
  */
 
-interface IndexWorkerMessage {
+/**
+ * Serialized message format used for both input and output.
+ * This structure matches SerializedSearchMessage in zip-parser.ts
+ * (duplicated here because workers can't easily import from main bundle)
+ */
+interface SerializedMessage {
 	id: string;
 	timestamp: string; // ISO string
 	sender: string;
@@ -20,11 +26,15 @@ interface IndexWorkerMessage {
 }
 
 interface IndexWorkerInput {
-	messages: IndexWorkerMessage[];
+	messages: SerializedMessage[];
 	chatTitle: string;
 }
 
-// Serializable flat item types
+/**
+ * Serializable flat item types for rendering.
+ * These match DateFlatItem/MessageFlatItem in zip-parser.ts
+ * (duplicated here because workers can't easily import from main bundle)
+ */
 interface DateItem {
 	type: 'date';
 	date: string;
@@ -35,19 +45,21 @@ interface MessageItem {
 	messageId: string;
 }
 
-type SerializedFlatItem = DateItem | MessageItem;
+type FlatItem = DateItem | MessageItem;
 
 interface IndexWorkerOutput {
 	chatTitle: string;
 	indexEntries: [string, number][];
-	flatItems: SerializedFlatItem[];
+	flatItems: FlatItem[];
+	// Pre-serialized messages for search worker (avoids re-serialization on every search)
+	serializedMessages: SerializedMessage[];
 }
 
 self.onmessage = (event: MessageEvent<IndexWorkerInput>) => {
 	const { messages, chatTitle } = event.data;
 
 	// Group messages by date (same logic as groupMessagesByDate in chat-parser.ts)
-	const groups = new Map<string, IndexWorkerMessage[]>();
+	const groups = new Map<string, SerializedMessage[]>();
 
 	for (const message of messages) {
 		const timestamp = new Date(message.timestamp);
@@ -64,7 +76,7 @@ self.onmessage = (event: MessageEvent<IndexWorkerInput>) => {
 
 	// Build the flat items list and index simultaneously
 	const indexEntries: [string, number][] = [];
-	const flatItems: SerializedFlatItem[] = [];
+	const flatItems: FlatItem[] = [];
 	let flatIndex = 0;
 
 	for (const [date, dayMessages] of groups.entries()) {
@@ -78,6 +90,13 @@ self.onmessage = (event: MessageEvent<IndexWorkerInput>) => {
 		}
 	}
 
-	const output: IndexWorkerOutput = { chatTitle, indexEntries, flatItems };
+	// Pre-serialize messages for search worker (avoids re-serialization on every search)
+	// Note: messages are already in SerializedMessage format, so we just pass them through
+	const output: IndexWorkerOutput = {
+		chatTitle,
+		indexEntries,
+		flatItems,
+		serializedMessages: messages,
+	};
 	self.postMessage(output);
 };

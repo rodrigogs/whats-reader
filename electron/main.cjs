@@ -5,6 +5,7 @@ const {
 	dialog,
 	protocol,
 	Menu,
+	shell,
 } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
@@ -214,4 +215,12 @@ ipcMain.handle('fs:readDir', async (_event, dirPath) => {
 
 ipcMain.handle('fs:fileExists', async (_event, filePath) => {
 	return fs.existsSync(filePath);
+});
+
+ipcMain.handle('shell:openExternal', async (_event, url) => {
+	// Validate URL before opening
+	if (!url.startsWith('https://github.com/rodrigogs/whats-reader')) {
+		throw new Error('Invalid URL');
+	}
+	await shell.openExternal(url);
 });
