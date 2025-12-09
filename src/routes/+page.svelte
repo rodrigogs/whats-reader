@@ -433,36 +433,37 @@ const currentUser = $derived.by(() => {
 					</div>
 				{/if}
 
-				<!-- Instructions -->
-				<div class="mt-6 w-full">
-					<div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700/50">
-						<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 text-center">
-							{m.export_instructions_title()}
-						</h3>
-						<ol class="text-sm text-gray-600 dark:text-gray-400 space-y-1.5">
-							<li class="flex items-start gap-2">
-								<span class="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--color-whatsapp-green)] text-white text-xs flex items-center justify-center font-medium">1</span>
-								<span>{m.export_step_1()}</span>
-							</li>
-							<li class="flex items-start gap-2">
-								<span class="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--color-whatsapp-green)] text-white text-xs flex items-center justify-center font-medium">2</span>
-								<span>{m.export_step_2()}</span>
-							</li>
-							<li class="flex items-start gap-2">
-								<span class="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--color-whatsapp-green)] text-white text-xs flex items-center justify-center font-medium">3</span>
-								<span>{m.export_step_3()}</span>
-							</li>
-							<li class="flex items-start gap-2">
-								<span class="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--color-whatsapp-green)] text-white text-xs flex items-center justify-center font-medium">4</span>
-								<span>{m.export_step_4()}</span>
-							</li>
-							<li class="flex items-start gap-2">
-								<span class="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--color-whatsapp-green)] text-white text-xs flex items-center justify-center font-medium">5</span>
-								<span>{m.export_step_5()}</span>
-							</li>
-						</ol>
+				<!-- Instructions - Collapsible -->
+				<details class="mt-6 w-full group">
+					<summary class="flex items-center justify-center gap-2 cursor-pointer text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors select-none">
+						<svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+						</svg>
+						{m.export_instructions_title()}
+					</summary>
+					<div class="mt-3 grid grid-cols-1 gap-2 text-xs text-gray-600 dark:text-gray-400">
+						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--color-whatsapp-green)] text-white text-xs flex items-center justify-center font-bold">1</span>
+							<span>{m.export_step_1()}</span>
+						</div>
+						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--color-whatsapp-green)] text-white text-xs flex items-center justify-center font-bold">2</span>
+							<span>{m.export_step_2()}</span>
+						</div>
+						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--color-whatsapp-green)] text-white text-xs flex items-center justify-center font-bold">3</span>
+							<span>{m.export_step_3()}</span>
+						</div>
+						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--color-whatsapp-green)] text-white text-xs flex items-center justify-center font-bold">4</span>
+							<span>{m.export_step_4()}</span>
+						</div>
+						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--color-whatsapp-green)] text-white text-xs flex items-center justify-center font-bold">5</span>
+							<span>{m.export_step_5()}</span>
+						</div>
 					</div>
-				</div>
+				</details>
 
 				<!-- GitHub Star -->
 				<div class="mt-4 flex flex-col items-center gap-1.5">
