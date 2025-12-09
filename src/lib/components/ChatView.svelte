@@ -343,9 +343,17 @@ $effect(() => {
 		const maxRetries = 20; // 20 * 50ms = 1 second max
 		const retryDelay = 50;
 
+		// Capture targetId at the start to detect if it changes during retries
+		const capturedTargetId = targetId;
+
 		for (let attempt = 0; attempt < maxRetries; attempt++) {
+			// Check if currentSearchResultId changed during retry loop (race condition)
+			if (currentSearchResultId !== capturedTargetId) {
+				return; // Exit early, a newer navigation is in progress
+			}
+
 			// Check if we need to expand chunks
-			const messageIndex = currentIndexMap.get(targetId);
+			const messageIndex = currentIndexMap.get(capturedTargetId);
 
 			if (messageIndex !== undefined) {
 				const itemsFromEnd = currentFlatItemsLength - messageIndex;
@@ -358,13 +366,13 @@ $effect(() => {
 			}
 
 			// Check if message ref exists in DOM
-			if (messageRefs.has(targetId)) {
-				const element = messageRefs.get(targetId);
+			if (messageRefs.has(capturedTargetId)) {
+				const element = messageRefs.get(capturedTargetId);
 
 				if (element) {
 					highlightReady = false;
 					highlightedId = null;
-					pendingHighlightId = targetId;
+					pendingHighlightId = capturedTargetId;
 					isNavigationScroll = true;
 
 					element.scrollIntoView({ behavior: 'smooth', block: 'center' });
