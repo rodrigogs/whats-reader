@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/rodrigogs/whats-reader/compare/v1.4.0...v1.4.1) (2025-12-09)
+
+
+### Bug Fixes
+
+* enable automatic changelog updates ([82352c3](https://github.com/rodrigogs/whats-reader/commit/82352c3d2eb4130c44fca10e995c7384dd0ea11c))
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
