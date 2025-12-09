@@ -67,8 +67,8 @@ A 1:1 conversation between two people demonstrating:
 
 Example bookmark JSON files are provided to test the import/export functionality:
 
-- **`bookmarks/family-group-bookmarks.json`** — 4 bookmarks from the family chat
-- **`bookmarks/private-chat-bookmarks.json`** — 3 bookmarks from the private chat
+- **`bookmarks/family-group-bookmarks.json`**: 4 bookmarks from the family chat
+- **`bookmarks/private-chat-bookmarks.json`**: 3 bookmarks from the private chat
 
 ### How to Use Bookmarks
 
