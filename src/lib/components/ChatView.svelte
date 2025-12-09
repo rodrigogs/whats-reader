@@ -589,7 +589,7 @@ function handleScroll() {
 					{bookmarkedMessageIds}
 					isOwn={currentUser !== undefined && message.sender === currentUser}
 					showSender={true}
-					searchQuery={matchResult ? searchQuery : ''}
+					searchQuery={searchQuery}
 					isSearchMatch={matchResult}
 					isCurrentSearchResult={message.id === currentSearchResultId}
 					triggerHighlight={highlightReady && message.id === highlightedId}

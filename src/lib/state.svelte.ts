@@ -265,7 +265,14 @@ export function createAppState() {
 		searchProgress = 0;
 
 		// Ensure worker is ready
-		await ensureSearchWorker(chat);
+		try {
+			await ensureSearchWorker(chat);
+		} catch (error) {
+			console.error('Failed to initialize search worker:', error);
+			isSearching = false;
+			searchProgress = 0;
+			return;
+		}
 
 		// Increment search ID to invalidate any previous search
 		currentSearchId++;
