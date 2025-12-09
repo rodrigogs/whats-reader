@@ -31,7 +31,7 @@ interface CancelInput {
 	type: 'cancel';
 }
 
-type WorkerInput = LoadDataInput | SearchInput | CancelInput;
+type SearchWorkerInput = LoadDataInput | SearchInput | CancelInput;
 
 interface SearchWorkerOutput {
 	type: 'progress' | 'complete' | 'ready' | 'cancelled';
@@ -81,7 +81,7 @@ function performSearch(input: SearchInput): void {
 				query,
 				progress: 100,
 			} as SearchWorkerOutput,
-			[emptyBitmap.buffer],
+			{ transfer: [emptyBitmap.buffer] },
 		);
 		return;
 	}
@@ -188,11 +188,11 @@ function performSearch(input: SearchInput): void {
 			query,
 			progress: 100,
 		} as SearchWorkerOutput,
-		[matchBitmap.buffer],
+		{ transfer: [matchBitmap.buffer] },
 	);
 }
 
-self.onmessage = (event: MessageEvent<WorkerInput>) => {
+self.onmessage = (event: MessageEvent<SearchWorkerInput>) => {
 	const input = event.data;
 
 	switch (input.type) {

@@ -13,7 +13,7 @@ interface ChatMessage {
 	isSystemMessage: boolean;
 }
 
-interface WorkerInput {
+interface StatsWorkerInput {
 	messages: ChatMessage[];
 	messageCount: number;
 	startDate: string | null;
@@ -30,7 +30,7 @@ interface WorkerOutput {
 	totalDays: number;
 }
 
-self.onmessage = (event: MessageEvent<WorkerInput>) => {
+self.onmessage = (event: MessageEvent<StatsWorkerInput>) => {
 	const { messages, messageCount, startDate, endDate } = event.data;
 
 	const messagesByParticipant = new Map<string, number>();
