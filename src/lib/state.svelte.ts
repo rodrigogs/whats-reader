@@ -106,6 +106,8 @@ export function createAppState() {
 	// Initialize or reuse search worker for a chat
 	function ensureSearchWorker(chat: ChatData): Promise<void> {
 		return new Promise((resolve, reject) => {
+			let isSettled = false; // Track if promise is already settled
+
 			// If worker is already loaded for this chat, reuse it
 			if (
 				searchWorker &&
@@ -126,11 +128,22 @@ export function createAppState() {
 
 			// Set timeout to reject if worker doesn't respond within 5 seconds
 			workerTimeoutId = setTimeout(() => {
+				if (isSettled) return;
+				isSettled = true;
+
+				// Terminate worker since initialization failed
+				if (searchWorker) {
+					searchWorker.terminate();
+					searchWorker = null;
+				}
+
+				searchWorkerReady = false;
+				searchWorkerChatTitle = null;
+				workerTimeoutId = null;
+
 				reject(
 					new Error('Search worker failed to initialize within 5 seconds'),
 				);
-				searchWorkerReady = false;
-				workerTimeoutId = null;
 			}, 5000);
 
 			searchWorker = new Worker(
@@ -152,6 +165,9 @@ export function createAppState() {
 				const data = event.data;
 
 				if (data.type === 'ready') {
+					if (isSettled) return;
+					isSettled = true;
+
 					if (workerTimeoutId) {
 						clearTimeout(workerTimeoutId);
 						workerTimeoutId = null;
@@ -195,6 +211,9 @@ export function createAppState() {
 
 			searchWorker.onerror = (err) => {
 				console.error('Search worker error:', err);
+				if (isSettled) return;
+				isSettled = true;
+
 				if (workerTimeoutId) {
 					clearTimeout(workerTimeoutId);
 					workerTimeoutId = null;

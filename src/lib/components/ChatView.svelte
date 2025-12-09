@@ -361,6 +361,10 @@ $effect(() => {
 
 				if (chunksNeeded > loadedChunksFromEnd) {
 					loadedChunksFromEnd = chunksNeeded + 1;
+					// Check again before async operation
+					if (currentSearchResultId !== capturedTargetId) {
+						return;
+					}
 					await tick(); // Wait for DOM update after chunk expansion
 				}
 			}
@@ -377,6 +381,11 @@ $effect(() => {
 
 					element.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
+					// Check again before async operation
+					if (currentSearchResultId !== capturedTargetId) {
+						return;
+					}
+
 					setTimeout(() => {
 						isNavigationScroll = false;
 					}, 500);
@@ -385,7 +394,10 @@ $effect(() => {
 				}
 			}
 
-			// Ref not ready yet, wait and retry
+			// Ref not ready yet, check again before waiting
+			if (currentSearchResultId !== capturedTargetId) {
+				return;
+			}
 			await new Promise((resolve) => setTimeout(resolve, retryDelay));
 		}
 	})();
