@@ -1,117 +1,213 @@
 /**
  * Web Worker for searching chat messages
- * This runs in a separate thread to prevent UI blocking on large chats
+ *
+ * SIMPLIFIED APPROACH: Uses simple string.includes() for search.
+ * This is surprisingly fast for text search and avoids the overhead of:
+ * - Serializing large MiniSearch indexes via postMessage (was ~5-10MB!)
+ * - Complex index structures that are overkill for substring search
+ *
+ * The worker maintains state:
+ * - Messages are loaded ONCE per chat (via load-data)
+ * - Subsequent searches only send the query string (tiny postMessage cost)
+ *
+ * Results are returned using a transferable bitmap for O(1) lookup performance.
  */
 
-// Time to yield to main thread between chunks (~1 frame at 60fps)
-const FRAME_TIME_MS = 16;
+// Stored state - loaded once per chat
+let messages: Array<{ id: string; content: string; sender: string }> = [];
+let messageIdToIndex: Map<string, number> = new Map();
+let currentSearchId = 0;
 
-interface SearchMessage {
-	id: string;
-	timestamp: string;
-	sender: string;
-	content: string;
-	isSystemMessage: boolean;
-	isMediaMessage: boolean;
-	mediaType?: string;
-	rawLine: string;
+interface LoadDataInput {
+	type: 'load-data';
+	// Simple message data - just what we need for search
+	messages: Array<{ id: string; content: string; sender: string }>;
 }
 
-interface SearchWorkerInput {
-	messages: SearchMessage[];
+interface SearchInput {
+	type: 'search';
+	searchId: number;
 	query: string;
-	transcriptions?: Record<string, string>; // messageId -> transcription text
+	transcriptions?: Record<string, string>;
 }
+
+interface CancelInput {
+	type: 'cancel';
+}
+
+type WorkerInput = LoadDataInput | SearchInput | CancelInput;
 
 interface SearchWorkerOutput {
-	type: 'progress' | 'complete';
+	type: 'progress' | 'complete' | 'ready' | 'cancelled';
+	searchId?: number;
 	matchingIds?: string[];
-	query: string;
-	progress?: number; // 0-100
+	matchBitmap?: ArrayBuffer;
+	totalMatches?: number;
+	query?: string;
+	progress?: number;
 }
 
-// Process search in chunks to allow progress updates to be sent
-async function processSearch(
-	messages: SearchMessage[],
-	query: string,
-	transcriptions: Record<string, string> = {},
-) {
-	const lowerQuery = query.toLowerCase();
-	const matchingIds: string[] = [];
-	const total = messages.length;
+/**
+ * Load message data from main thread.
+ * This is called ONCE per chat, subsequent searches only send the query.
+ */
+function loadData(input: LoadDataInput): void {
+	messages = input.messages;
 
-	// Process in chunks to yield control and send progress updates
-	// Use smaller chunks for better progress visibility
-	const NUM_CHUNKS = 10; // ~10 progress updates
-	const CHUNK_SIZE = Math.max(50, Math.ceil(total / NUM_CHUNKS));
-
-	// Send initial progress
-	self.postMessage({
-		type: 'progress',
-		query,
-		progress: 0,
-	} as SearchWorkerOutput);
-
-	for (let i = 0; i < messages.length; i += CHUNK_SIZE) {
-		const chunkEnd = Math.min(i + CHUNK_SIZE, messages.length);
-
-		// Process this chunk
-		for (let j = i; j < chunkEnd; j++) {
-			const message = messages[j];
-
-			// Check message content and sender
-			if (
-				message.content.toLowerCase().includes(lowerQuery) ||
-				message.sender.toLowerCase().includes(lowerQuery)
-			) {
-				matchingIds.push(message.id);
-				continue;
-			}
-
-			// Check transcription for audio messages
-			const transcription = transcriptions[message.id];
-			if (transcription?.toLowerCase().includes(lowerQuery)) {
-				matchingIds.push(message.id);
-			}
-		}
-
-		// Report progress after each chunk
-		const currentProgress = Math.round((chunkEnd / total) * 100);
-		self.postMessage({
-			type: 'progress',
-			query,
-			progress: currentProgress,
-		} as SearchWorkerOutput);
-
-		// Give main thread time to process and render
-		await new Promise((resolve) => setTimeout(resolve, FRAME_TIME_MS));
+	// Build index map for O(1) lookup of message position
+	messageIdToIndex = new Map();
+	for (let i = 0; i < messages.length; i++) {
+		messageIdToIndex.set(messages[i].id, i);
 	}
 
-	return matchingIds;
+	self.postMessage({ type: 'ready' } as SearchWorkerOutput);
 }
 
-self.onmessage = async (event: MessageEvent<SearchWorkerInput>) => {
-	const { messages, query, transcriptions = {} } = event.data;
+/**
+ * Perform search using simple string.includes()
+ * Returns results as a transferable bitmap for performance.
+ */
+function performSearch(input: SearchInput): void {
+	const { searchId, query, transcriptions = {} } = input;
+	currentSearchId = searchId;
+
+	const messageCount = messages.length;
 
 	if (!query.trim()) {
-		// Empty query - return empty results (don't highlight anything)
-		const result: SearchWorkerOutput = {
-			type: 'complete',
-			matchingIds: [],
-			query,
-		};
-		self.postMessage(result);
+		const emptyBitmap = new Uint8Array(messageCount);
+		self.postMessage(
+			{
+				type: 'complete',
+				searchId,
+				matchingIds: [],
+				matchBitmap: emptyBitmap.buffer,
+				totalMatches: 0,
+				query,
+				progress: 100,
+			} as SearchWorkerOutput,
+			[emptyBitmap.buffer],
+		);
 		return;
 	}
 
-	const matchingIds = await processSearch(messages, query, transcriptions);
+	const lowerQuery = query.toLowerCase();
+	const matchBitmap = new Uint8Array(messageCount);
+	let totalMatches = 0;
 
-	const result: SearchWorkerOutput = {
-		type: 'complete',
-		matchingIds,
+	// Report start
+	self.postMessage({
+		type: 'progress',
+		searchId,
 		query,
-		progress: 100,
-	};
+		progress: 5,
+	} as SearchWorkerOutput);
 
-	self.postMessage(result);
+	// Process in chunks to allow cancellation and progress updates
+	const CHUNK_SIZE = 2000;
+	let processed = 0;
+
+	for (let i = 0; i < messageCount; i += CHUNK_SIZE) {
+		// Check cancellation
+		if (currentSearchId !== searchId) {
+			self.postMessage({ type: 'cancelled', searchId } as SearchWorkerOutput);
+			return;
+		}
+
+		const end = Math.min(i + CHUNK_SIZE, messageCount);
+
+		for (let j = i; j < end; j++) {
+			const msg = messages[j];
+			if (
+				msg.content.toLowerCase().includes(lowerQuery) ||
+				msg.sender.toLowerCase().includes(lowerQuery)
+			) {
+				matchBitmap[j] = 1;
+				totalMatches++;
+			}
+		}
+
+		processed = end;
+		const progress = Math.round((processed / messageCount) * 70) + 5; // 5-75%
+		self.postMessage({
+			type: 'progress',
+			searchId,
+			query,
+			progress,
+		} as SearchWorkerOutput);
+	}
+
+	// Check cancellation before transcription search
+	if (currentSearchId !== searchId) {
+		self.postMessage({ type: 'cancelled', searchId } as SearchWorkerOutput);
+		return;
+	}
+
+	// Search transcriptions (for audio messages)
+	self.postMessage({
+		type: 'progress',
+		searchId,
+		query,
+		progress: 80,
+	} as SearchWorkerOutput);
+
+	for (const [msgId, transcription] of Object.entries(transcriptions)) {
+		const idx = messageIdToIndex.get(msgId);
+		if (
+			idx !== undefined &&
+			matchBitmap[idx] === 0 &&
+			transcription.toLowerCase().includes(lowerQuery)
+		) {
+			matchBitmap[idx] = 1;
+			totalMatches++;
+		}
+	}
+
+	// Check cancellation
+	if (currentSearchId !== searchId) {
+		self.postMessage({ type: 'cancelled', searchId } as SearchWorkerOutput);
+		return;
+	}
+
+	// Collect first N matching IDs for navigation (in chronological order)
+	const MAX_NAV_RESULTS = 1000;
+	const matchingIds: string[] = [];
+	for (
+		let i = 0;
+		i < messageCount && matchingIds.length < MAX_NAV_RESULTS;
+		i++
+	) {
+		if (matchBitmap[i] === 1) {
+			matchingIds.push(messages[i].id);
+		}
+	}
+
+	// Transfer the bitmap buffer for zero-copy performance
+	self.postMessage(
+		{
+			type: 'complete',
+			searchId,
+			matchingIds,
+			matchBitmap: matchBitmap.buffer,
+			totalMatches,
+			query,
+			progress: 100,
+		} as SearchWorkerOutput,
+		[matchBitmap.buffer],
+	);
+}
+
+self.onmessage = (event: MessageEvent<WorkerInput>) => {
+	const input = event.data;
+
+	switch (input.type) {
+		case 'load-data':
+			loadData(input);
+			break;
+		case 'search':
+			performSearch(input);
+			break;
+		case 'cancel':
+			currentSearchId++;
+			break;
+	}
 };

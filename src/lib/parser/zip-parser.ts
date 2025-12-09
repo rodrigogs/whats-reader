@@ -34,6 +34,18 @@ export interface MessageFlatItem {
 
 export type FlatItem = DateFlatItem | MessageFlatItem;
 
+// Serialized message format for search (pre-computed to avoid re-serialization)
+export interface SerializedSearchMessage {
+	id: string;
+	timestamp: string;
+	sender: string;
+	content: string;
+	isSystemMessage: boolean;
+	isMediaMessage: boolean;
+	mediaType?: string;
+	rawLine: string;
+}
+
 export interface ParsedZipChat extends ParsedChat {
 	mediaFiles: MediaFile[];
 	hasMedia: boolean;
@@ -49,6 +61,8 @@ export interface ParsedZipChat extends ParsedChat {
 	flatItems?: FlatItem[];
 	// Pre-computed messages by ID map for O(1) lookups (built with flatItems)
 	messagesById?: Map<string, ChatMessage>;
+	// Pre-serialized messages for search worker (avoids re-serialization on every search)
+	serializedMessages?: SerializedSearchMessage[];
 }
 
 // Keep track of loaded media to manage memory

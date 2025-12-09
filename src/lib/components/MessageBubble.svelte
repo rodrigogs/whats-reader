@@ -249,7 +249,7 @@ async function transcribeVoiceMessage() {
 	<div class="relative {highlightBgClass} -mx-4 px-4 transition-colors duration-300">
 		<div class="flex justify-center my-2 group">
 			<div class="bg-white/80 dark:bg-gray-800/80 text-gray-500 dark:text-gray-400 text-xs px-3 py-1 rounded-lg shadow-sm max-w-[80%] text-center transition-all {highlightClass} {shouldAnimate ? 'animate-search-highlight' : ''}">
-				{#if searchQuery}
+				{#if searchQuery && isSearchMatch}
 					{@html highlightText(message.content, searchQuery)}
 				{:else}
 					{message.content}
@@ -372,7 +372,7 @@ async function transcribeVoiceMessage() {
 													</button>
 												</div>
 												<p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap italic">
-													"{#if searchQuery}{@html highlightText(transcription, searchQuery)}{:else}{transcription}{/if}"
+													"{#if transcriptionMatchesSearch}{@html highlightText(transcription, searchQuery)}{:else}{transcription}{/if}"
 												</p>
 											</div>
 										{:else if transcriptionLoading}
@@ -539,7 +539,7 @@ async function transcribeVoiceMessage() {
 			{:else}
 				<!-- Text content -->
 				<p class="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
-					{#if searchQuery}
+					{#if searchQuery && isSearchMatch}
 						{@html highlightText(message.content, searchQuery)}
 					{:else}
 						{message.content}

@@ -4,8 +4,13 @@
  * This worker builds:
  * 1. A map of messageId -> flatIndex for efficient bookmark navigation
  * 2. The flat items list with date separators for rendering
+ * 3. Pre-serialized messages for search worker
  *
- * Both operations account for date separators in the flat list structure used by ChatView.
+ * All operations are performed in a single worker pass for efficiency.
+ * 
+ * NOTE: We no longer use MiniSearch here. The search worker uses simple
+ * string.includes() which is fast enough and avoids the overhead of
+ * serializing/deserializing large index structures via postMessage.
  */
 
 interface IndexWorkerMessage {
@@ -37,10 +42,24 @@ interface MessageItem {
 
 type SerializedFlatItem = DateItem | MessageItem;
 
+// Serialized message format for search (cached to avoid re-serialization)
+interface SerializedSearchMessage {
+	id: string;
+	timestamp: string;
+	sender: string;
+	content: string;
+	isSystemMessage: boolean;
+	isMediaMessage: boolean;
+	mediaType?: string;
+	rawLine: string;
+}
+
 interface IndexWorkerOutput {
 	chatTitle: string;
 	indexEntries: [string, number][];
 	flatItems: SerializedFlatItem[];
+	// Pre-serialized messages for search worker (avoids re-serialization on every search)
+	serializedMessages: SerializedSearchMessage[];
 }
 
 self.onmessage = (event: MessageEvent<IndexWorkerInput>) => {
@@ -78,6 +97,23 @@ self.onmessage = (event: MessageEvent<IndexWorkerInput>) => {
 		}
 	}
 
-	const output: IndexWorkerOutput = { chatTitle, indexEntries, flatItems };
+	// Pre-serialize messages for search worker (avoids re-serialization on every search)
+	const serializedMessages: SerializedSearchMessage[] = messages.map((m) => ({
+		id: m.id,
+		timestamp: m.timestamp,
+		sender: m.sender,
+		content: m.content,
+		isSystemMessage: m.isSystemMessage,
+		isMediaMessage: m.isMediaMessage,
+		mediaType: m.mediaType,
+		rawLine: m.rawLine,
+	}));
+
+	const output: IndexWorkerOutput = {
+		chatTitle,
+		indexEntries,
+		flatItems,
+		serializedMessages,
+	};
 	self.postMessage(output);
 };
