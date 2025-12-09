@@ -27,3 +27,6 @@ vite.config.ts.timestamp-*
 examples/chats/*.zip
 
 .bkp
+
+# Playwright MCP screenshots
+.playwright-mcp/

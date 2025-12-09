@@ -379,9 +379,9 @@ const currentUser = $derived.by(() => {
 
 	{#if !appState.hasChats}
 		<!-- Empty state - show file upload -->
-		<div class="relative flex-1 overflow-hidden flex flex-col">
+		<div class="relative flex-1 overflow-y-auto flex flex-col">
 			<!-- Settings buttons (top-right) -->
-			<div class="absolute top-4 right-4 flex items-center gap-1.5 z-10">
+			<div class="sticky top-4 right-4 flex items-center gap-1.5 z-10 self-end mr-4">
 				<LocaleSwitcher variant="default" />
 				<button
 					onclick={toggleDarkMode}
@@ -403,8 +403,8 @@ const currentUser = $derived.by(() => {
 				</button>
 			</div>
 			
-			<div class="flex-1 flex items-center justify-center p-4 sm:p-8">
-				<div class="max-w-lg w-full flex flex-col items-center">
+			<div class="flex-1 flex items-center justify-center p-4 sm:p-8 min-h-0">
+				<div class="max-w-lg w-full flex flex-col items-center py-8">
 				<!-- Logo and title -->
 				<div class="text-center mb-6">
 					<div class="w-16 h-16 mx-auto mb-3 rounded-full bg-[var(--color-whatsapp-green)] flex items-center justify-center shadow-lg">
