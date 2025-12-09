@@ -13,7 +13,12 @@
  * serializing/deserializing large index structures via postMessage.
  */
 
-interface IndexWorkerMessage {
+/**
+ * Serialized message format used for both input and output.
+ * This structure matches SerializedSearchMessage in zip-parser.ts
+ * (duplicated here because workers can't easily import from main bundle)
+ */
+interface SerializedMessage {
 	id: string;
 	timestamp: string; // ISO string
 	sender: string;
@@ -25,7 +30,7 @@ interface IndexWorkerMessage {
 }
 
 interface IndexWorkerInput {
-	messages: IndexWorkerMessage[];
+	messages: SerializedMessage[];
 	chatTitle: string;
 }
 
@@ -42,31 +47,19 @@ interface MessageItem {
 
 type SerializedFlatItem = DateItem | MessageItem;
 
-// Serialized message format for search (cached to avoid re-serialization)
-interface SerializedSearchMessage {
-	id: string;
-	timestamp: string;
-	sender: string;
-	content: string;
-	isSystemMessage: boolean;
-	isMediaMessage: boolean;
-	mediaType?: string;
-	rawLine: string;
-}
-
 interface IndexWorkerOutput {
 	chatTitle: string;
 	indexEntries: [string, number][];
 	flatItems: SerializedFlatItem[];
 	// Pre-serialized messages for search worker (avoids re-serialization on every search)
-	serializedMessages: SerializedSearchMessage[];
+	serializedMessages: SerializedMessage[];
 }
 
 self.onmessage = (event: MessageEvent<IndexWorkerInput>) => {
 	const { messages, chatTitle } = event.data;
 
 	// Group messages by date (same logic as groupMessagesByDate in chat-parser.ts)
-	const groups = new Map<string, IndexWorkerMessage[]>();
+	const groups = new Map<string, SerializedMessage[]>();
 
 	for (const message of messages) {
 		const timestamp = new Date(message.timestamp);
@@ -98,22 +91,12 @@ self.onmessage = (event: MessageEvent<IndexWorkerInput>) => {
 	}
 
 	// Pre-serialize messages for search worker (avoids re-serialization on every search)
-	const serializedMessages: SerializedSearchMessage[] = messages.map((m) => ({
-		id: m.id,
-		timestamp: m.timestamp,
-		sender: m.sender,
-		content: m.content,
-		isSystemMessage: m.isSystemMessage,
-		isMediaMessage: m.isMediaMessage,
-		mediaType: m.mediaType,
-		rawLine: m.rawLine,
-	}));
-
+	// Note: messages are already in SerializedMessage format, so we just pass them through
 	const output: IndexWorkerOutput = {
 		chatTitle,
 		indexEntries,
 		flatItems,
-		serializedMessages,
+		serializedMessages: messages,
 	};
 	self.postMessage(output);
 };
