@@ -224,11 +224,8 @@ export function createAppState() {
 				reject(err);
 			};
 
-			// Send simplified message data to worker
-			// Only send id, content, sender - minimal data for search
-			// This is much smaller than serializing the full MiniSearch index!
+			// Send simplified message data to worker (only id, content, sender)
 			// Use pre-computed serializedMessages if available (faster, avoids reactive proxy)
-			// Otherwise fall back to messages array
 			const messageData = chat.serializedMessages
 				? chat.serializedMessages.map((m) => ({
 						id: m.id,

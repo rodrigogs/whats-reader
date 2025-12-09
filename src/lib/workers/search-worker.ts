@@ -1,16 +1,12 @@
 /**
  * Web Worker for searching chat messages
  *
- * SIMPLIFIED APPROACH: Uses simple string.includes() for search.
- * This is surprisingly fast for text search and avoids the overhead of:
- * - Serializing large MiniSearch indexes via postMessage (was ~5-10MB!)
- * - Complex index structures that are overkill for substring search
+ * Uses simple string.includes() for fast substring search.
  *
- * The worker maintains state:
+ * Architecture:
  * - Messages are loaded ONCE per chat (via load-data)
- * - Subsequent searches only send the query string (tiny postMessage cost)
- *
- * Results are returned using a transferable bitmap for O(1) lookup performance.
+ * - Subsequent searches only send the query string (minimal postMessage cost)
+ * - Results are returned using a transferable bitmap for O(1) lookup performance
  */
 
 // Stored state - loaded once per chat
