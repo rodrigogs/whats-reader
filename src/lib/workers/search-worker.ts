@@ -100,7 +100,6 @@ function performSearch(input: SearchInput): void {
 
 	// Process in chunks to allow cancellation and progress updates
 	const CHUNK_SIZE = 2000;
-	let processed = 0;
 
 	for (let i = 0; i < messageCount; i += CHUNK_SIZE) {
 		// Check cancellation
@@ -122,8 +121,7 @@ function performSearch(input: SearchInput): void {
 			}
 		}
 
-		processed = end;
-		const progress = Math.round((processed / messageCount) * 70) + 5; // 5-75%
+		const progress = Math.round((end / messageCount) * 70) + 5; // 5-75%
 		self.postMessage({
 			type: 'progress',
 			searchId,
