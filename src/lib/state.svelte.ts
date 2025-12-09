@@ -54,7 +54,7 @@ export function createAppState() {
 	let searchWorkerChatTitle: string | null = null; // Track which chat the worker is loaded for
 	let currentSearchId = 0; // For tracking/cancelling searches
 	let searchDebounceId: ReturnType<typeof setTimeout> | null = null;
-	let dataLoadTimeoutId: ReturnType<typeof setTimeout> | null = null;
+	let workerTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
 	// Derived values
 	const selectedChat = $derived(
@@ -91,9 +91,9 @@ export function createAppState() {
 	// Terminate and cleanup worker
 	function terminateSearchWorker() {
 		cleanupSearchDebounce();
-		if (dataLoadTimeoutId) {
-			clearTimeout(dataLoadTimeoutId);
-			dataLoadTimeoutId = null;
+		if (workerTimeoutId) {
+			clearTimeout(workerTimeoutId);
+			workerTimeoutId = null;
 		}
 		if (searchWorker) {
 			searchWorker.terminate();
@@ -125,11 +125,12 @@ export function createAppState() {
 			searchWorkerChatTitle = chat.title;
 
 			// Set timeout to reject if worker doesn't respond within 5 seconds
-			const workerTimeoutId = setTimeout(() => {
+			workerTimeoutId = setTimeout(() => {
 				reject(
 					new Error('Search worker failed to initialize within 5 seconds'),
 				);
 				searchWorkerReady = false;
+				workerTimeoutId = null;
 			}, 5000);
 
 			searchWorker = new Worker(
@@ -151,7 +152,10 @@ export function createAppState() {
 				const data = event.data;
 
 				if (data.type === 'ready') {
-					clearTimeout(workerTimeoutId);
+					if (workerTimeoutId) {
+						clearTimeout(workerTimeoutId);
+						workerTimeoutId = null;
+					}
 					searchWorkerReady = true;
 					resolve();
 					return;
@@ -191,7 +195,10 @@ export function createAppState() {
 
 			searchWorker.onerror = (err) => {
 				console.error('Search worker error:', err);
-				clearTimeout(workerTimeoutId);
+				if (workerTimeoutId) {
+					clearTimeout(workerTimeoutId);
+					workerTimeoutId = null;
+				}
 				isSearching = false;
 				searchProgress = 0;
 				searchWorkerReady = false;
@@ -201,33 +208,30 @@ export function createAppState() {
 			// Send simplified message data to worker
 			// Only send id, content, sender - minimal data for search
 			// This is much smaller than serializing the full MiniSearch index!
-			dataLoadTimeoutId = setTimeout(() => {
-				// Use pre-computed serializedMessages if available (faster, avoids reactive proxy)
-				// Otherwise fall back to messages array
-				const messageData = chat.serializedMessages
-					? chat.serializedMessages.map((m) => ({
-							id: m.id,
-							content: m.content,
-							sender: m.sender,
-						}))
-					: chat.messages.map((m) => ({
-							id: m.id,
-							content: m.content,
-							sender: m.sender,
-						}));
+			// Use pre-computed serializedMessages if available (faster, avoids reactive proxy)
+			// Otherwise fall back to messages array
+			const messageData = chat.serializedMessages
+				? chat.serializedMessages.map((m) => ({
+						id: m.id,
+						content: m.content,
+						sender: m.sender,
+					}))
+				: chat.messages.map((m) => ({
+						id: m.id,
+						content: m.content,
+						sender: m.sender,
+					}));
 
-				// Build the ID-to-index map for bitmap lookup on main thread
-				searchMessageIdToIndex = new Map();
-				for (let i = 0; i < messageData.length; i++) {
-					searchMessageIdToIndex.set(messageData[i].id, i);
-				}
+			// Build the ID-to-index map for bitmap lookup on main thread
+			searchMessageIdToIndex = new Map();
+			for (let i = 0; i < messageData.length; i++) {
+				searchMessageIdToIndex.set(messageData[i].id, i);
+			}
 
-				searchWorker?.postMessage({
-					type: 'load-data',
-					messages: messageData,
-				});
-				dataLoadTimeoutId = null;
-			}, 0);
+			searchWorker.postMessage({
+				type: 'load-data',
+				messages: messageData,
+			});
 		});
 	}
 
