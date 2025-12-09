@@ -2,7 +2,6 @@
  * Application state management using Svelte 5 runes
  */
 
-import type { ChatMessage } from './parser/chat-parser';
 import type {
 	ParsedZipChat,
 	SerializedSearchMessage,
@@ -44,17 +43,18 @@ export function createAppState() {
 	let searchResultIds = $state<string[]>([]); // Ordered list of matching message IDs (first N for navigation)
 	let totalSearchMatches = $state(0); // Total number of matches (may be > searchResultIds.length)
 	let currentSearchIndex = $state(0); // Current position in search results
-	
+
 	// Bitmap-based match lookup for O(1) performance
 	// This avoids creating a Set from thousands of IDs on every search
 	let searchMatchBitmap: Uint8Array | null = null;
 	let searchMessageIdToIndex: Map<string, number> | null = null;
-	
+
 	let searchWorker: Worker | null = null;
 	let searchWorkerReady = false;
 	let searchWorkerChatTitle: string | null = null; // Track which chat the worker is loaded for
 	let currentSearchId = 0; // For tracking/cancelling searches
 	let searchDebounceId: ReturnType<typeof setTimeout> | null = null;
+	let workerTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
 	// Derived values
 	const selectedChat = $derived(
@@ -91,6 +91,10 @@ export function createAppState() {
 	// Terminate and cleanup worker
 	function terminateSearchWorker() {
 		cleanupSearchDebounce();
+		if (workerTimeoutId) {
+			clearTimeout(workerTimeoutId);
+			workerTimeoutId = null;
+		}
 		if (searchWorker) {
 			searchWorker.terminate();
 			searchWorker = null;
@@ -101,7 +105,9 @@ export function createAppState() {
 
 	// Initialize or reuse search worker for a chat
 	function ensureSearchWorker(chat: ChatData): Promise<void> {
-		return new Promise((resolve) => {
+		return new Promise((resolve, reject) => {
+			let isSettled = false; // Track if promise is already settled
+
 			// If worker is already loaded for this chat, reuse it
 			if (
 				searchWorker &&
@@ -119,6 +125,26 @@ export function createAppState() {
 
 			searchWorkerReady = false;
 			searchWorkerChatTitle = chat.title;
+
+			// Set timeout to reject if worker doesn't respond within 5 seconds
+			workerTimeoutId = setTimeout(() => {
+				if (isSettled) return;
+				isSettled = true;
+
+				// Terminate worker since initialization failed
+				if (searchWorker) {
+					searchWorker.terminate();
+					searchWorker = null;
+				}
+
+				searchWorkerReady = false;
+				searchWorkerChatTitle = null;
+				workerTimeoutId = null;
+
+				reject(
+					new Error('Search worker failed to initialize within 5 seconds'),
+				);
+			}, 5000);
 
 			searchWorker = new Worker(
 				new URL('./workers/search-worker.ts', import.meta.url),
@@ -139,6 +165,13 @@ export function createAppState() {
 				const data = event.data;
 
 				if (data.type === 'ready') {
+					if (isSettled) return;
+					isSettled = true;
+
+					if (workerTimeoutId) {
+						clearTimeout(workerTimeoutId);
+						workerTimeoutId = null;
+					}
 					searchWorkerReady = true;
 					resolve();
 					return;
@@ -164,7 +197,7 @@ export function createAppState() {
 					} else {
 						searchMatchBitmap = null;
 					}
-					
+
 					searchResultIds = data.matchingIds ?? [];
 					totalSearchMatches = data.totalMatches ?? searchResultIds.length;
 					// Only update activeSearchQuery when results are ready
@@ -178,40 +211,46 @@ export function createAppState() {
 
 			searchWorker.onerror = (err) => {
 				console.error('Search worker error:', err);
+				if (isSettled) return;
+				isSettled = true;
+
+				if (workerTimeoutId) {
+					clearTimeout(workerTimeoutId);
+					workerTimeoutId = null;
+				}
 				isSearching = false;
 				searchProgress = 0;
 				searchWorkerReady = false;
+				reject(err);
 			};
 
 			// Send simplified message data to worker
 			// Only send id, content, sender - minimal data for search
 			// This is much smaller than serializing the full MiniSearch index!
-			setTimeout(() => {
-				// Use pre-computed serializedMessages if available (faster, avoids reactive proxy)
-				// Otherwise fall back to messages array
-				const messageData = chat.serializedMessages
-					? chat.serializedMessages.map((m) => ({
-							id: m.id,
-							content: m.content,
-							sender: m.sender,
-						}))
-					: chat.messages.map((m) => ({
-							id: m.id,
-							content: m.content,
-							sender: m.sender,
-						}));
+			// Use pre-computed serializedMessages if available (faster, avoids reactive proxy)
+			// Otherwise fall back to messages array
+			const messageData = chat.serializedMessages
+				? chat.serializedMessages.map((m) => ({
+						id: m.id,
+						content: m.content,
+						sender: m.sender,
+					}))
+				: chat.messages.map((m) => ({
+						id: m.id,
+						content: m.content,
+						sender: m.sender,
+					}));
 
-				// Build the ID-to-index map for bitmap lookup on main thread
-				searchMessageIdToIndex = new Map();
-				for (let i = 0; i < messageData.length; i++) {
-					searchMessageIdToIndex.set(messageData[i].id, i);
-				}
+			// Build the ID-to-index map for bitmap lookup on main thread
+			searchMessageIdToIndex = new Map();
+			for (let i = 0; i < messageData.length; i++) {
+				searchMessageIdToIndex.set(messageData[i].id, i);
+			}
 
-				searchWorker?.postMessage({
-					type: 'load-data',
-					messages: messageData,
-				});
-			}, 0);
+			searchWorker.postMessage({
+				type: 'load-data',
+				messages: messageData,
+			});
 		});
 	}
 

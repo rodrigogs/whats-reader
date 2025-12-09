@@ -7,7 +7,7 @@
  * 3. Pre-serialized messages for search worker
  *
  * All operations are performed in a single worker pass for efficiency.
- * 
+ *
  * NOTE: We no longer use MiniSearch here. The search worker uses simple
  * string.includes() which is fast enough and avoids the overhead of
  * serializing/deserializing large index structures via postMessage.

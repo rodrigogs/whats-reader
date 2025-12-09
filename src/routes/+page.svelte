@@ -211,19 +211,12 @@ async function handleFilesSelected(files: FileList) {
 						}>;
 					}>,
 				) => {
-					const {
-						chatTitle,
-						indexEntries,
-						flatItems,
-						serializedMessages,
-					} = event.data;
+					const { chatTitle, indexEntries, flatItems, serializedMessages } =
+						event.data;
 					const messageIndex = new Map(indexEntries);
 					appState.updateChatMessageIndex(chatTitle, messageIndex);
 					appState.updateChatFlatItems(chatTitle, flatItems);
-					appState.updateChatSerializedMessages(
-						chatTitle,
-						serializedMessages,
-					);
+					appState.updateChatSerializedMessages(chatTitle, serializedMessages);
 					indexWorker.terminate();
 				};
 
