@@ -25,6 +25,7 @@
   <a href="#features">Features</a> •
   <a href="#quick-start">Quick Start</a> •
   <a href="#how-to-export-from-whatsapp">Export Guide</a> •
+  <a href="#privacy--security">Privacy</a> •
   <a href="#contributing">Contributing</a>
 </p>
 
@@ -138,6 +139,46 @@ First, you need to export a chat from WhatsApp on your phone. This creates a `.z
 - Large chats may take a few minutes to export
 - The file will be named something like `WhatsApp Chat with John.zip`
 - Both individual and group chats work
+
+---
+
+## Privacy & Security
+
+This app is designed with privacy as the top priority. Your WhatsApp data never leaves your device.
+
+### Why it's secure
+
+- **100% Offline** — The app works entirely without internet. No servers, no cloud, no data transmission.
+- **Local processing** — All parsing, search, and analysis happens in your browser or Electron app.
+- **Local AI** — Voice transcription uses [Whisper](https://openai.com/research/whisper) running locally via WebGPU. No audio is sent to any server or API.
+- **No tracking** — Zero analytics, telemetry, or third-party scripts. No Google Analytics, no cookies.
+- **No account required** — No registration, no login, no personal data collected.
+- **Open source** — The entire codebase is public under [AGPL-3.0](LICENSE). Anyone can audit it.
+
+### How to verify
+
+Don't just trust us — verify it yourself:
+
+1. **Read the source code**  
+   Browse the [GitHub repository](https://github.com/rodrigogs/whats-reader). The main logic is in `src/lib/` and `src/routes/`.
+
+2. **Check network requests**  
+   Open the browser's DevTools (F12) → Network tab → Use the app. You'll see **zero external requests** (except initial page load if using web version).
+
+3. **Test offline**  
+   Disconnect from the internet, then use the app. Everything works because nothing requires a connection.
+
+4. **Build from source**  
+   Clone the repo and build it yourself:
+   ```bash
+   git clone https://github.com/rodrigogs/whats-reader.git
+   cd whats-reader
+   npm install
+   npm run build
+   ```
+
+5. **Audit the Electron app**  
+   The desktop app uses the same web code. Check `electron/main.cjs` and `electron/preload.cjs` — they only handle window management and file dialogs.
 
 ---
 
