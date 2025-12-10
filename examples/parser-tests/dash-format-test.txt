@@ -1,0 +1,5 @@
+10-12-2024, 14:30 - Alice: Hello there
+10-12-2024, 14:31 - Bob: Hi Alice!
+10-12-2024, 14:32 - Alice: <Media omitted>
+10-12-2024, 14:33 - Bob: Nice picture!
+10-12-2024, 14:36 - Alice: .png (file attached)

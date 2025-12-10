@@ -41,8 +41,21 @@ const MEDIA_INDICATORS = [
 	'<Medien ausgelassen>',
 	'<Medien weggelaten>',
 	'<Archivo omitido>',
+	'<Media eliminati>',
+	'<メディアなし>',
+	'<媒体省略>',
+	'<미디어 생략>',
+	'<Медиа пропущены>',
 	'(file attached)',
 	'(arquivo anexado)',
+	'(fichier joint)',
+	'(Datei angehängt)',
+	'(archivo adjunto)',
+	'(file allegato)',
+	'(bestand bijgevoegd)',
+	'(ファイル添付)',
+	'(附件)',
+	'(файл прикреплен)',
 	'image omitted',
 	'video omitted',
 	'audio omitted',
@@ -63,10 +76,17 @@ const MEDIA_INDICATORS = [
 	'.pdf (arquivo anexado)',
 	'.webp (arquivo anexado)',
 	'.vcf (arquivo anexado)',
+	'.jpg (fichier joint)',
+	'.png (fichier joint)',
+	'.jpg (Datei angehängt)',
+	'.png (Datei angehängt)',
+	'.jpg (archivo adjunto)',
+	'.png (archivo adjunto)',
 ];
 
 // System message indicators
 const SYSTEM_INDICATORS = [
+	// English
 	"joined using this group's invite link",
 	'created group',
 	'added',
@@ -91,6 +111,52 @@ const SYSTEM_INDICATORS = [
 	'mudou a imagem deste grupo',
 	'mudou o assunto',
 	'entrou usando o link',
+	// Spanish
+	'se unió usando el enlace de invitación',
+	'creó el grupo',
+	'agregó',
+	'eliminó',
+	'salió',
+	'cambió el asunto',
+	'cambió la foto del grupo',
+	'eliminó la foto del grupo',
+	'Los mensajes y las llamadas están cifrados',
+	// French
+	'a rejoint en utilisant le lien',
+	'a créé le groupe',
+	'a ajouté',
+	'a retiré',
+	'a quitté',
+	'a modifié le sujet',
+	'a changé la photo du groupe',
+	'Les messages et les appels sont protégés',
+	// German
+	'ist über Einladungslink beigetreten',
+	'hat die Gruppe erstellt',
+	'hinzugefügt',
+	'entfernt',
+	'hat die Gruppe verlassen',
+	'hat den Betreff geändert',
+	'hat das Gruppenbild geändert',
+	'Nachrichten und Anrufe sind Ende-zu-Ende-verschlüsselt',
+	// Italian
+	'si è unito tramite link di invito',
+	'ha creato il gruppo',
+	'ha aggiunto',
+	'ha rimosso',
+	'ha abbandonato',
+	'ha modificato l\'oggetto',
+	'ha cambiato l\'immagine del gruppo',
+	'I messaggi e le chiamate sono crittografati',
+	// Dutch
+	'heeft deelgenomen via uitnodigingslink',
+	'heeft groep gemaakt',
+	'heeft toegevoegd',
+	'heeft verwijderd',
+	'heeft de groep verlaten',
+	'heeft het onderwerp gewijzigd',
+	'heeft de groepsfoto gewijzigd',
+	'Berichten en oproepen zijn end-to-end versleuteld',
 ];
 
 /**
@@ -160,6 +226,38 @@ const DATE_PATTERNS = [
 				parseInt(day, 10),
 				parseInt(month, 10),
 				normalizeYear(parseInt(year, 10)),
+				parseInt(hours, 10),
+				parseInt(minutes, 10),
+				seconds ? parseInt(seconds, 10) : 0,
+			);
+		},
+	},
+	// DD-MM-YY, HH:MM - Alternative European format with dashes
+	{
+		regex:
+			/^(\d{1,2})-(\d{1,2})-(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*-\s*/,
+		parse: (match: RegExpMatchArray) => {
+			const [, day, month, year, hours, minutes, seconds] = match;
+			return parseDateTime(
+				parseInt(day, 10),
+				parseInt(month, 10),
+				normalizeYear(parseInt(year, 10)),
+				parseInt(hours, 10),
+				parseInt(minutes, 10),
+				seconds ? parseInt(seconds, 10) : 0,
+			);
+		},
+	},
+	// YYYY/MM/DD, HH:MM - Asian format
+	{
+		regex:
+			/^(\d{4})\/(\d{1,2})\/(\d{1,2}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*-\s*/,
+		parse: (match: RegExpMatchArray) => {
+			const [, year, month, day, hours, minutes, seconds] = match;
+			return parseDateTime(
+				parseInt(day, 10),
+				parseInt(month, 10),
+				parseInt(year, 10),
 				parseInt(hours, 10),
 				parseInt(minutes, 10),
 				seconds ? parseInt(seconds, 10) : 0,
