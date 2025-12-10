@@ -124,7 +124,7 @@ const displayPreview = $derived(
 		<div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
 			<div class="flex items-center justify-between">
 				<h2 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-					{isCreateMode ? 'Add Bookmark' : 'Edit Bookmark'}
+					{isCreateMode ? m.bookmarks_add_title() : m.bookmarks_edit_title()}
 				</h2>
 				<button
 					type="button"
@@ -156,7 +156,7 @@ const displayPreview = $derived(
 			<!-- Comment textarea -->
 			<div>
 				<label for="comment" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-					Your note
+					{m.bookmarks_your_note()}
 				</label>
 				<textarea
 					bind:this={textarea}
@@ -167,7 +167,7 @@ const displayPreview = $derived(
 					placeholder={m.bookmarks_note_placeholder()}
 				></textarea>
 				<p class="mt-1 text-xs text-gray-400">
-					Press <kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">⌘</kbd>+<kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">Enter</kbd> to save
+					{m.bookmarks_keyboard_hint()}
 				</p>
 			</div>
 		</div>

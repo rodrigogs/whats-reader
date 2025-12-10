@@ -1,4 +1,6 @@
 <script lang="ts">
+import * as m from '$lib/paraglide/messages';
+
 interface Props {
 	messageId: string;
 	chatId: string;
@@ -32,8 +34,8 @@ function handleClick(e: MouseEvent) {
 	class="bookmark-btn p-1 rounded transition-all duration-200 cursor-pointer hover:bg-black/10 dark:hover:bg-white/10"
 	class:bookmarked={isBookmarked}
 	onclick={handleClick}
-	title={isBookmarked ? 'Edit bookmark' : 'Add bookmark'}
-	aria-label={isBookmarked ? 'Edit bookmark' : 'Add bookmark'}
+	title={isBookmarked ? m.bookmarks_edit() : m.bookmarks_add()}
+	aria-label={isBookmarked ? m.bookmarks_edit() : m.bookmarks_add()}
 >
 	{#if isBookmarked}
 		<!-- Filled bookmark icon -->

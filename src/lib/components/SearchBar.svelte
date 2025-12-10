@@ -16,7 +16,7 @@ let {
 	onInput,
 	onNextResult,
 	onPrevResult,
-	placeholder = 'Search messages...',
+	placeholder = m.search_placeholder(),
 	debounceMs = 300,
 }: Props = $props();
 
