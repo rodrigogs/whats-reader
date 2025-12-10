@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/rodrigogs/whats-reader/compare/v1.8.0...v1.9.0) (2025-12-10)
+
+
+### Features
+
+* complete all README translations with full content matching README.md structure ([0086b90](https://github.com/rodrigogs/whats-reader/commit/0086b90d62748c2712e9d08e9b7b4859671a99f9))
+
 # [1.8.0](https://github.com/rodrigogs/whats-reader/compare/v1.7.1...v1.8.0) (2025-12-10)
 
 
