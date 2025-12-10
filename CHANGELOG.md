@@ -1,3 +1,11 @@
+## [1.7.1](https://github.com/rodrigogs/whats-reader/compare/v1.7.0...v1.7.1) (2025-12-10)
+
+
+### Bug Fixes
+
+* apply biome formatting to bookmarks panel ([1791533](https://github.com/rodrigogs/whats-reader/commit/17915331f6afe0bb9bb8886f239ea48e1392ec59))
+* resolve TypeScript type error with LocalizedString concatenation ([6e9d6a4](https://github.com/rodrigogs/whats-reader/commit/6e9d6a48a04c01f6b73b737a500257110710a176))
+
 # [1.7.0](https://github.com/rodrigogs/whats-reader/compare/v1.6.0...v1.7.0) (2025-12-10)
 
 
