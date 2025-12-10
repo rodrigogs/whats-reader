@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/rodrigogs/whats-reader/compare/v1.7.1...v1.8.0) (2025-12-10)
+
+
+### Features
+
+* add missing README translations for Italian, Dutch, Japanese, Chinese, and Russian ([5f0f2bf](https://github.com/rodrigogs/whats-reader/commit/5f0f2bfbea62fb84b179252d6ed87e17af83b8de))
+
 ## [1.7.1](https://github.com/rodrigogs/whats-reader/compare/v1.7.0...v1.7.1) (2025-12-10)
 
 
