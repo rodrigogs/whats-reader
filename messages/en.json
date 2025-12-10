@@ -1,20 +1,15 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
-  
   "app_title": "WhatsApp Backup Reader",
   "app_subtitle": "View and analyze your WhatsApp chat exports",
-  
   "theme_switch_to_light": "Switch to light mode",
   "theme_switch_to_dark": "Switch to dark mode",
   "toggle_dark_mode": "Toggle dark mode",
-  
   "sidebar_toggle": "Toggle sidebar",
   "sidebar_hide": "Hide sidebar",
   "sidebar_show": "Show sidebar",
   "sidebar_close": "Close sidebar",
-  
   "import_chat": "Import Chat",
-  
   "chats_title": "Chats",
   "chats_count": "{count} conversations",
   "chats_no_loaded": "No chats loaded",
@@ -22,27 +17,23 @@
   "chat_remove": "Remove chat",
   "chat_options": "Chat options",
   "chat_select": "Select a chat to view messages",
-  
   "messages_count": "{count} messages",
   "messages_media_count": "{count} media",
   "messages_no_display": "No messages to display",
   "messages_loading_older": "Loading older messages...",
   "messages_scroll_older": "Scroll up for older messages",
-  
   "search_placeholder": "Search in chat...",
   "search_no_results": "No results",
   "search_result_of": "{current} of {total}",
   "search_previous": "Previous match",
   "search_next": "Next match",
   "search_clear": "Clear search",
-  
   "perspective_view_as": "View as",
   "perspective_select": "Select perspective",
   "perspective_search_placeholder": "Search by name or number...",
   "perspective_none": "None (all messages left)",
   "perspective_no_match": "No participants match \"{query}\"",
   "perspective_more_participants": "+{count} more",
-  
   "bookmarks_title": "Bookmarks",
   "bookmarks_toggle": "Toggle bookmarks",
   "bookmarks_add": "Add bookmark",
@@ -64,7 +55,6 @@
   "bookmarks_close_modal": "Close",
   "bookmarks_note_placeholder": "Add a note to this bookmark...",
   "bookmarks_indexing": "Indexing...",
-  
   "stats_title": "Chat Statistics",
   "stats_view": "View statistics",
   "stats_close": "Close",
@@ -82,7 +72,6 @@
   "stats_busiest_hour": "Busiest Hour",
   "stats_messages_by_participant": "Messages by Participant",
   "stats_activity_by_hour": "Activity by Hour",
-  
   "participants_title": "Participants",
   "participants_members": "{count} members",
   "participants_close": "Close participants",
@@ -90,7 +79,6 @@
   "participants_phone_number": "Phone number",
   "participants_contact_name": "Contact name",
   "participants_phone_from_vcf": "Phone from shared contact",
-  
   "media_photo": "Photo",
   "media_video": "Video",
   "media_audio": "Voice Message",
@@ -106,7 +94,6 @@
   "media_loading": "Loading...",
   "media_failed": "Failed to load",
   "media_download": "Download",
-  
   "transcription_title": "Transcription",
   "transcription_transcribe": "Transcribe audio",
   "transcription_transcribe_title": "Transcribe this voice message using AI",
@@ -120,40 +107,31 @@
   "transcription_no_speech": "(No speech detected)",
   "transcription_language": "Transcription Language",
   "transcription_select_language": "Select Language",
-  
   "auto_load_media": "Auto-load Media",
-  
   "context_menu_remove": "Remove Chat",
   "context_menu_close": "Close context menu",
-  
   "participants_view_all": "Click to see all participants",
-  
   "export_instructions_title": "How to export your WhatsApp chat",
   "export_step_1": "Open WhatsApp on your phone",
   "export_step_2": "Go to the chat you want to export",
   "export_step_3": "Tap ⋮ → More → Export chat",
   "export_step_4": "Choose \"Include media\" for full backup",
   "export_step_5": "Save the .zip file and upload it here",
-  
   "privacy_title": "Privacy & Security",
   "privacy_offline": "100% Offline – Works without internet after loading",
   "privacy_local_processing": "Local Processing – Your files never leave your device",
   "privacy_local_ai": "Local AI – Audio transcription runs entirely on your device",
   "privacy_no_tracking": "No Tracking – Zero analytics, telemetry, or external services",
   "privacy_open_source": "Open Source – Verify for yourself on GitHub",
-  
   "dropzone_title": "Drop WhatsApp export here",
   "dropzone_subtitle": "or click to browse",
   "dropzone_formats": "Supports .zip files with media",
   "dropzone_loading": "Processing...",
-  
   "error_unsupported_file": "Unsupported file type: {filename}. Only .zip files are supported.",
   "error_parse_failed": "Failed to parse file",
   "error_generic": "An error occurred",
-  
   "time_yesterday": "Yesterday",
   "time_today": "Today",
-  
   "language_portuguese": "Português",
   "language_english": "English",
   "language_spanish": "Español",
@@ -167,7 +145,6 @@
   "language_russian": "Русский",
   "language_auto": "Auto-detect",
   "language_change": "Change language",
-  
   "github_star_title": "Like this project?",
   "github_star_cta": "Star on GitHub"
 }
