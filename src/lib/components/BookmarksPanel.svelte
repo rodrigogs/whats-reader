@@ -105,9 +105,10 @@ async function handleImport(e: Event) {
 	try {
 		const result = await bookmarksState.importFromFile(file);
 		// Build success message
-		let message = `Imported ${result.imported} bookmark${result.imported !== 1 ? 's' : ''}`;
+		const plural = result.imported !== 1 ? 's' : '';
+		let message = m.bookmarks_imported_message({ imported: result.imported, plural });
 		if (result.skipped > 0) {
-			message += ` (${result.skipped} duplicate${result.skipped !== 1 ? 's' : ''} skipped)`;
+			message += ` ${m.bookmarks_skipped_message({ skipped: result.skipped })}`;
 		}
 		importSuccess = message;
 
@@ -117,7 +118,7 @@ async function handleImport(e: Event) {
 		}, 3000);
 	} catch (err) {
 		importError =
-			err instanceof Error ? err.message : 'Failed to import bookmarks';
+			err instanceof Error ? err.message : m.bookmarks_import_error();
 	}
 
 	// Reset input
@@ -141,7 +142,7 @@ function handleKeydown(e: KeyboardEvent) {
 				<svg class="w-5 h-5 text-[var(--color-whatsapp-teal)]" fill="currentColor" viewBox="0 0 24 24">
 					<path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
 				</svg>
-				<h2 class="font-semibold text-gray-900 dark:text-gray-100">Bookmarks</h2>
+				<h2 class="font-semibold text-gray-900 dark:text-gray-100">{m.bookmarks_header_title()}</h2>
 				<span class="text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
 					{displayedBookmarks.length}
 				</span>
@@ -173,7 +174,7 @@ function handleKeydown(e: KeyboardEvent) {
 				class:dark:hover:bg-gray-700={filterMode !== 'all'}
 				onclick={() => filterMode = 'all'}
 			>
-				All chats
+				{m.bookmarks_filter_all()}
 			</button>
 			<button
 				type="button"
@@ -186,7 +187,7 @@ function handleKeydown(e: KeyboardEvent) {
 				class:dark:hover:bg-gray-700={filterMode !== 'current'}
 				onclick={() => filterMode = 'current'}
 			>
-				This chat
+				{m.bookmarks_filter_current()}
 			</button>
 		</div>
 	{/if}
@@ -267,7 +268,7 @@ function handleKeydown(e: KeyboardEvent) {
 															<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
 														</svg>
 													{/if}
-													{isIndexed ? 'Go to' : m.bookmarks_indexing()}
+													{isIndexed ? m.bookmarks_goto_button() : m.bookmarks_indexing()}
 												</button>
 												<button
 													type="button"
@@ -277,7 +278,7 @@ function handleKeydown(e: KeyboardEvent) {
 													<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
 													</svg>
-													Edit
+													m.bookmarks_edit_button()
 												</button>
 												<button
 													type="button"
@@ -287,7 +288,7 @@ function handleKeydown(e: KeyboardEvent) {
 													<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
 													</svg>
-													Delete
+													m.bookmarks_delete_action()
 												</button>
 											</div>
 										{/if}
@@ -322,7 +323,7 @@ function handleKeydown(e: KeyboardEvent) {
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
 				</svg>
-				Import
+				{m.bookmarks_import_button()}
 			</button>
 			<button
 				type="button"
@@ -335,7 +336,7 @@ function handleKeydown(e: KeyboardEvent) {
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
 				</svg>
-				Export
+				{m.bookmarks_export_button()}
 			</button>
 		</div>
 		<input

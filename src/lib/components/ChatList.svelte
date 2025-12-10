@@ -36,9 +36,9 @@ let {
 }: Props = $props();
 
 const stageLabels = {
-	reading: 'Reading file...',
-	extracting: 'Extracting...',
-	parsing: 'Parsing messages...',
+	reading: m.loading_reading(),
+	extracting: m.loading_extracting(),
+	parsing: m.loading_parsing(),
 };
 
 // Context menu state
@@ -140,9 +140,9 @@ function formatDate(date: Date | null): string {
 }
 
 function getLastMessage(chat: ChatData): string {
-	if (chat.messages.length === 0) return 'No messages';
+	if (chat.messages.length === 0) return m.no_messages();
 	const last = chat.messages[chat.messages.length - 1];
-	if (last.isMediaMessage) return '📎 Media';
+	if (last.isMediaMessage) return m.last_message_media();
 	if (last.isSystemMessage) return last.content;
 	return `${last.sender}: ${last.content}`;
 }
@@ -224,11 +224,11 @@ function getLastMessage(chat: ChatData): string {
 						</p>
 						<div class="flex items-center gap-2 mt-1">
 							<span class="text-xs text-gray-400 dark:text-gray-500">
-								{chat.messageCount} messages
+								{chat.messageCount} {m.count_messages()}
 							</span>
 							{#if chat.mediaCount > 0}
 								<span class="text-xs text-gray-400 dark:text-gray-500">
-									• {chat.mediaCount} media
+									• {chat.mediaCount} {m.count_media()}
 								</span>
 							{/if}
 						</div>
@@ -323,7 +323,7 @@ function getLastMessage(chat: ChatData): string {
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
 						</svg>
-						Transcription Language
+						{m.transcription_language()}
 					</span>
 					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />

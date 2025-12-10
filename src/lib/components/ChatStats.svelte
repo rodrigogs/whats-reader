@@ -39,7 +39,7 @@ onMount(() => {
 
 	worker.onerror = (err) => {
 		console.error('Stats worker error:', err);
-		error = 'Failed to compute statistics';
+		error = m.stats_failed();
 		isLoading = false;
 		worker.terminate();
 	};
