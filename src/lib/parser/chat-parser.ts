@@ -145,8 +145,8 @@ const SYSTEM_INDICATORS = [
 	'ha aggiunto',
 	'ha rimosso',
 	'ha abbandonato',
-	'ha modificato l\'oggetto',
-	'ha cambiato l\'immagine del gruppo',
+	"ha modificato l'oggetto",
+	"ha cambiato l'immagine del gruppo",
 	'I messaggi e le chiamate sono crittografati',
 	// Dutch
 	'heeft deelgenomen via uitnodigingslink',

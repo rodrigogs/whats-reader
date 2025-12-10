@@ -1,20 +1,15 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
-  
   "app_title": "WhatsApp Backup Reader",
   "app_subtitle": "Zeigen und analysieren Sie Ihre WhatsApp-Chat-Exporte an",
-  
   "theme_switch_to_light": "Zum hellen Modus wechseln",
   "theme_switch_to_dark": "Zum dunklen Modus wechseln",
   "toggle_dark_mode": "Dunklen Modus umschalten",
-  
   "sidebar_toggle": "Seitenleiste umschalten",
   "sidebar_hide": "Seitenleiste ausblenden",
   "sidebar_show": "Seitenleiste anzeigen",
   "sidebar_close": "Seitenleiste schließen",
-  
   "import_chat": "Chat Importieren",
-  
   "chats_title": "Chats",
   "chats_count": "{count} Unterhaltungen",
   "chats_no_loaded": "Keine Chats geladen",
@@ -22,27 +17,23 @@
   "chat_remove": "Chat entfernen",
   "chat_options": "Chat-Optionen",
   "chat_select": "Wählen Sie einen Chat aus, um Nachrichten anzuzeigen",
-  
   "messages_count": "{count} Nachrichten",
   "messages_media_count": "{count} Medien",
   "messages_no_display": "Keine Nachrichten zum Anzeigen",
   "messages_loading_older": "Ältere Nachrichten werden geladen...",
   "messages_scroll_older": "Nach oben scrollen für ältere Nachrichten",
-  
   "search_placeholder": "Im Chat suchen...",
   "search_no_results": "Keine Ergebnisse",
   "search_result_of": "{current} von {total}",
   "search_previous": "Vorherige Übereinstimmung",
   "search_next": "Nächste Übereinstimmung",
   "search_clear": "Suche löschen",
-  
   "perspective_view_as": "Ansehen als",
   "perspective_select": "Perspektive auswählen",
   "perspective_search_placeholder": "Nach Name oder Nummer suchen...",
   "perspective_none": "Keine (alle Nachrichten links)",
   "perspective_no_match": "Keine Teilnehmer stimmen mit \"{query}\" überein",
   "perspective_more_participants": "+{count} weitere",
-  
   "bookmarks_title": "Lesezeichen",
   "bookmarks_toggle": "Lesezeichen umschalten",
   "bookmarks_add": "Lesezeichen hinzufügen",
@@ -64,7 +55,6 @@
   "bookmarks_close_modal": "Schließen",
   "bookmarks_note_placeholder": "Notiz zu diesem Lesezeichen hinzufügen...",
   "bookmarks_indexing": "Indizierung...",
-  
   "stats_title": "Chat-Statistiken",
   "stats_view": "Statistiken anzeigen",
   "stats_close": "Schließen",
@@ -82,7 +72,6 @@
   "stats_busiest_hour": "Geschäftigste Stunde",
   "stats_messages_by_participant": "Nachrichten nach Teilnehmer",
   "stats_activity_by_hour": "Aktivität nach Stunde",
-  
   "participants_title": "Teilnehmer",
   "participants_members": "{count} Mitglieder",
   "participants_close": "Teilnehmer schließen",
@@ -90,7 +79,6 @@
   "participants_phone_number": "Telefonnummer",
   "participants_contact_name": "Kontaktname",
   "participants_phone_from_vcf": "Telefon vom geteilten Kontakt",
-  
   "media_photo": "Foto",
   "media_video": "Video",
   "media_audio": "Sprachnachricht",
@@ -106,7 +94,6 @@
   "media_loading": "Wird geladen...",
   "media_failed": "Laden fehlgeschlagen",
   "media_download": "Herunterladen",
-  
   "transcription_title": "Transkription",
   "transcription_transcribe": "Audio transkribieren",
   "transcription_transcribe_title": "Diese Sprachnachricht mit KI transkribieren",
@@ -120,40 +107,31 @@
   "transcription_no_speech": "(Keine Sprache erkannt)",
   "transcription_language": "Transkriptionssprache",
   "transcription_select_language": "Sprache Auswählen",
-  
   "auto_load_media": "Medien Automatisch Laden",
-  
   "context_menu_remove": "Chat Entfernen",
   "context_menu_close": "Kontextmenü schließen",
-  
   "participants_view_all": "Klicken, um alle Teilnehmer zu sehen",
-  
   "export_instructions_title": "So exportieren Sie Ihren WhatsApp-Chat",
   "export_step_1": "Öffnen Sie WhatsApp auf Ihrem Telefon",
   "export_step_2": "Gehen Sie zu dem Chat, den Sie exportieren möchten",
   "export_step_3": "Tippen Sie auf ⋮ → Mehr → Chat exportieren",
   "export_step_4": "Wählen Sie \"Medien einschließen\" für vollständiges Backup",
   "export_step_5": "Speichern Sie die .zip-Datei und laden Sie sie hier hoch",
-  
   "privacy_title": "Datenschutz und Sicherheit",
   "privacy_offline": "100% Offline – Funktioniert ohne Internet nach dem Laden",
   "privacy_local_processing": "Lokale Verarbeitung – Ihre Dateien verlassen niemals Ihr Gerät",
   "privacy_local_ai": "Lokale KI – Audio-Transkription läuft vollständig auf Ihrem Gerät",
   "privacy_no_tracking": "Kein Tracking – Null Analytik, Telemetrie oder externe Dienste",
   "privacy_open_source": "Open Source – Überprüfen Sie selbst auf GitHub",
-  
   "dropzone_title": "WhatsApp-Export hier ablegen",
   "dropzone_subtitle": "oder zum Durchsuchen klicken",
   "dropzone_formats": "Unterstützt .zip-Dateien mit Medien",
   "dropzone_loading": "Verarbeitung...",
-  
   "error_unsupported_file": "Nicht unterstützter Dateityp: {filename}. Nur .zip-Dateien werden unterstützt.",
   "error_parse_failed": "Datei konnte nicht analysiert werden",
   "error_generic": "Ein Fehler ist aufgetreten",
-  
   "time_yesterday": "Gestern",
   "time_today": "Heute",
-  
   "language_portuguese": "Português",
   "language_english": "English",
   "language_spanish": "Español",
@@ -167,7 +145,6 @@
   "language_russian": "Русский",
   "language_auto": "Automatische Erkennung",
   "language_change": "Sprache ändern",
-  
   "github_star_title": "Gefällt Ihnen dieses Projekt?",
   "github_star_cta": "Auf GitHub markieren"
 }
