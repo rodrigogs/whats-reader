@@ -106,11 +106,18 @@ async function handleImport(e: Event) {
 		const result = await bookmarksState.importFromFile(file);
 		// Build success message
 		const plural = result.imported !== 1 ? 's' : '';
-		let message = m.bookmarks_imported_message({ imported: result.imported, plural });
+		const baseMessage = m.bookmarks_imported_message({
+			imported: result.imported,
+			plural,
+		});
 		if (result.skipped > 0) {
-			message += ` ${m.bookmarks_skipped_message({ skipped: result.skipped })}`;
+			const skippedMessage = m.bookmarks_skipped_message({
+				skipped: result.skipped,
+			});
+			importSuccess = `${baseMessage} ${skippedMessage}`;
+		} else {
+			importSuccess = baseMessage;
 		}
-		importSuccess = message;
 
 		// Clear success message after 3 seconds
 		setTimeout(() => {
