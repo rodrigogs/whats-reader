@@ -85,6 +85,8 @@ I messaggi vocali possono essere trascritti usando [Whisper](https://openai.com/
 - **Interfaccia multilingue**: Inglese, Portoghese, Spagnolo, Francese, Tedesco, Italiano, Olandese, Giapponese, Cinese, Russo
 - **App desktop**: macOS, Windows, Linux tramite Electron
 
+---
+
 ## Avvio Rapido
 
 ### Prerequisiti
@@ -126,6 +128,8 @@ npm run electron:build:win    # Windows (nsis, portable)
 npm run electron:build:linux  # Linux (AppImage, deb)
 ```
 
+---
+
 ## Come Esportare da WhatsApp
 
 Prima di tutto, devi esportare una chat da WhatsApp sul tuo telefono. Questo crea un file `.zip` contenente i tuoi messaggi e media.
@@ -148,6 +152,8 @@ Prima di tutto, devi esportare una chat da WhatsApp sul tuo telefono. Questo cre
 - Le chat grandi potrebbero richiedere alcuni minuti per l'esportazione
 - Il file sarà denominato qualcosa come `WhatsApp Chat with John.zip`
 - Funzionano sia le chat individuali che di gruppo
+
+---
 
 ## Privacy e Sicurezza
 
@@ -238,6 +244,8 @@ Hai trovato un bug o hai un'idea? [Apri una issue](https://github.com/rodrigogs/
 Vuoi contribuire con codice? Fai un fork del repository, fai le tue modifiche e apri una pull request.
 
 Ci sono file di chat di esempio in `examples/chats/` che puoi usare per i test.
+
+---
 
 ## Licenza
 
