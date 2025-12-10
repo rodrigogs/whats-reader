@@ -13,7 +13,12 @@
   <a href="README.pt.md">Português</a> •
   <strong>Español</strong> •
   <a href="README.fr.md">Français</a> •
-  <a href="README.de.md">Deutsch</a>
+  <a href="README.de.md">Deutsch</a> •
+  <a href="README.it.md">Italiano</a> •
+  <a href="README.nl.md">Nederlands</a> •
+  <a href="README.ja.md">日本語</a> •
+  <a href="README.zh.md">中文</a> •
+  <a href="README.ru.md">Русский</a>
 </p>
 
 ---
