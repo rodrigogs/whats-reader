@@ -546,6 +546,7 @@ const currentUser = $derived.by(() => {
 			</div>
 		</div>
 	</div>
+	</div>
 	{:else}
 		<!-- Main app layout -->
 		<div class="flex-1 flex overflow-hidden">
