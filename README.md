@@ -22,6 +22,14 @@
 </p>
 
 <p align="center">
+  <strong>English</strong> •
+  <a href="README.pt.md">Português</a> •
+  <a href="README.es.md">Español</a> •
+  <a href="README.fr.md">Français</a> •
+  <a href="README.de.md">Deutsch</a>
+</p>
+
+<p align="center">
   <a href="#features">Features</a> •
   <a href="#quick-start">Quick Start</a> •
   <a href="#how-to-export-from-whatsapp">Export Guide</a> •
@@ -69,7 +77,7 @@ Voice messages can be transcribed using [Whisper](https://openai.com/research/wh
 - **Perspective mode**: View the chat as any participant
 - **Statistics**: Message counts, activity charts, timeline
 - **Dark mode**: Follows system or toggle manually (preference saved)
-- **Multi-language UI**: English and Portuguese (more coming soon)
+- **Multi-language UI**: English, Portuguese, Spanish, French, German, Italian, Dutch, Japanese, Chinese, Russian
 - **Desktop app**: macOS, Windows, Linux via Electron
 
 ---
