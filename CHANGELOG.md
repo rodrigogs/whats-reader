@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/rodrigogs/whats-reader/compare/v1.6.0...v1.7.0) (2025-12-10)
+
+
+### Features
+
+* add missing translations for bookmarks and loading states ([#10](https://github.com/rodrigogs/whats-reader/issues/10)) ([4c5db28](https://github.com/rodrigogs/whats-reader/commit/4c5db2872cf5c03f1d919f254ebba4d58c6c4010))
+
 # [1.6.0](https://github.com/rodrigogs/whats-reader/compare/v1.5.4...v1.6.0) (2025-12-10)
 
 
