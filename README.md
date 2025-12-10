@@ -22,6 +22,14 @@
 </p>
 
 <p align="center">
+  <strong>English</strong> •
+  <a href="README.pt.md">Português</a> •
+  <a href="README.es.md">Español</a> •
+  <a href="README.fr.md">Français</a> •
+  <a href="README.de.md">Deutsch</a>
+</p>
+
+<p align="center">
   <a href="#features">Features</a> •
   <a href="#quick-start">Quick Start</a> •
   <a href="#how-to-export-from-whatsapp">Export Guide</a> •
@@ -69,7 +77,7 @@ Voice messages can be transcribed using [Whisper](https://openai.com/research/wh
 - **Perspective mode**: View the chat as any participant
 - **Statistics**: Message counts, activity charts, timeline
 - **Dark mode**: Follows system or toggle manually (preference saved)
-- **Multi-language UI**: English and Portuguese (more coming soon)
+- **Multi-language UI**: English, Portuguese, Spanish, French, German, Italian, Dutch, Japanese, Chinese, Russian
 - **Desktop app**: macOS, Windows, Linux via Electron
 
 ---
@@ -231,6 +239,11 @@ Found a bug or have an idea? [Open an issue](https://github.com/rodrigogs/whats-
 Want to contribute code? Fork the repo, make your changes, and open a pull request.
 
 There are example chat files in `examples/chats/` you can use for testing.
+
+### Roadmap & Next Steps
+
+- **[ROADMAP.md](ROADMAP.md)** - Comprehensive list of planned features and improvements based on research and competitor analysis
+- **[NEXT_STEPS.md](NEXT_STEPS.md)** - Actionable implementation guide for high-priority features with technical details
 
 ---
 

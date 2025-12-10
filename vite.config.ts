@@ -18,4 +18,10 @@ export default defineConfig({
 	],
 	// Electron needs to use relative paths
 	base: './',
+	build: {
+		// Performance optimizations
+		target: 'esnext',
+		minify: 'esbuild',
+		cssMinify: true,
+	},
 });

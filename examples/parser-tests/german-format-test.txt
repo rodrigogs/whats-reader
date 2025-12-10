@@ -1,0 +1,6 @@
+10.12.2024, 14:30 - John Doe: Hallo, wie geht es dir?
+10.12.2024, 14:31 - Jane Smith: Mir geht es gut, danke!
+10.12.2024, 14:32 - John Doe: <Medien ausgelassen>
+10.12.2024, 14:33 - Jane Smith: Das Bild ist schön!
+10.12.2024, 14:35 - System: Jane Smith hat die Gruppe erstellt
+10.12.2024, 14:36 - Jane Smith: .jpg (Datei angehängt)

@@ -19,10 +19,21 @@ let { variant = 'default' }: Props = $props();
 let dropdownOpen = $state(false);
 let currentLocale = $derived(getLocale());
 
-const localeNames: Record<Locale, string> = {
-	en: 'English',
-	pt: 'Português',
-};
+// Memoize locale names to avoid calling message functions on every render
+const localeNames = $derived.by(() => {
+	return {
+		en: m.language_english(),
+		pt: m.language_portuguese(),
+		es: m.language_spanish(),
+		fr: m.language_french(),
+		de: m.language_german(),
+		it: m.language_italian(),
+		nl: m.language_dutch(),
+		ja: m.language_japanese(),
+		zh: m.language_chinese(),
+		ru: m.language_russian(),
+	} as Record<Locale, string>;
+});
 
 // Restore locale from localStorage on mount
 if (browser) {

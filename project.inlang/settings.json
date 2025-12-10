@@ -3,11 +3,19 @@
   "baseLocale": "en",
   "locales": [
     "en",
-    "pt"
+    "pt",
+    "es",
+    "fr",
+    "de",
+    "it",
+    "nl",
+    "ja",
+    "zh",
+    "ru"
   ],
   "modules": [
-    "https://cdn.jsdelivr.net/npm/@inlang/plugin-message-format@4/dist/index.js",
-    "https://cdn.jsdelivr.net/npm/@inlang/plugin-m-function-matcher@2/dist/index.js"
+    "https://cdn.jsdelivr.net/npm/@inlang/plugin-message-format@latest/dist/index.js",
+    "https://cdn.jsdelivr.net/npm/@inlang/plugin-m-function-matcher@latest/dist/index.js"
   ],
   "plugin.inlang.messageFormat": {
     "pathPattern": "./messages/{locale}.json"
