@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/rodrigogs/whats-reader/compare/v1.5.4...v1.6.0) (2025-12-10)
+
+
+### Features
+
+* add multi-language support and enhanced parser ([591084a](https://github.com/rodrigogs/whats-reader/commit/591084aa53eca16a745019e03b54de14faaf469c))
+
 # [1.5.0](https://github.com/rodrigogs/whats-reader/compare/v1.4.1...v1.5.0) (2025-12-09)
 
 
