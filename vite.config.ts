@@ -18,4 +18,23 @@ export default defineConfig({
 	],
 	// Electron needs to use relative paths
 	base: './',
+	build: {
+		// Performance optimizations
+		target: 'esnext',
+		minify: 'esbuild',
+		cssMinify: true,
+		rollupOptions: {
+			output: {
+				manualChunks: {
+					// Separate vendor chunks for better caching
+					'vendor-transformers': ['@huggingface/transformers'],
+					'vendor-jszip': ['jszip'],
+				},
+			},
+		},
+	},
+	optimizeDeps: {
+		// Pre-bundle dependencies for faster cold starts
+		include: ['@huggingface/transformers', 'jszip'],
+	},
 });

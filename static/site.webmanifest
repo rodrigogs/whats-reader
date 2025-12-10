@@ -1,7 +1,7 @@
 {
   "name": "WhatsApp Backup Reader",
   "short_name": "WhatsReader",
-  "description": "Read and browse your WhatsApp chat exports with media support",
+  "description": "Read and browse your WhatsApp chat exports with media support, audio transcription, and bookmarks - 100% offline and private",
   "icons": [
     {
       "src": "web-app-manifest-192x192.png",
@@ -23,6 +23,32 @@
   "theme_color": "#075e54",
   "background_color": "#111827",
   "display": "standalone",
-  "start_url": ".",
-  "scope": "."
+  "start_url": "/",
+  "scope": "/",
+  "categories": ["utilities", "productivity"],
+  "orientation": "any",
+  "lang": "en",
+  "dir": "ltr",
+  "screenshots": [
+    {
+      "src": "examples/images/2-chats.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Chat view with messages"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Import Chat",
+      "short_name": "Import",
+      "description": "Import a WhatsApp chat export",
+      "url": "/",
+      "icons": [
+        {
+          "src": "web-app-manifest-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
 }
