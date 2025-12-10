@@ -240,11 +240,6 @@ Want to contribute code? Fork the repo, make your changes, and open a pull reque
 
 There are example chat files in `examples/chats/` you can use for testing.
 
-### Roadmap & Next Steps
-
-- **[ROADMAP.md](ROADMAP.md)** - Comprehensive list of planned features and improvements based on research and competitor analysis
-- **[NEXT_STEPS.md](NEXT_STEPS.md)** - Actionable implementation guide for high-priority features with technical details
-
 ---
 
 ## License
