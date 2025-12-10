@@ -29,14 +29,6 @@
   "orientation": "any",
   "lang": "en",
   "dir": "ltr",
-  "screenshots": [
-    {
-      "src": "examples/images/2-chats.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "label": "Chat view with messages"
-    }
-  ],
   "shortcuts": [
     {
       "name": "Import Chat",
