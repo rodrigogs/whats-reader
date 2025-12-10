@@ -111,7 +111,9 @@ async function handleImport(e: Event) {
 			plural,
 		});
 		if (result.skipped > 0) {
-			const skippedMessage = m.bookmarks_skipped_message({ skipped: result.skipped });
+			const skippedMessage = m.bookmarks_skipped_message({
+				skipped: result.skipped,
+			});
 			importSuccess = `${baseMessage} ${skippedMessage}`;
 		} else {
 			importSuccess = baseMessage;
