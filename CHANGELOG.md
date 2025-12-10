@@ -1,3 +1,11 @@
+# [1.10.0](https://github.com/rodrigogs/whats-reader/compare/v1.9.0...v1.10.0) (2025-12-10)
+
+
+### Features
+
+* complete Spanish, Portuguese, German, French README translations ([12b6523](https://github.com/rodrigogs/whats-reader/commit/12b6523a7d2652fbcdae8ae40f7c53c7d9d6f19f))
+* synchronize all README translations with complete content matching README.md structure ([75ce077](https://github.com/rodrigogs/whats-reader/commit/75ce077168db51f3d36b60c93bc75005d6b442ea))
+
 # [1.9.0](https://github.com/rodrigogs/whats-reader/compare/v1.8.0...v1.9.0) (2025-12-10)
 
 
