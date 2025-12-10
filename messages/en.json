@@ -82,6 +82,7 @@
   "stats_view": "View statistics",
   "stats_close": "Close",
   "stats_computing": "Computing statistics...",
+  "stats_failed": "Failed to compute statistics",
   "stats_messages": "Messages",
   "stats_participants": "Participants",
   "stats_avg_day": "Avg/Day",

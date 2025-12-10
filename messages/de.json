@@ -82,6 +82,7 @@
   "stats_view": "Statistiken anzeigen",
   "stats_close": "Schließen",
   "stats_computing": "Statistiken werden berechnet...",
+  "stats_failed": "Fehler beim Berechnen der Statistiken",
   "stats_messages": "Nachrichten",
   "stats_participants": "Teilnehmer",
   "stats_avg_day": "Durchschn./Tag",

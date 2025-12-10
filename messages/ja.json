@@ -80,6 +80,7 @@
   "stats_view": "統計を表示",
   "stats_close": "閉じる",
   "stats_computing": "統計を計算中...",
+  "stats_failed": "統計の計算に失敗しました",
   "stats_messages": "メッセージ",
   "stats_participants": "参加者",
   "stats_avg_day": "平均/日",

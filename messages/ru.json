@@ -82,6 +82,7 @@
   "stats_view": "Просмотр статистики",
   "stats_close": "Закрыть",
   "stats_computing": "Вычисление статистики...",
+  "stats_failed": "Не удалось вычислить статистику",
   "stats_messages": "Сообщения",
   "stats_participants": "Участники",
   "stats_avg_day": "Среднее/день",

@@ -82,6 +82,7 @@
   "stats_view": "Ver estadísticas",
   "stats_close": "Cerrar",
   "stats_computing": "Calculando estadísticas...",
+  "stats_failed": "Error al calcular estadísticas",
   "stats_messages": "Mensajes",
   "stats_participants": "Participantes",
   "stats_avg_day": "Promedio/Día",

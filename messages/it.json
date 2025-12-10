@@ -80,6 +80,7 @@
   "stats_view": "Visualizza statistiche",
   "stats_close": "Chiudi",
   "stats_computing": "Calcolo statistiche...",
+  "stats_failed": "Impossibile calcolare le statistiche",
   "stats_messages": "Messaggi",
   "stats_participants": "Partecipanti",
   "stats_avg_day": "Media/Giorno",

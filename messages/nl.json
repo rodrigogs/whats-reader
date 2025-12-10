@@ -81,6 +81,7 @@
   "stats_view": "Statistieken weergeven",
   "stats_close": "Sluiten",
   "stats_computing": "Statistieken berekenen...",
+  "stats_failed": "Statistieken berekenen mislukt",
   "stats_messages": "Berichten",
   "stats_participants": "Deelnemers",
   "stats_avg_day": "Gem./Dag",

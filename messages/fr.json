@@ -80,6 +80,7 @@
   "stats_view": "Voir les statistiques",
   "stats_close": "Fermer",
   "stats_computing": "Calcul des statistiques...",
+  "stats_failed": "Échec du calcul des statistiques",
   "stats_messages": "Messages",
   "stats_participants": "Participants",
   "stats_avg_day": "Moy/Jour",

@@ -82,6 +82,7 @@
   "stats_view": "查看统计",
   "stats_close": "关闭",
   "stats_computing": "正在计算统计...",
+  "stats_failed": "计算统计失败",
   "stats_messages": "消息",
   "stats_participants": "参与者",
   "stats_avg_day": "平均/天",
