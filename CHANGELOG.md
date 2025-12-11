@@ -1,3 +1,5 @@
+## [1.13.2](https://github.com/rodrigogs/whats-reader/compare/v1.13.1...v1.13.2) (2025-12-11)
+
 ## [1.13.1](https://github.com/rodrigogs/whats-reader/compare/v1.13.0...v1.13.1) (2025-12-11)
 
 
