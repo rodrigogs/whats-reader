@@ -180,5 +180,15 @@
   "update_ignore_tooltip": "Ignorar esta versión",
   "update_never_tooltip": "Nunca mostrar notificaciones de actualización",
   "version_view_releases": "Ver versiones en GitHub",
-  "close": "Cerrar"
+  "close": "Cerrar",
+  "update_ready": "Actualización lista",
+  "update_downloading": "Descargando actualización",
+  "update_close": "Cerrar notificación de actualización",
+  "update_ready_message": "Actualización {version} descargada y lista para instalar",
+  "update_install_restart": "Instalar y reiniciar",
+  "update_later": "Más tarde",
+  "update_downloading_message": "Descargando actualización...",
+  "update_new_version_message": "¡Nueva versión {latest} disponible! (actual: {current} )",
+  "update_download": "Descargar actualización",
+  "update_view_release": "Ver comunicado"
 }

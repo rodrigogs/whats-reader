@@ -54,7 +54,8 @@
   "bookmarks_close": "Bladwijzerpaneel sluiten",
   "bookmarks_close_modal": "Sluiten",
   "bookmarks_note_placeholder": "Notitie toevoegen aan deze bladwijzer...",
-  "bookmarks_indexing": "Indexeren...",  "bookmarks_add_title": "Bladwijzer toevoegen",
+  "bookmarks_indexing": "Indexeren...",
+  "bookmarks_add_title": "Bladwijzer toevoegen",
   "bookmarks_edit_title": "Bladwijzer bewerken",
   "bookmarks_your_note": "Uw notitie",
   "bookmarks_keyboard_hint": "Druk op ⌘+Enter om op te slaan",
@@ -179,5 +180,15 @@
   "update_ignore_tooltip": "Deze versie negeren",
   "update_never_tooltip": "Nooit updatemeldingen tonen",
   "version_view_releases": "Bekijk releases op GitHub",
-  "close": "Sluiten"
+  "close": "Sluiten",
+  "update_ready": "Update gereed",
+  "update_downloading": "Update downloaden",
+  "update_close": "Sluit de updatemelding",
+  "update_ready_message": "Update {version} is gedownload en klaar om te installeren",
+  "update_install_restart": "Installeren en opnieuw opstarten",
+  "update_later": "Later",
+  "update_downloading_message": "Update downloaden...",
+  "update_new_version_message": "Nieuwe versie {latest} beschikbaar! (huidige versie: {current} )",
+  "update_download": "Update downloaden",
+  "update_view_release": "Bekijk persbericht"
 }

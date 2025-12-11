@@ -7,10 +7,15 @@ const {
 	Menu,
 	shell,
 } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('node:path');
 const fs = require('node:fs');
 
 let mainWindow;
+
+// Configure auto-updater
+autoUpdater.autoDownload = false; // Manual download control
+autoUpdater.autoInstallOnAppQuit = true; // Install when app quits
 
 // Get the build directory path
 const getBuildPath = () => {
@@ -135,6 +140,11 @@ app.whenReady().then(() => {
 
 	createWindow();
 
+	// Setup auto-updater (production only)
+	if (process.env.NODE_ENV !== 'development') {
+		setupAutoUpdater();
+	}
+
 	// On OS X it's common to re-create a window in the app when the
 	// dock icon is clicked and there are no other windows open.
 	app.on('activate', () => {
@@ -223,4 +233,67 @@ ipcMain.handle('shell:openExternal', async (_event, url) => {
 		throw new Error('Invalid URL');
 	}
 	await shell.openExternal(url);
+});
+// Auto-updater setup and IPC handlers
+function setupAutoUpdater() {
+	// Check for updates on startup (after 5 seconds to let app stabilize)
+	setTimeout(() => {
+		autoUpdater.checkForUpdates().catch((err) => {
+			console.error('Auto-updater check failed:', err);
+		});
+	}, 5000);
+
+	// Auto-updater events
+	autoUpdater.on('checking-for-update', () => {
+		sendUpdateStatusToRenderer('checking-for-update');
+	});
+
+	autoUpdater.on('update-available', (info) => {
+		sendUpdateStatusToRenderer('update-available', info);
+	});
+
+	autoUpdater.on('update-not-available', (info) => {
+		sendUpdateStatusToRenderer('update-not-available', info);
+	});
+
+	autoUpdater.on('error', (err) => {
+		sendUpdateStatusToRenderer('error', { message: err.message });
+	});
+
+	autoUpdater.on('download-progress', (progressObj) => {
+		sendUpdateStatusToRenderer('download-progress', progressObj);
+	});
+
+	autoUpdater.on('update-downloaded', (info) => {
+		sendUpdateStatusToRenderer('update-downloaded', info);
+	});
+}
+
+function sendUpdateStatusToRenderer(event, data = {}) {
+	if (mainWindow && !mainWindow.isDestroyed()) {
+		mainWindow.webContents.send('auto-update-status', { event, data });
+	}
+}
+
+// IPC handlers for manual update control
+ipcMain.handle('updater:checkForUpdates', async () => {
+	try {
+		const result = await autoUpdater.checkForUpdates();
+		return { success: true, data: result };
+	} catch (error) {
+		return { success: false, error: error.message };
+	}
+});
+
+ipcMain.handle('updater:downloadUpdate', async () => {
+	try {
+		await autoUpdater.downloadUpdate();
+		return { success: true };
+	} catch (error) {
+		return { success: false, error: error.message };
+	}
+});
+
+ipcMain.handle('updater:quitAndInstall', () => {
+	autoUpdater.quitAndInstall(false, true);
 });

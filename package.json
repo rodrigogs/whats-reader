@@ -39,6 +39,7 @@
 	"dependencies": {
 		"@floating-ui/dom": "^1.7.4",
 		"@huggingface/transformers": "^3.8.1",
+		"electron-updater": "^6.6.2",
 		"jszip": "^3.10.1"
 	},
 	"overrides": {
@@ -71,7 +72,11 @@
 	"build": {
 		"appId": "com.whatsapp.backup-reader",
 		"productName": "WhatsApp Backup Reader",
-		"publish": null,
+		"publish": {
+			"provider": "github",
+			"owner": "rodrigogs",
+			"repo": "whats-reader"
+		},
 		"directories": {
 			"output": "dist-electron"
 		},
@@ -80,6 +85,7 @@
 			"electron/**/*",
 			"!node_modules/**/*"
 		],
+		"asar": true,
 		"compression": "maximum",
 		"electronLanguages": [
 			"en",
@@ -155,7 +161,9 @@
 		},
 		"nsis": {
 			"oneClick": false,
-			"allowToChangeInstallationDirectory": true
+			"allowToChangeInstallationDirectory": true,
+			"compressionLevel": 9,
+			"differentialPackage": true
 		}
 	}
 }

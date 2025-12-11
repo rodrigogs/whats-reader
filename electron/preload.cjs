@@ -15,6 +15,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
 	// External links
 	openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
 
+	// Auto-updater
+	updater: {
+		checkForUpdates: () => ipcRenderer.invoke('updater:checkForUpdates'),
+		downloadUpdate: () => ipcRenderer.invoke('updater:downloadUpdate'),
+		quitAndInstall: () => ipcRenderer.invoke('updater:quitAndInstall'),
+		onStatus: (callback) => {
+			const subscription = (_event, data) => callback(data);
+			ipcRenderer.on('auto-update-status', subscription);
+			return () => ipcRenderer.removeListener('auto-update-status', subscription);
+		},
+	},
+
 	// Platform info
 	platform: process.platform,
 	isElectron: true,
