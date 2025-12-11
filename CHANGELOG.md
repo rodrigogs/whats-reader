@@ -1,3 +1,10 @@
+## [1.12.3](https://github.com/rodrigogs/whats-reader/compare/v1.12.2...v1.12.3) (2025-12-11)
+
+
+### Bug Fixes
+
+* ensure auto-updater metadata files are uploaded to releases ([ababfa3](https://github.com/rodrigogs/whats-reader/commit/ababfa34742d6f2aa0b881dc33c9d655b0a950aa))
+
 ## [1.12.2](https://github.com/rodrigogs/whats-reader/compare/v1.12.1...v1.12.2) (2025-12-11)
 
 
