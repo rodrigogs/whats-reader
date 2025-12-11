@@ -1,3 +1,15 @@
+# [1.11.0](https://github.com/rodrigogs/whats-reader/compare/v1.10.0...v1.11.0) (2025-12-11)
+
+
+### Bug Fixes
+
+* trigger build workflow after semantic release ([bd96c83](https://github.com/rodrigogs/whats-reader/commit/bd96c83ea713aee284cba30e0c96c3ef422e7742))
+
+
+### Features
+
+* add auto-update checker with version badge and toast notification ([977afbf](https://github.com/rodrigogs/whats-reader/commit/977afbf091c62dfe0649b8d0a4e776d184b8fd10))
+
 # [1.10.0](https://github.com/rodrigogs/whats-reader/compare/v1.9.0...v1.10.0) (2025-12-10)
 
 
