@@ -12,8 +12,9 @@ const path = require('node:path');
 module.exports = async function (context) {
 	const appOutDir = context.appOutDir;
 	const platform = context.electronPlatformName;
+	const arch = context.arch;
 	
-	console.log(`\n[afterPack] Running cleanup for ${platform}...`);
+	console.log(`\n[afterPack] Running cleanup for ${platform} (${arch})...`);
 	console.log(`[afterPack] App directory: ${appOutDir}`);
 
 	// Paths differ by platform
