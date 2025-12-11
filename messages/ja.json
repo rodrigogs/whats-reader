@@ -168,5 +168,15 @@
   "language_auto": "自動検出",
   "language_change": "言語を変更",
   "github_star_title": "このプロジェクトが気に入りましたか？",
-  "github_star_cta": "GitHubでスターを付ける"
+  "github_star_cta": "GitHubでスターを付ける",
+  "update_available": "アップデート利用可能",
+  "update_new_version": "バージョン {version} が利用可能です！",
+  "update_current_version": "現在: {version}",
+  "update_update_button": "更新",
+  "update_ignore_button": "無視",
+  "update_never_button": "今後通知しない",
+  "update_ignore_tooltip": "このバージョンを無視",
+  "update_never_tooltip": "アップデート通知を表示しない",
+  "version_view_releases": "GitHubでリリースを見る",
+  "close": "閉じる"
 }

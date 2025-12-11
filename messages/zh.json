@@ -170,5 +170,15 @@
   "language_auto": "自动检测",
   "language_change": "更改语言",
   "github_star_title": "喜欢这个项目？",
-  "github_star_cta": "在 GitHub 上加星"
+  "github_star_cta": "在 GitHub 上加星",
+  "update_available": "有更新可用",
+  "update_new_version": "版本 {version} 可用！",
+  "update_current_version": "当前：{version}",
+  "update_update_button": "更新",
+  "update_ignore_button": "忽略",
+  "update_never_button": "不再提醒",
+  "update_ignore_tooltip": "忽略此版本",
+  "update_never_tooltip": "不再显示更新通知",
+  "version_view_releases": "在 GitHub 上查看版本",
+  "close": "关闭"
 }

@@ -169,5 +169,15 @@
   "language_auto": "Automatische detectie",
   "language_change": "Taal wijzigen",
   "github_star_title": "Bevalt dit project?",
-  "github_star_cta": "Ster op GitHub"
+  "github_star_cta": "Ster op GitHub",
+  "update_available": "Update Beschikbaar",
+  "update_new_version": "Versie {version} is beschikbaar!",
+  "update_current_version": "Huidig: {version}",
+  "update_update_button": "Bijwerken",
+  "update_ignore_button": "Negeren",
+  "update_never_button": "Nooit herinneren",
+  "update_ignore_tooltip": "Deze versie negeren",
+  "update_never_tooltip": "Nooit updatemeldingen tonen",
+  "version_view_releases": "Bekijk releases op GitHub",
+  "close": "Sluiten"
 }

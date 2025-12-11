@@ -170,5 +170,15 @@
   "language_auto": "Detección automática",
   "language_change": "Cambiar idioma",
   "github_star_title": "¿Te gusta este proyecto?",
-  "github_star_cta": "Dale una estrella en GitHub"
+  "github_star_cta": "Dale una estrella en GitHub",
+  "update_available": "Actualización Disponible",
+  "update_new_version": "¡Versión {version} disponible!",
+  "update_current_version": "Actual: {version}",
+  "update_update_button": "Actualizar",
+  "update_ignore_button": "Ignorar",
+  "update_never_button": "Nunca recordar",
+  "update_ignore_tooltip": "Ignorar esta versión",
+  "update_never_tooltip": "Nunca mostrar notificaciones de actualización",
+  "version_view_releases": "Ver versiones en GitHub",
+  "close": "Cerrar"
 }

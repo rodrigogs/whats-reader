@@ -168,5 +168,15 @@
   "language_auto": "Détection automatique",
   "language_change": "Changer de langue",
   "github_star_title": "Vous aimez ce projet ?",
-  "github_star_cta": "Ajouter une étoile sur GitHub"
+  "github_star_cta": "Ajouter une étoile sur GitHub",
+  "update_available": "Mise à jour disponible",
+  "update_new_version": "Version {version} disponible !",
+  "update_current_version": "Actuelle : {version}",
+  "update_update_button": "Mettre à jour",
+  "update_ignore_button": "Ignorer",
+  "update_never_button": "Ne plus rappeler",
+  "update_ignore_tooltip": "Ignorer cette version",
+  "update_never_tooltip": "Ne jamais afficher les notifications de mise à jour",
+  "version_view_releases": "Voir les versions sur GitHub",
+  "close": "Fermer"
 }

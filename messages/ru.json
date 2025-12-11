@@ -170,5 +170,15 @@
   "language_auto": "Автоопределение",
   "language_change": "Изменить язык",
   "github_star_title": "Нравится этот проект?",
-  "github_star_cta": "Поставьте звезду на GitHub"
+  "github_star_cta": "Поставьте звезду на GitHub",
+  "update_available": "Доступно обновление",
+  "update_new_version": "Версия {version} доступна!",
+  "update_current_version": "Текущая: {version}",
+  "update_update_button": "Обновить",
+  "update_ignore_button": "Игнорировать",
+  "update_never_button": "Больше не напоминать",
+  "update_ignore_tooltip": "Игнорировать эту версию",
+  "update_never_tooltip": "Никогда не показывать уведомления об обновлениях",
+  "version_view_releases": "Посмотреть релизы на GitHub",
+  "close": "Закрыть"
 }

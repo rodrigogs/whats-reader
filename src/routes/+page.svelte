@@ -8,6 +8,8 @@ import {
 	ChatView,
 	FileDropZone,
 	SearchBar,
+	UpdateToast,
+	VersionBadge,
 } from '$lib/components';
 import BookmarksPanel from '$lib/components/BookmarksPanel.svelte';
 import LocaleSwitcher from '$lib/components/LocaleSwitcher.svelte';
@@ -15,6 +17,12 @@ import * as m from '$lib/paraglide/messages';
 import { parseZipFile, readFileAsArrayBuffer } from '$lib/parser';
 import { appState, type ChatData } from '$lib/state.svelte';
 import { setTranscriptionLanguage } from '$lib/transcription.svelte';
+import {
+	dismissUpdate,
+	getReleasesPageUrl,
+	getUpdateState,
+	initUpdateChecker,
+} from '$lib/update-checker.svelte';
 
 // Detect if running in Electron
 const isElectron =
@@ -43,6 +51,20 @@ function toggleDarkMode() {
 		// Only persist to localStorage when user explicitly toggles
 		localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
 	}
+}
+
+// Update checker state
+const updateState = $derived(getUpdateState());
+
+// Initialize update checker when the app loads
+$effect(() => {
+	if (browser) {
+		initUpdateChecker(3000); // Check for updates after 3 seconds
+	}
+});
+
+function handleUpdateDismiss() {
+	dismissUpdate();
 }
 
 let showStats = $state(false);
@@ -380,6 +402,11 @@ const currentUser = $derived.by(() => {
 	{#if !appState.hasChats}
 		<!-- Empty state - show file upload -->
 		<div class="relative flex-1 flex flex-col overflow-hidden">
+			<!-- Version badge (top-left) - fixed position -->
+			<div class="absolute top-4 left-4 z-10">
+				<VersionBadge />
+			</div>
+			
 			<!-- Settings buttons (top-right) - fixed position -->
 			<div class="absolute top-4 right-4 flex items-center gap-1.5 z-10">
 				<LocaleSwitcher variant="default" />
@@ -1009,3 +1036,12 @@ const currentUser = $derived.by(() => {
 		</div>
 	{/if}
 </div>
+
+<!-- Update toast notification -->
+{#if updateState.updateAvailable && updateState.latestVersion}
+	<UpdateToast
+		latestVersion={updateState.latestVersion}
+		releaseUrl={getReleasesPageUrl()}
+		onClose={handleUpdateDismiss}
+	/>
+{/if}

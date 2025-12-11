@@ -170,5 +170,15 @@
   "language_auto": "Auto-detect",
   "language_change": "Change language",
   "github_star_title": "Like this project?",
-  "github_star_cta": "Star on GitHub"
+  "github_star_cta": "Star on GitHub",
+  "update_available": "Update Available",
+  "update_new_version": "Version {version} is available!",
+  "update_current_version": "Current: {version}",
+  "update_update_button": "Update",
+  "update_ignore_button": "Ignore",
+  "update_never_button": "Never remind me",
+  "update_ignore_tooltip": "Ignore this version",
+  "update_never_tooltip": "Never show update notifications",
+  "version_view_releases": "View releases on GitHub",
+  "close": "Close"
 }
