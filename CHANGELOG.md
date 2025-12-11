@@ -1,3 +1,10 @@
+## [1.15.9](https://github.com/rodrigogs/whats-reader/compare/v1.15.8...v1.15.9) (2025-12-11)
+
+
+### Bug Fixes
+
+* improve afterPack logging to show architecture ([859e187](https://github.com/rodrigogs/whats-reader/commit/859e187a32f087a516324b9f234a66bf7dc1ff76))
+
 ## [1.15.8](https://github.com/rodrigogs/whats-reader/compare/v1.15.7...v1.15.8) (2025-12-11)
 
 
