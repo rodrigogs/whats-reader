@@ -1,3 +1,17 @@
+## [1.12.2](https://github.com/rodrigogs/whats-reader/compare/v1.12.1...v1.12.2) (2025-12-11)
+
+
+### Bug Fixes
+
+* add GH_TOKEN env var to electron-builder steps ([2eea66a](https://github.com/rodrigogs/whats-reader/commit/2eea66ad218a34ada2710e1d71ce2fc03ab607e1))
+
+## [1.12.1](https://github.com/rodrigogs/whats-reader/compare/v1.12.0...v1.12.1) (2025-12-11)
+
+
+### Bug Fixes
+
+* remove invalid compressionLevel from NSIS config ([8688228](https://github.com/rodrigogs/whats-reader/commit/868822891d5ed45d125d991f4cfd3ca36a47093e))
+
 # [1.12.0](https://github.com/rodrigogs/whats-reader/compare/v1.11.1...v1.12.0) (2025-12-11)
 
 
