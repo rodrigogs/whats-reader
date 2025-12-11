@@ -1,3 +1,16 @@
+# [1.12.0](https://github.com/rodrigogs/whats-reader/compare/v1.11.1...v1.12.0) (2025-12-11)
+
+
+### Bug Fixes
+
+* resolve TypeScript and lint errors in auto-updater implementation ([181797b](https://github.com/rodrigogs/whats-reader/commit/181797b1f9f362527f23d0139f8b532dda4a8f9b))
+* use npm install instead of npm ci to avoid lock file sync issues ([1da401c](https://github.com/rodrigogs/whats-reader/commit/1da401c932dc9dbb977f231733c6097d2e7337b9))
+
+
+### Features
+
+* implement true auto-update with electron-updater, optimize build pipeline, reduce Windows binary size ([53b9197](https://github.com/rodrigogs/whats-reader/commit/53b91971a99265a96dcc2d93f4bedff3a9dd0f61))
+
 ## [1.11.1](https://github.com/rodrigogs/whats-reader/compare/v1.11.0...v1.11.1) (2025-12-11)
 
 
