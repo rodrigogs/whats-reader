@@ -1,3 +1,10 @@
+## [1.15.4](https://github.com/rodrigogs/whats-reader/compare/v1.15.3...v1.15.4) (2025-12-11)
+
+
+### Bug Fixes
+
+* test build with CUDA skip configuration ([f24cd55](https://github.com/rodrigogs/whats-reader/commit/f24cd5543f362fb88b21a03f806cdda0c70d8020))
+
 ## [1.15.3](https://github.com/rodrigogs/whats-reader/compare/v1.15.2...v1.15.3) (2025-12-11)
 
 
