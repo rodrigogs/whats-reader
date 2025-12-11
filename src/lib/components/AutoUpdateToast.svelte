@@ -10,7 +10,9 @@ import {
 	downloadUpdate,
 	getAutoUpdaterState,
 	getReleasesPageUrl,
+	ignoreVersion,
 	installUpdate,
+	setNeverAsk,
 } from '$lib/auto-updater.svelte';
 import * as m from '$lib/paraglide/messages';
 
@@ -25,7 +27,7 @@ const state = getAutoUpdaterState();
 const isElectron =
 	browser && typeof window !== 'undefined' && 'electronAPI' in window;
 
-async function handleDownload() {
+async function handleUpdate() {
 	await downloadUpdate();
 }
 
@@ -33,13 +35,21 @@ function handleInstall() {
 	installUpdate();
 }
 
-function handleOpenReleases() {
-	const url = getReleasesPageUrl();
-	if (isElectron && window.electronAPI?.openExternal) {
-		window.electronAPI.openExternal(url);
-	} else if (browser) {
-		window.open(url, '_blank', 'noopener,noreferrer');
+function handleRemindLater() {
+	dismissUpdate();
+	onClose?.();
+}
+
+function handleIgnoreVersion() {
+	if (state.latestVersion) {
+		ignoreVersion(state.latestVersion);
 	}
+	onClose?.();
+}
+
+function handleNeverAsk() {
+	setNeverAsk();
+	onClose?.();
 }
 
 function handleClose() {
@@ -101,7 +111,7 @@ function handleClose() {
 						<button
 							type="button"
 							class="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm cursor-pointer"
-							onclick={handleClose}
+							onclick={handleRemindLater}
 						>
 							{m.update_later()}
 						</button>
@@ -125,20 +135,42 @@ function handleClose() {
 					<p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
 						{m.update_new_version_message({ current: state.currentVersion, latest: state.latestVersion || '' })}
 					</p>
-					<div class="flex gap-2">
+					<!-- Primary actions: Update and Remind Later -->
+					<div class="flex gap-2 mb-2">
 						<button
 							type="button"
 							class="flex-1 px-3 py-2 bg-[var(--color-whatsapp-teal)] text-white rounded-md hover:bg-[var(--color-whatsapp-dark-teal)] transition-colors text-sm font-medium cursor-pointer"
-							onclick={handleDownload}
+							onclick={handleUpdate}
+							title={m.update_download()}
 						>
-							{m.update_download()}
+							{m.update_update_button()}
 						</button>
 						<button
 							type="button"
-							class="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm cursor-pointer"
-							onclick={handleOpenReleases}
+							class="flex-1 px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm cursor-pointer"
+							onclick={handleRemindLater}
+							title={m.update_later()}
 						>
-							{m.update_view_release()}
+							{m.update_later()}
+						</button>
+					</div>
+					<!-- Secondary actions: Ignore Version and Never Ask -->
+					<div class="flex gap-2">
+						<button
+							type="button"
+							class="flex-1 px-3 py-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-md transition-colors text-xs cursor-pointer"
+							onclick={handleIgnoreVersion}
+							title={m.update_ignore_tooltip()}
+						>
+							{m.update_ignore_button()}
+						</button>
+						<button
+							type="button"
+							class="flex-1 px-3 py-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-md transition-colors text-xs cursor-pointer"
+							onclick={handleNeverAsk}
+							title={m.update_never_tooltip()}
+						>
+							{m.update_never_button()}
 						</button>
 					</div>
 				{/if}

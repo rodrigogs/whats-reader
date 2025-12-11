@@ -9,6 +9,10 @@ import { browser } from '$app/environment';
 const isElectron =
 	browser && typeof window !== 'undefined' && 'electronAPI' in window;
 
+// Storage keys for user preferences
+const STORAGE_KEY_NEVER_ASK = 'auto_update_never_ask';
+const STORAGE_KEY_IGNORED_VERSION = 'auto_update_ignored_version';
+
 // Update state
 let updateAvailable = $state(false);
 let latestVersion = $state<string | null>(null);
@@ -45,8 +49,22 @@ function handleUpdateStatus(status: { event: string; data?: unknown }) {
 
 		case 'update-available': {
 			const data = status.data as { version?: string } | undefined;
+			const version = `v${data?.version || ''}`;
+			
+			// Check if user has set "never ask" preference
+			if (isNeverAsk()) {
+				updateAvailable = false;
+				break;
+			}
+			
+			// Check if this specific version is ignored
+			if (isVersionIgnored(version)) {
+				updateAvailable = false;
+				break;
+			}
+			
 			updateAvailable = true;
-			latestVersion = `v${data?.version || ''}`;
+			latestVersion = version;
 			isDismissed = false;
 			break;
 		}
@@ -105,9 +123,45 @@ export function installUpdate() {
 }
 
 /**
- * Dismiss the update notification
+ * Dismiss the update notification (remind me later)
  */
 export function dismissUpdate() {
+	isDismissed = true;
+	updateAvailable = false;
+}
+
+/**
+ * Check if user has set "never ask again" preference
+ */
+function isNeverAsk(): boolean {
+	if (!browser) return false;
+	return localStorage.getItem(STORAGE_KEY_NEVER_ASK) === 'true';
+}
+
+/**
+ * Check if a specific version has been ignored
+ */
+function isVersionIgnored(version: string): boolean {
+	if (!browser) return false;
+	return localStorage.getItem(STORAGE_KEY_IGNORED_VERSION) === version;
+}
+
+/**
+ * Set "never ask again" preference
+ */
+export function setNeverAsk(): void {
+	if (!browser) return;
+	localStorage.setItem(STORAGE_KEY_NEVER_ASK, 'true');
+	isDismissed = true;
+	updateAvailable = false;
+}
+
+/**
+ * Ignore a specific version (won't prompt again for this version)
+ */
+export function ignoreVersion(version: string): void {
+	if (!browser) return;
+	localStorage.setItem(STORAGE_KEY_IGNORED_VERSION, version);
 	isDismissed = true;
 	updateAvailable = false;
 }

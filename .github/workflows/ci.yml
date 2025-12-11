@@ -20,8 +20,18 @@ jobs:
           node-version: "22"
           cache: "npm"
 
+      # Cache Electron binaries to avoid download failures
+      - name: Cache Electron
+        uses: actions/cache@v4
+        with:
+          path: ~/cache/electron
+          key: electron-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
       - name: Install dependencies
         run: npm install
+        env:
+          ELECTRON_CACHE: ~/cache/electron
+          ELECTRON_BUILDER_CACHE: ~/cache/electron-builder
 
       - name: Run linter
         run: npm run lint
@@ -39,8 +49,18 @@ jobs:
           node-version: "22"
           cache: "npm"
 
+      # Cache Electron binaries to avoid download failures
+      - name: Cache Electron
+        uses: actions/cache@v4
+        with:
+          path: ~/cache/electron
+          key: electron-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
       - name: Install dependencies
         run: npm install
+        env:
+          ELECTRON_CACHE: ~/cache/electron
+          ELECTRON_BUILDER_CACHE: ~/cache/electron-builder
 
       - name: Build (generates paraglide files)
         run: npm run build
@@ -61,8 +81,18 @@ jobs:
           node-version: "22"
           cache: "npm"
 
+      # Cache Electron binaries to avoid download failures
+      - name: Cache Electron
+        uses: actions/cache@v4
+        with:
+          path: ~/cache/electron
+          key: electron-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
       - name: Install dependencies
         run: npm install
+        env:
+          ELECTRON_CACHE: ~/cache/electron
+          ELECTRON_BUILDER_CACHE: ~/cache/electron-builder
 
       - name: Build
         run: npm run build
