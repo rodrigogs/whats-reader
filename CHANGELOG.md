@@ -1,3 +1,10 @@
+## [1.12.2](https://github.com/rodrigogs/whats-reader/compare/v1.12.1...v1.12.2) (2025-12-11)
+
+
+### Bug Fixes
+
+* add GH_TOKEN env var to electron-builder steps ([2eea66a](https://github.com/rodrigogs/whats-reader/commit/2eea66ad218a34ada2710e1d71ce2fc03ab607e1))
+
 ## [1.12.1](https://github.com/rodrigogs/whats-reader/compare/v1.12.0...v1.12.1) (2025-12-11)
 
 
