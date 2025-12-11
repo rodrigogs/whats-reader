@@ -23,6 +23,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
+		"postinstall": "node scripts/cleanup-deps.cjs",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "biome check .",
@@ -82,10 +83,25 @@
 		},
 		"files": [
 			"build/**/*",
-			"electron/**/*"
+			"electron/**/*",
+			"!node_modules/onnxruntime-node/**/*",
+			"!**/*.map",
+			"!**/*.md",
+			"!**/LICENSE",
+			"!**/README",
+			"!**/.github",
+			"!**/test",
+			"!**/tests",
+			"!**/__tests__",
+			"!**/docs",
+			"!**/examples"
+		],
+		"asarUnpack": [
+			"**/*.{node,dll}"
 		],
 		"asar": true,
 		"compression": "maximum",
+		"removePackageScripts": true,
 		"electronLanguages": [
 			"en",
 			"en-US",
@@ -156,6 +172,8 @@
 			"allowToChangeInstallationDirectory": true,
 			"differentialPackage": true
 		},
-		"generateUpdatesFilesForAllChannels": true
+		"generateUpdatesFilesForAllChannels": true,
+		"npmRebuild": false,
+		"buildDependenciesFromSource": false
 	}
 }
