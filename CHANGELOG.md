@@ -1,3 +1,10 @@
+# [1.15.0](https://github.com/rodrigogs/whats-reader/compare/v1.14.1...v1.15.0) (2025-12-11)
+
+
+### Features
+
+* verify consistent asset generation across releases ([1d4b549](https://github.com/rodrigogs/whats-reader/commit/1d4b549516da6bf7cbb280d1d4b56da61b7838dc))
+
 ## [1.14.1](https://github.com/rodrigogs/whats-reader/compare/v1.14.0...v1.14.1) (2025-12-11)
 
 
