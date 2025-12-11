@@ -27,7 +27,10 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm ci --prefer-offline || \
+          npm ci --prefer-offline || \
+          npm ci
 
       - name: Run Semantic Release
         id: semantic

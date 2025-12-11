@@ -32,7 +32,10 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm ci --prefer-offline || \
+          npm ci --prefer-offline || \
+          npm ci
 
       - name: Build SvelteKit
         run: npm run build
@@ -92,7 +95,10 @@ jobs:
           key: ${{ runner.os }}-electron-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm ci --prefer-offline || \
+          npm ci --prefer-offline || \
+          npm ci
 
       - name: Download SvelteKit build
         uses: actions/download-artifact@v4
