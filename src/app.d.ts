@@ -34,6 +34,14 @@ interface ElectronAPI {
 	openExternal: (url: string) => Promise<void>;
 	platform: string;
 	isElectron: boolean;
+	updater?: {
+		checkForUpdates: () => Promise<void>;
+		downloadUpdate: () => Promise<void>;
+		quitAndInstall: () => void;
+		onStatus: (
+			callback: (data: { event: string; data?: unknown }) => void,
+		) => () => void;
+	};
 }
 
 declare global {

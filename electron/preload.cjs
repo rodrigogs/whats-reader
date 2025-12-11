@@ -23,7 +23,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 		onStatus: (callback) => {
 			const subscription = (_event, data) => callback(data);
 			ipcRenderer.on('auto-update-status', subscription);
-			return () => ipcRenderer.removeListener('auto-update-status', subscription);
+			return () =>
+				ipcRenderer.removeListener('auto-update-status', subscription);
 		},
 	},
 
