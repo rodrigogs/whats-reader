@@ -32,13 +32,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: |
-          for i in 1 2 3; do
-            npm install && break || {
-              echo "Attempt $i failed, waiting 10 seconds...";
-              sleep 10;
-            }
-          done
+        run: npm install
 
       - name: Build SvelteKit
         run: npm run build
@@ -98,13 +92,7 @@ jobs:
           key: ${{ runner.os }}-electron-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
-        run: |
-          for i in 1 2 3; do
-            npm install && break || {
-              echo "Attempt $i failed, waiting 10 seconds...";
-              sleep 10;
-            }
-          done
+        run: npm install
 
       - name: Download SvelteKit build
         uses: actions/download-artifact@v4
@@ -166,6 +154,7 @@ jobs:
     name: Publish Release
     runs-on: ubuntu-latest
     needs: build
+    if: success()
     steps:
       - name: Get version from input
         id: version
@@ -199,7 +188,49 @@ jobs:
                 release_id: draftRelease.id,
                 draft: false
               });
-              console.log(`Published release ${draftRelease.tag_name}`);
+              console.log(`✅ Published release ${draftRelease.tag_name}`);
             } else {
-              console.log('No draft release found for ${{ steps.version.outputs.version }}');
+              console.log('⚠️ No draft release found for ${{ steps.version.outputs.version }}');
+            }
+
+  cleanup-failed-release:
+    name: Cleanup Failed Release
+    runs-on: ubuntu-latest
+    needs: build
+    if: failure()
+    steps:
+      - name: Get version from input
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+          else
+            VERSION="v${{ inputs.version }}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Delete Draft Release
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: releases } = await github.rest.repos.listReleases({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            
+            const draftRelease = releases.find(r => r.tag_name === '${{ steps.version.outputs.version }}' && r.draft);
+            
+            if (draftRelease) {
+              await github.rest.repos.deleteRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: draftRelease.id
+              });
+              console.log(`🗑️ Deleted failed draft release ${draftRelease.tag_name}`);
+            } else {
+              console.log('⚠️ No draft release found to delete for ${{ steps.version.outputs.version }}');
             }
