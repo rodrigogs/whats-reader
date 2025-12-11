@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/rodrigogs/whats-reader/compare/v1.13.4...v1.14.0) (2025-12-11)
+
+
+### Features
+
+* validate and test complete draft-first release workflow ([c2a4397](https://github.com/rodrigogs/whats-reader/commit/c2a4397d469a7edda0c6e9375a0aa60f6fb103f5))
+
 ## [1.13.4](https://github.com/rodrigogs/whats-reader/compare/v1.13.3...v1.13.4) (2025-12-11)
 
 
