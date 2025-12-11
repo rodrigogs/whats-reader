@@ -16,7 +16,7 @@ const STORAGE_KEY_IGNORED_VERSION = 'auto_update_ignored_version';
 // Update state
 let updateAvailable = $state(false);
 let latestVersion = $state<string | null>(null);
-const currentVersion = $state<string>('v' + __APP_VERSION__);
+const currentVersion = $state<string>(`v${__APP_VERSION__}`);
 let downloadProgress = $state(0);
 let isDownloading = $state(false);
 let isUpdateReady = $state(false);
@@ -50,19 +50,19 @@ function handleUpdateStatus(status: { event: string; data?: unknown }) {
 		case 'update-available': {
 			const data = status.data as { version?: string } | undefined;
 			const version = `v${data?.version || ''}`;
-			
+
 			// Check if user has set "never ask" preference
 			if (isNeverAsk()) {
 				updateAvailable = false;
 				break;
 			}
-			
+
 			// Check if this specific version is ignored
 			if (isVersionIgnored(version)) {
 				updateAvailable = false;
 				break;
 			}
-			
+
 			updateAvailable = true;
 			latestVersion = version;
 			isDismissed = false;
