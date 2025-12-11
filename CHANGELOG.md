@@ -1,3 +1,11 @@
+## [1.13.1](https://github.com/rodrigogs/whats-reader/compare/v1.13.0...v1.13.1) (2025-12-11)
+
+
+### Bug Fixes
+
+* add retry logic for npm install to handle CDN failures ([970bd9e](https://github.com/rodrigogs/whats-reader/commit/970bd9e72fde45688a658cce2e432bedf836bdbd))
+* add retry logic to release workflow npm install ([214862b](https://github.com/rodrigogs/whats-reader/commit/214862bc666410a97255359517dffe3cdcbe8aac))
+
 # [1.13.0](https://github.com/rodrigogs/whats-reader/compare/v1.12.3...v1.13.0) (2025-12-11)
 
 
