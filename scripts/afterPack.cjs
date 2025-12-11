@@ -2,6 +2,8 @@
  * electron-builder afterPack hook
  * Removes unused dependencies AFTER packaging to reduce app size
  * Runs after dependencies are analyzed but before final installer creation
+ * 
+ * @see https://www.electron.build/configuration/configuration#afterpack
  */
 
 const fs = require('node:fs');
