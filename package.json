@@ -82,8 +82,7 @@
 		},
 		"files": [
 			"build/**/*",
-			"electron/**/*",
-			"!node_modules/**/*"
+			"electron/**/*"
 		],
 		"asar": true,
 		"compression": "maximum",
