@@ -1,3 +1,10 @@
+## [1.14.1](https://github.com/rodrigogs/whats-reader/compare/v1.14.0...v1.14.1) (2025-12-11)
+
+
+### Bug Fixes
+
+* prevent premature release publishing by keeping draft status ([9c94b7f](https://github.com/rodrigogs/whats-reader/commit/9c94b7fa51c2a32c49647d34266f9b0a0dd0d82e))
+
 # [1.14.0](https://github.com/rodrigogs/whats-reader/compare/v1.13.4...v1.14.0) (2025-12-11)
 
 
