@@ -5,7 +5,6 @@
  */
 
 import { browser } from '$app/environment';
-import * as m from '$lib/paraglide/messages';
 import {
 	dismissUpdate,
 	downloadUpdate,
@@ -13,6 +12,7 @@ import {
 	getReleasesPageUrl,
 	installUpdate,
 } from '$lib/auto-updater.svelte';
+import * as m from '$lib/paraglide/messages';
 
 interface Props {
 	onClose?: () => void;

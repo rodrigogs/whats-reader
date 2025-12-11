@@ -12,7 +12,7 @@ const isElectron =
 // Update state
 let updateAvailable = $state(false);
 let latestVersion = $state<string | null>(null);
-let currentVersion = $state<string>('v' + __APP_VERSION__);
+const currentVersion = $state<string>('v' + __APP_VERSION__);
 let downloadProgress = $state(0);
 let isDownloading = $state(false);
 let isUpdateReady = $state(false);
@@ -23,7 +23,7 @@ let isDismissed = $state(false);
  * Initialize auto-updater (Electron only)
  */
 export function initAutoUpdater() {
-	if (!isElectron ||!window.electronAPI?.updater) return;
+	if (!isElectron || !window.electronAPI?.updater) return;
 
 	// Setup auto-update listeners
 	const unsubscribe = window.electronAPI.updater.onStatus(handleUpdateStatus);
@@ -37,30 +37,36 @@ export function initAutoUpdater() {
 /**
  * Handle auto-update status events from Electron
  */
-function handleUpdateStatus(status: { event: string; data: any }) {
+function handleUpdateStatus(status: { event: string; data?: unknown }) {
 	switch (status.event) {
 		case 'checking-for-update':
 			errorMessage = null;
 			break;
 
-		case 'update-available':
+		case 'update-available': {
+			const data = status.data as { version?: string } | undefined;
 			updateAvailable = true;
-			latestVersion = 'v' + (status.data?.version || '');
+			latestVersion = `v${data?.version || ''}`;
 			isDismissed = false;
 			break;
+		}
 
 		case 'update-not-available':
 			updateAvailable = false;
 			break;
 
-		case 'error':
-			errorMessage = status.data?.message || 'Update check failed';
+		case 'error': {
+			const data = status.data as { message?: string } | undefined;
+			errorMessage = data?.message || 'Update check failed';
 			break;
+		}
 
-		case 'download-progress':
+		case 'download-progress': {
+			const data = status.data as { percent?: number } | undefined;
 			isDownloading = true;
-			downloadProgress = Math.round(status.data?.percent || 0);
+			downloadProgress = Math.round(data?.percent || 0);
 			break;
+		}
 
 		case 'update-downloaded':
 			isDownloading = false;

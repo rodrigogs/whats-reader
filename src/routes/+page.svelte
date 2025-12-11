@@ -2,6 +2,7 @@
 import { tick } from 'svelte';
 import { browser } from '$app/environment';
 import { floating } from '$lib/actions/floating';
+import { getAutoUpdaterState, initAutoUpdater } from '$lib/auto-updater.svelte';
 import {
 	ChatList,
 	ChatStats,
@@ -16,10 +17,6 @@ import LocaleSwitcher from '$lib/components/LocaleSwitcher.svelte';
 import * as m from '$lib/paraglide/messages';
 import { parseZipFile, readFileAsArrayBuffer } from '$lib/parser';
 import { appState, type ChatData } from '$lib/state.svelte';
-import {
-	getAutoUpdaterState,
-	initAutoUpdater,
-} from '$lib/auto-updater.svelte';
 import { setTranscriptionLanguage } from '$lib/transcription.svelte';
 
 // Detect if running in Electron
