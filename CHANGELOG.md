@@ -1,3 +1,10 @@
+## [1.15.7](https://github.com/rodrigogs/whats-reader/compare/v1.15.6...v1.15.7) (2025-12-11)
+
+
+### Performance Improvements
+
+* optimize electron build size by removing onnxruntime-node (saves 210MB) ([3e75ddd](https://github.com/rodrigogs/whats-reader/commit/3e75ddd6d533b66143b563935f926c182823d046))
+
 ## [1.15.6](https://github.com/rodrigogs/whats-reader/compare/v1.15.5...v1.15.6) (2025-12-11)
 
 
