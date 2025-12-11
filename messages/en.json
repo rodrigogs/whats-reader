@@ -180,5 +180,15 @@
   "update_ignore_tooltip": "Ignore this version",
   "update_never_tooltip": "Never show update notifications",
   "version_view_releases": "View releases on GitHub",
+  "update_ready": "Update Ready",
+  "update_downloading": "Downloading Update",
+  "update_close": "Close update notification",
+  "update_ready_message": "Update {version} downloaded and ready to install",
+  "update_install_restart": "Install & Restart",
+  "update_later": "Later",
+  "update_downloading_message": "Downloading update...",
+  "update_new_version_message": "New version {latest} available! (current: {current})",
+  "update_download": "Download Update",
+  "update_view_release": "View Release",
   "close": "Close"
 }

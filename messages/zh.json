@@ -180,5 +180,15 @@
   "update_ignore_tooltip": "忽略此版本",
   "update_never_tooltip": "不再显示更新通知",
   "version_view_releases": "在 GitHub 上查看版本",
-  "close": "关闭"
+  "close": "关闭",
+  "update_ready": "更新准备就绪",
+  "update_downloading": "正在下载更新",
+  "update_close": "关闭更新通知",
+  "update_ready_message": "更新{version}已下载并准备安装",
+  "update_install_restart": "安装并重启",
+  "update_later": "之后",
+  "update_downloading_message": "正在下载更新……",
+  "update_new_version_message": "新版本{latest}可用！（当前版本： {current} ）",
+  "update_download": "下载更新",
+  "update_view_release": "查看新闻稿"
 }

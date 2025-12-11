@@ -1,0 +1,146 @@
+/**
+ * Auto-Updater Service (Electron only)
+ * Uses electron-updater for automatic update downloads and installation
+ */
+
+import { browser } from '$app/environment';
+
+// Detect if running in Electron
+const isElectron =
+	browser && typeof window !== 'undefined' && 'electronAPI' in window;
+
+// Update state
+let updateAvailable = $state(false);
+let latestVersion = $state<string | null>(null);
+let currentVersion = $state<string>('v' + __APP_VERSION__);
+let downloadProgress = $state(0);
+let isDownloading = $state(false);
+let isUpdateReady = $state(false);
+let errorMessage = $state<string | null>(null);
+let isDismissed = $state(false);
+
+/**
+ * Initialize auto-updater (Electron only)
+ */
+export function initAutoUpdater() {
+	if (!isElectron ||!window.electronAPI?.updater) return;
+
+	// Setup auto-update listeners
+	const unsubscribe = window.electronAPI.updater.onStatus(handleUpdateStatus);
+
+	// Cleanup on app unmount
+	if (browser) {
+		window.addEventListener('beforeunload', unsubscribe);
+	}
+}
+
+/**
+ * Handle auto-update status events from Electron
+ */
+function handleUpdateStatus(status: { event: string; data: any }) {
+	switch (status.event) {
+		case 'checking-for-update':
+			errorMessage = null;
+			break;
+
+		case 'update-available':
+			updateAvailable = true;
+			latestVersion = 'v' + (status.data?.version || '');
+			isDismissed = false;
+			break;
+
+		case 'update-not-available':
+			updateAvailable = false;
+			break;
+
+		case 'error':
+			errorMessage = status.data?.message || 'Update check failed';
+			break;
+
+		case 'download-progress':
+			isDownloading = true;
+			downloadProgress = Math.round(status.data?.percent || 0);
+			break;
+
+		case 'update-downloaded':
+			isDownloading = false;
+			isUpdateReady = true;
+			downloadProgress = 100;
+			break;
+	}
+}
+
+/**
+ * Download the available update
+ */
+export async function downloadUpdate() {
+	if (!isElectron || !window.electronAPI?.updater) return;
+
+	try {
+		await window.electronAPI.updater.downloadUpdate();
+	} catch (err) {
+		console.error('Failed to download update:', err);
+		errorMessage = 'Failed to download update';
+	}
+}
+
+/**
+ * Install and restart with the new update
+ */
+export function installUpdate() {
+	if (!isElectron || !window.electronAPI?.updater) return;
+
+	try {
+		window.electronAPI.updater.quitAndInstall();
+	} catch (err) {
+		console.error('Failed to install update:', err);
+		errorMessage = 'Failed to install update';
+	}
+}
+
+/**
+ * Dismiss the update notification
+ */
+export function dismissUpdate() {
+	isDismissed = true;
+	updateAvailable = false;
+}
+
+/**
+ * Get releases page URL
+ */
+export function getReleasesPageUrl() {
+	return 'https://github.com/rodrigogs/whats-reader/releases';
+}
+
+/**
+ * Export reactive state
+ */
+export function getAutoUpdaterState() {
+	return {
+		get updateAvailable() {
+			return updateAvailable && !isDismissed;
+		},
+		get latestVersion() {
+			return latestVersion;
+		},
+		get currentVersion() {
+			return currentVersion;
+		},
+		get downloadProgress() {
+			return downloadProgress;
+		},
+		get isDownloading() {
+			return isDownloading;
+		},
+		get isUpdateReady() {
+			return isUpdateReady;
+		},
+		get errorMessage() {
+			return errorMessage;
+		},
+		get isElectron() {
+			return isElectron;
+		},
+	};
+}

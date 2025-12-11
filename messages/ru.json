@@ -180,5 +180,15 @@
   "update_ignore_tooltip": "Игнорировать эту версию",
   "update_never_tooltip": "Никогда не показывать уведомления об обновлениях",
   "version_view_releases": "Посмотреть релизы на GitHub",
-  "close": "Закрыть"
+  "close": "Закрыть",
+  "update_ready": "Обновление готово",
+  "update_downloading": "Загрузка обновления",
+  "update_close": "Закрыть уведомление об обновлении",
+  "update_ready_message": "Обновление {version} загружено и готово к установке.",
+  "update_install_restart": "Установите и перезагрузите",
+  "update_later": "Позже",
+  "update_downloading_message": "Загрузка обновления...",
+  "update_new_version_message": "Доступна новая версия {latest} ! (текущая: {current}",
+  "update_download": "Загрузить обновление",
+  "update_view_release": "Просмотреть релиз"
 }

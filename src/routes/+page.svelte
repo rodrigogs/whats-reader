@@ -8,21 +8,19 @@ import {
 	ChatView,
 	FileDropZone,
 	SearchBar,
-	UpdateToast,
 	VersionBadge,
 } from '$lib/components';
+import AutoUpdateToast from '$lib/components/AutoUpdateToast.svelte';
 import BookmarksPanel from '$lib/components/BookmarksPanel.svelte';
 import LocaleSwitcher from '$lib/components/LocaleSwitcher.svelte';
 import * as m from '$lib/paraglide/messages';
 import { parseZipFile, readFileAsArrayBuffer } from '$lib/parser';
 import { appState, type ChatData } from '$lib/state.svelte';
-import { setTranscriptionLanguage } from '$lib/transcription.svelte';
 import {
-	dismissUpdate,
-	getReleasesPageUrl,
-	getUpdateState,
-	initUpdateChecker,
-} from '$lib/update-checker.svelte';
+	getAutoUpdaterState,
+	initAutoUpdater,
+} from '$lib/auto-updater.svelte';
+import { setTranscriptionLanguage } from '$lib/transcription.svelte';
 
 // Detect if running in Electron
 const isElectron =
@@ -53,19 +51,15 @@ function toggleDarkMode() {
 	}
 }
 
-// Update checker state
-const updateState = $derived(getUpdateState());
+// Auto-updater state
+const autoUpdaterState = $derived(getAutoUpdaterState());
 
-// Initialize update checker when the app loads
+// Initialize auto-updater when the app loads (Electron only)
 $effect(() => {
-	if (browser) {
-		initUpdateChecker(3000); // Check for updates after 3 seconds
+	if (browser && isElectron) {
+		initAutoUpdater();
 	}
 });
-
-function handleUpdateDismiss() {
-	dismissUpdate();
-}
 
 let showStats = $state(false);
 let showSidebar = $state(true);
@@ -1037,11 +1031,7 @@ const currentUser = $derived.by(() => {
 	{/if}
 </div>
 
-<!-- Update toast notification -->
-{#if updateState.updateAvailable && updateState.latestVersion}
-	<UpdateToast
-		latestVersion={updateState.latestVersion}
-		releaseUrl={getReleasesPageUrl()}
-		onClose={handleUpdateDismiss}
-	/>
+<!-- Auto-update toast notification (Electron only) -->
+{#if isElectron && autoUpdaterState.isElectron}
+	<AutoUpdateToast />
 {/if}
