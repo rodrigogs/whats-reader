@@ -74,6 +74,35 @@ Los mensajes de voz pueden ser transcritos usando [Whisper](https://openai.com/r
 
 ---
 
+## Descargar
+
+Descarga la aplicación para tu plataforma:
+
+### Windows
+- Descarga **WhatsApp-Backup-Reader-Setup-{version}.exe** de la [última versión](https://github.com/rodrigogs/whats-reader/releases/latest)
+- Ejecuta el instalador y sigue el asistente de configuración
+- La app se actualizará automáticamente cuando haya nuevas versiones
+
+### macOS
+- **Apple Silicon (M1/M2/M3)**: Descarga **WhatsApp-Backup-Reader-{version}-arm64.dmg**
+- **Intel**: Descarga **WhatsApp-Backup-Reader-{version}.dmg**
+- Abre el archivo DMG y arrastra la app a Aplicaciones
+- En el primer inicio, haz clic derecho en la app y selecciona "Abrir" para pasar Gatekeeper
+
+### Linux
+- **Debian/Ubuntu**: Descarga **whats-reader_{version}_amd64.deb** o **whats-reader_{version}_arm64.deb**
+  ```bash
+  sudo dpkg -i whats-reader_{version}_amd64.deb
+  ```
+- **Fedora/RHEL**: Descarga **whats-reader-{version}.x86_64.rpm** o **whats-reader-{version}.aarch64.rpm**
+  ```bash
+  sudo rpm -i whats-reader-{version}.x86_64.rpm
+  ```
+
+> **O usa la versión web**: Visita [rodrigogs.github.io/whats-reader](https://rodrigogs.github.io/whats-reader) - ¡sin instalación!
+
+---
+
 ## Características
 
 - **Transcripción de voz**: Transcribe audio con Whisper (se ejecuta localmente, más de 12 idiomas)

@@ -74,6 +74,35 @@ WhatsAppからエクスポートした`.zip`ファイルをドラッグ＆ドロ
 
 ---
 
+## ダウンロード
+
+お使いのプラットフォーム用アプリをダウンロード:
+
+### Windows
+- [最新リリース](https://github.com/rodrigogs/whats-reader/releases/latest)から **WhatsApp-Backup-Reader-Setup-{version}.exe** をダウンロード
+- インストーラーを実行しセットアップウィザードに従う
+- 新しいバージョンが利用可能になると自動的に更新されます
+
+### macOS
+- **Apple Silicon (M1/M2/M3)**: **WhatsApp-Backup-Reader-{version}-arm64.dmg** をダウンロード
+- **Intel**: **WhatsApp-Backup-Reader-{version}.dmg** をダウンロード
+- DMGファイルを開き、アプリをアプリケーションフォルダにドラッグ
+- 初回起動時は、アプリを右クリックして「開く」を選択しGatekeeperをバイパス
+
+### Linux
+- **Debian/Ubuntu**: **whats-reader_{version}_amd64.deb** または **whats-reader_{version}_arm64.deb** をダウンロード
+  ```bash
+  sudo dpkg -i whats-reader_{version}_amd64.deb
+  ```
+- **Fedora/RHEL**: **whats-reader-{version}.x86_64.rpm** または **whats-reader-{version}.aarch64.rpm** をダウンロード
+  ```bash
+  sudo rpm -i whats-reader-{version}.x86_64.rpm
+  ```
+
+> **またはWeb版を使用**: [rodrigogs.github.io/whats-reader](https://rodrigogs.github.io/whats-reader) にアクセス - インストール不要!
+
+---
+
 ## 主な機能
 
 - **音声文字起こし**: Whisperでオーディオを文字起こし（ローカル実行、12以上の言語対応）

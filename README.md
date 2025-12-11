@@ -74,6 +74,35 @@ Voice messages can be transcribed using [Whisper](https://openai.com/research/wh
 
 ---
 
+## Download
+
+Get the desktop app for your platform:
+
+### Windows
+- Download **WhatsApp-Backup-Reader-Setup-{version}.exe** from [latest release](https://github.com/rodrigogs/whats-reader/releases/latest)
+- Run the installer and follow the setup wizard
+- The app will auto-update when new versions are available
+
+### macOS
+- **Apple Silicon (M1/M2/M3)**: Download **WhatsApp-Backup-Reader-{version}-arm64.dmg**
+- **Intel**: Download **WhatsApp-Backup-Reader-{version}.dmg**
+- Open the DMG file and drag the app to Applications
+- On first launch, right-click the app and select "Open" to bypass Gatekeeper
+
+### Linux
+- **Debian/Ubuntu**: Download **whats-reader_{version}_amd64.deb** or **whats-reader_{version}_arm64.deb**
+  ```bash
+  sudo dpkg -i whats-reader_{version}_amd64.deb
+  ```
+- **Fedora/RHEL**: Download **whats-reader-{version}.x86_64.rpm** or **whats-reader-{version}.aarch64.rpm**
+  ```bash
+  sudo rpm -i whats-reader-{version}.x86_64.rpm
+  ```
+
+> **Or use the web version**: Visit [rodrigogs.github.io/whats-reader](https://rodrigogs.github.io/whats-reader) - no installation needed!
+
+---
+
 ## Features
 
 - **Auto-update**: Desktop app automatically checks and installs updates (Electron only)

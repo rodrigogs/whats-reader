@@ -1,3 +1,15 @@
+## [1.15.8](https://github.com/rodrigogs/whats-reader/compare/v1.15.7...v1.15.8) (2025-12-11)
+
+
+### Bug Fixes
+
+* regenerate package-lock.json after removing postinstall script ([d69043d](https://github.com/rodrigogs/whats-reader/commit/d69043d6d9e142b297b479d9f721db0407244bdb))
+
+
+### Performance Improvements
+
+* use afterPack hook to remove onnxruntime-node (saves 141MB) ([0c91df3](https://github.com/rodrigogs/whats-reader/commit/0c91df3c8f5cd553e8884ebd9214bee918444b35))
+
 ## [1.15.7](https://github.com/rodrigogs/whats-reader/compare/v1.15.6...v1.15.7) (2025-12-11)
 
 

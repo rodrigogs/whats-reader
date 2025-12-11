@@ -74,6 +74,35 @@
 
 ---
 
+## 下载
+
+为您的平台下载应用:
+
+### Windows
+- 从[最新版本](https://github.com/rodrigogs/whats-reader/releases/latest)下载 **WhatsApp-Backup-Reader-Setup-{version}.exe**
+- 运行安装程序并按照设置向导操作
+- 应用程序将在有新版本时自动更新
+
+### macOS
+- **Apple Silicon (M1/M2/M3)**: 下载 **WhatsApp-Backup-Reader-{version}-arm64.dmg**
+- **Intel**: 下载 **WhatsApp-Backup-Reader-{version}.dmg**
+- 打开DMG文件并将应用拖到应用程序文件夹
+- 首次启动时,右键点击应用并选择"打开"以绕过Gatekeeper
+
+### Linux
+- **Debian/Ubuntu**: 下载 **whats-reader_{version}_amd64.deb** 或 **whats-reader_{version}_arm64.deb**
+  ```bash
+  sudo dpkg -i whats-reader_{version}_amd64.deb
+  ```
+- **Fedora/RHEL**: 下载 **whats-reader-{version}.x86_64.rpm** 或 **whats-reader-{version}.aarch64.rpm**
+  ```bash
+  sudo rpm -i whats-reader-{version}.x86_64.rpm
+  ```
+
+> **或使用Web版本**: 访问 [rodrigogs.github.io/whats-reader](https://rodrigogs.github.io/whats-reader) - 无需安装!
+
+---
+
 ## 主要特性
 
 - **语音转录**：使用 Whisper 转录音频（本地运行，支持 12 种以上语言）

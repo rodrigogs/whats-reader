@@ -74,6 +74,35 @@ Spraakberichten kunnen worden getranscribeerd met [Whisper](https://openai.com/r
 
 ---
 
+## Download
+
+Download de app voor jouw platform:
+
+### Windows
+- Download **WhatsApp-Backup-Reader-Setup-{version}.exe** van de [nieuwste versie](https://github.com/rodrigogs/whats-reader/releases/latest)
+- Voer het installatieprogramma uit en volg de installatiewizard
+- De app wordt automatisch bijgewerkt wanneer nieuwe versies beschikbaar zijn
+
+### macOS
+- **Apple Silicon (M1/M2/M3)**: Download **WhatsApp-Backup-Reader-{version}-arm64.dmg**
+- **Intel**: Download **WhatsApp-Backup-Reader-{version}.dmg**
+- Open het DMG-bestand en sleep de app naar Programma's
+- Bij de eerste start, klik met de rechtermuisknop op de app en selecteer "Open" om Gatekeeper te omzeilen
+
+### Linux
+- **Debian/Ubuntu**: Download **whats-reader_{version}_amd64.deb** of **whats-reader_{version}_arm64.deb**
+  ```bash
+  sudo dpkg -i whats-reader_{version}_amd64.deb
+  ```
+- **Fedora/RHEL**: Download **whats-reader-{version}.x86_64.rpm** of **whats-reader-{version}.aarch64.rpm**
+  ```bash
+  sudo rpm -i whats-reader-{version}.x86_64.rpm
+  ```
+
+> **Of gebruik de webversie**: Bezoek [rodrigogs.github.io/whats-reader](https://rodrigogs.github.io/whats-reader) - geen installatie vereist!
+
+---
+
 ## Functies
 
 - **Spraaktranscriptie**: Transcribeer audio met Whisper (draait lokaal, meer dan 12 talen)
