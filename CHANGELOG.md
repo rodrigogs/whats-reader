@@ -1,3 +1,10 @@
+## [1.15.5](https://github.com/rodrigogs/whats-reader/compare/v1.15.4...v1.15.5) (2025-12-11)
+
+
+### Bug Fixes
+
+* final verification of asset consistency ([7d1e0d0](https://github.com/rodrigogs/whats-reader/commit/7d1e0d09299651603e51009845d446db41c86966))
+
 ## [1.15.4](https://github.com/rodrigogs/whats-reader/compare/v1.15.3...v1.15.4) (2025-12-11)
 
 
