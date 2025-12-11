@@ -132,6 +132,8 @@ jobs:
             dist-electron/*.AppImage
             dist-electron/*.deb
             dist-electron/*.rpm
+            dist-electron/*.yml
+            dist-electron/*.blockmap
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

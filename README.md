@@ -76,6 +76,7 @@ Voice messages can be transcribed using [Whisper](https://openai.com/research/wh
 
 ## Features
 
+- **Auto-update**: Desktop app automatically checks and installs updates (Electron only)
 - **Voice transcription**: Transcribe audio with Whisper (runs locally, 12+ languages)
 - **Search**: Full-text search across messages and transcriptions
 - **Bookmarks**: Save messages with notes, export/import as JSON
