@@ -1,3 +1,10 @@
+## [1.15.3](https://github.com/rodrigogs/whats-reader/compare/v1.15.2...v1.15.3) (2025-12-11)
+
+
+### Bug Fixes
+
+* skip CUDA binaries for onnxruntime to prevent CDN timeouts ([7e94061](https://github.com/rodrigogs/whats-reader/commit/7e94061d39474c3482614c22d9209080f5d1fca8))
+
 ## [1.15.2](https://github.com/rodrigogs/whats-reader/compare/v1.15.1...v1.15.2) (2025-12-11)
 
 
