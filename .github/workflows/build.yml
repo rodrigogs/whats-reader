@@ -106,14 +106,20 @@ jobs:
       - name: Build Electron (macOS)
         if: matrix.platform == 'mac'
         run: npm run electron:build:mac -- --x64 --arm64
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Electron (Windows)
         if: matrix.platform == 'win'
         run: npm run electron:build:win -- --x64 --arm64
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Electron (Linux)
         if: matrix.platform == 'linux'
         run: npm run electron:build:linux -- --x64 --arm64
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
