@@ -1,3 +1,10 @@
+# [1.16.0](https://github.com/rodrigogs/whats-reader/compare/v1.15.9...v1.16.0) (2025-12-11)
+
+
+### Features
+
+* improve update dialog with ignore version and never ask options ([068e65e](https://github.com/rodrigogs/whats-reader/commit/068e65e56dbed0f45a9fa590dd3f9d6db29a9fb6))
+
 ## [1.15.9](https://github.com/rodrigogs/whats-reader/compare/v1.15.8...v1.15.9) (2025-12-11)
 
 
