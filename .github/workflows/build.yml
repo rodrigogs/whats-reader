@@ -149,3 +149,45 @@ jobs:
             dist-electron/*.deb
             dist-electron/*.rpm
           retention-days: 7
+
+  publish-release:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Get version from input
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+          else
+            VERSION="v${{ inputs.version }}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Publish Draft Release
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: releases } = await github.rest.repos.listReleases({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            
+            const draftRelease = releases.find(r => r.tag_name === '${{ steps.version.outputs.version }}' && r.draft);
+            
+            if (draftRelease) {
+              await github.rest.repos.updateRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: draftRelease.id,
+                draft: false
+              });
+              console.log(`Published release ${draftRelease.tag_name}`);
+            } else {
+              console.log('No draft release found for ${{ steps.version.outputs.version }}');
+            }
