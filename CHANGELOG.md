@@ -1,3 +1,10 @@
+## [1.12.1](https://github.com/rodrigogs/whats-reader/compare/v1.12.0...v1.12.1) (2025-12-11)
+
+
+### Bug Fixes
+
+* remove invalid compressionLevel from NSIS config ([8688228](https://github.com/rodrigogs/whats-reader/commit/868822891d5ed45d125d991f4cfd3ca36a47093e))
+
 # [1.12.0](https://github.com/rodrigogs/whats-reader/compare/v1.11.1...v1.12.0) (2025-12-11)
 
 
