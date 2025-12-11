@@ -1,3 +1,10 @@
+## [1.15.6](https://github.com/rodrigogs/whats-reader/compare/v1.15.5...v1.15.6) (2025-12-11)
+
+
+### Bug Fixes
+
+* include dependencies in electron build to resolve module not found errors ([b8335a2](https://github.com/rodrigogs/whats-reader/commit/b8335a2d77d42d97caa61b29bb51d19c7d1e95fc))
+
 ## [1.15.5](https://github.com/rodrigogs/whats-reader/compare/v1.15.4...v1.15.5) (2025-12-11)
 
 
