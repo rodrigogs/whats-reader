@@ -162,8 +162,8 @@
 		"nsis": {
 			"oneClick": false,
 			"allowToChangeInstallationDirectory": true,
-			"compressionLevel": 9,
 			"differentialPackage": true
-		}
+		},
+		"generateUpdatesFilesForAllChannels": true
 	}
 }
