@@ -1,3 +1,15 @@
+# [1.13.0](https://github.com/rodrigogs/whats-reader/compare/v1.12.3...v1.13.0) (2025-12-11)
+
+
+### Bug Fixes
+
+* add GH_TOKEN env var to electron-builder steps ([11e73a1](https://github.com/rodrigogs/whats-reader/commit/11e73a16f2b5411f04b86ab1290d203fe7c531c2))
+
+
+### Features
+
+* create releases as drafts, publish only after all assets are uploaded ([6eaa902](https://github.com/rodrigogs/whats-reader/commit/6eaa902e9f6c106affacc539b53214a5ccbcf1d4))
+
 ## [1.12.3](https://github.com/rodrigogs/whats-reader/compare/v1.12.2...v1.12.3) (2025-12-11)
 
 
