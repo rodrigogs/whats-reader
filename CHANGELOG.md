@@ -1,3 +1,89 @@
+## [1.15.7](https://github.com/rodrigogs/whats-reader/compare/v1.15.6...v1.15.7) (2025-12-11)
+
+
+### Performance Improvements
+
+* optimize electron build size by removing onnxruntime-node (saves 210MB) ([3e75ddd](https://github.com/rodrigogs/whats-reader/commit/3e75ddd6d533b66143b563935f926c182823d046))
+
+## [1.15.6](https://github.com/rodrigogs/whats-reader/compare/v1.15.5...v1.15.6) (2025-12-11)
+
+
+### Bug Fixes
+
+* include dependencies in electron build to resolve module not found errors ([b8335a2](https://github.com/rodrigogs/whats-reader/commit/b8335a2d77d42d97caa61b29bb51d19c7d1e95fc))
+
+## [1.15.5](https://github.com/rodrigogs/whats-reader/compare/v1.15.4...v1.15.5) (2025-12-11)
+
+
+### Bug Fixes
+
+* final verification of asset consistency ([7d1e0d0](https://github.com/rodrigogs/whats-reader/commit/7d1e0d09299651603e51009845d446db41c86966))
+
+## [1.15.4](https://github.com/rodrigogs/whats-reader/compare/v1.15.3...v1.15.4) (2025-12-11)
+
+
+### Bug Fixes
+
+* test build with CUDA skip configuration ([f24cd55](https://github.com/rodrigogs/whats-reader/commit/f24cd5543f362fb88b21a03f806cdda0c70d8020))
+
+## [1.15.3](https://github.com/rodrigogs/whats-reader/compare/v1.15.2...v1.15.3) (2025-12-11)
+
+
+### Bug Fixes
+
+* skip CUDA binaries for onnxruntime to prevent CDN timeouts ([7e94061](https://github.com/rodrigogs/whats-reader/commit/7e94061d39474c3482614c22d9209080f5d1fca8))
+
+## [1.15.2](https://github.com/rodrigogs/whats-reader/compare/v1.15.1...v1.15.2) (2025-12-11)
+
+
+### Bug Fixes
+
+* retry build to verify asset consistency ([fd916da](https://github.com/rodrigogs/whats-reader/commit/fd916dae89a467c61db199150912e86d27a24629))
+
+## [1.15.1](https://github.com/rodrigogs/whats-reader/compare/v1.15.0...v1.15.1) (2025-12-11)
+
+
+### Bug Fixes
+
+* verify asset generation consistency ([2468e16](https://github.com/rodrigogs/whats-reader/commit/2468e16a8d2311a534a740e3d6dc678b2e7d88a9))
+
+# [1.15.0](https://github.com/rodrigogs/whats-reader/compare/v1.14.1...v1.15.0) (2025-12-11)
+
+
+### Features
+
+* verify consistent asset generation across releases ([1d4b549](https://github.com/rodrigogs/whats-reader/commit/1d4b549516da6bf7cbb280d1d4b56da61b7838dc))
+
+## [1.14.1](https://github.com/rodrigogs/whats-reader/compare/v1.14.0...v1.14.1) (2025-12-11)
+
+
+### Bug Fixes
+
+* prevent premature release publishing by keeping draft status ([9c94b7f](https://github.com/rodrigogs/whats-reader/commit/9c94b7fa51c2a32c49647d34266f9b0a0dd0d82e))
+
+# [1.14.0](https://github.com/rodrigogs/whats-reader/compare/v1.13.4...v1.14.0) (2025-12-11)
+
+
+### Features
+
+* validate and test complete draft-first release workflow ([c2a4397](https://github.com/rodrigogs/whats-reader/commit/c2a4397d469a7edda0c6e9375a0aa60f6fb103f5))
+
+## [1.13.4](https://github.com/rodrigogs/whats-reader/compare/v1.13.3...v1.13.4) (2025-12-11)
+
+
+### Bug Fixes
+
+* remove AppImage target due to unreliable CDN downloads ([6c41ee9](https://github.com/rodrigogs/whats-reader/commit/6c41ee9fcb67aaad5c7a4f3eb46c6a408ce3098e))
+
+## [1.13.3](https://github.com/rodrigogs/whats-reader/compare/v1.13.2...v1.13.3) (2025-12-11)
+
+
+### Bug Fixes
+
+* add retry logic with npm ci for reliable dependency installation ([c394cb1](https://github.com/rodrigogs/whats-reader/commit/c394cb16452a4a3e0ec2eb2ed9abd46d6f15db47))
+
+## [1.13.2](https://github.com/rodrigogs/whats-reader/compare/v1.13.1...v1.13.2) (2025-12-11)
+
 ## [1.13.1](https://github.com/rodrigogs/whats-reader/compare/v1.13.0...v1.13.1) (2025-12-11)
 
 

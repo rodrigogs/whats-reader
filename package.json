@@ -1,7 +1,7 @@
 {
 	"name": "whats-reader",
 	"productName": "WhatsApp Backup Reader",
-	"version": "1.13.1",
+	"version": "1.15.7",
 	"description": "A desktop app to read and visualize WhatsApp chat exports",
 	"license": "AGPL-3.0",
 	"author": {
@@ -72,6 +72,7 @@
 	"build": {
 		"appId": "com.whatsapp.backup-reader",
 		"productName": "WhatsApp Backup Reader",
+		"afterPack": "./scripts/afterPack.cjs",
 		"publish": {
 			"provider": "github",
 			"owner": "rodrigogs",
@@ -83,10 +84,23 @@
 		"files": [
 			"build/**/*",
 			"electron/**/*",
-			"!node_modules/**/*"
+			"!**/*.map",
+			"!**/*.md",
+			"!**/LICENSE",
+			"!**/README",
+			"!**/.github",
+			"!**/test",
+			"!**/tests",
+			"!**/__tests__",
+			"!**/docs",
+			"!**/examples"
+		],
+		"asarUnpack": [
+			"**/*.{node,dll}"
 		],
 		"asar": true,
 		"compression": "maximum",
+		"removePackageScripts": true,
 		"electronLanguages": [
 			"en",
 			"en-US",
@@ -136,13 +150,6 @@
 			"icon": "static/icon.png",
 			"target": [
 				{
-					"target": "AppImage",
-					"arch": [
-						"x64",
-						"arm64"
-					]
-				},
-				{
 					"target": "deb",
 					"arch": [
 						"x64",
@@ -164,6 +171,8 @@
 			"allowToChangeInstallationDirectory": true,
 			"differentialPackage": true
 		},
-		"generateUpdatesFilesForAllChannels": true
+		"generateUpdatesFilesForAllChannels": true,
+		"npmRebuild": false,
+		"buildDependenciesFromSource": false
 	}
 }

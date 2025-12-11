@@ -131,11 +131,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
+          draft: true  # Keep as draft, publish-release job will make public
           files: |
             dist-electron/*.dmg
             dist-electron/*.zip
             dist-electron/*.exe
-            dist-electron/*.AppImage
             dist-electron/*.deb
             dist-electron/*.rpm
             dist-electron/*.yml
@@ -151,7 +151,6 @@ jobs:
             dist-electron/*.dmg
             dist-electron/*.zip
             dist-electron/*.exe
-            dist-electron/*.AppImage
             dist-electron/*.deb
             dist-electron/*.rpm
           retention-days: 7
