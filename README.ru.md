@@ -74,6 +74,35 @@
 
 ---
 
+## Скачать
+
+Загрузите приложение для вашей платформы:
+
+### Windows
+- Скачайте **WhatsApp-Backup-Reader-Setup-{version}.exe** из [последнего релиза](https://github.com/rodrigogs/whats-reader/releases/latest)
+- Запустите установщик и следуйте мастеру установки
+- Приложение будет автоматически обновляться при выходе новых версий
+
+### macOS
+- **Apple Silicon (M1/M2/M3)**: Скачайте **WhatsApp-Backup-Reader-{version}-arm64.dmg**
+- **Intel**: Скачайте **WhatsApp-Backup-Reader-{version}.dmg**
+- Откройте DMG-файл и перетащите приложение в Программы
+- При первом запуске щелкните правой кнопкой мыши по приложению и выберите "Открыть", чтобы обойти Gatekeeper
+
+### Linux
+- **Debian/Ubuntu**: Скачайте **whats-reader_{version}_amd64.deb** или **whats-reader_{version}_arm64.deb**
+  ```bash
+  sudo dpkg -i whats-reader_{version}_amd64.deb
+  ```
+- **Fedora/RHEL**: Скачайте **whats-reader-{version}.x86_64.rpm** или **whats-reader-{version}.aarch64.rpm**
+  ```bash
+  sudo rpm -i whats-reader-{version}.x86_64.rpm
+  ```
+
+> **Или используйте веб-версию**: Посетите [rodrigogs.github.io/whats-reader](https://rodrigogs.github.io/whats-reader) - установка не требуется!
+
+---
+
 ## Основные возможности
 
 - **Транскрипция голоса**: Транскрибируйте аудио с помощью Whisper (работает локально, более 12 языков)
