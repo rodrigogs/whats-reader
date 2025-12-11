@@ -27,7 +27,13 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          for i in 1 2 3; do
+            npm install && break || {
+              echo "Attempt $i failed, waiting 10 seconds...";
+              sleep 10;
+            }
+          done
 
       - name: Run Semantic Release
         id: semantic
