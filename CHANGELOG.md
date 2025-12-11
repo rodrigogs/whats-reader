@@ -1,3 +1,10 @@
+## [1.13.4](https://github.com/rodrigogs/whats-reader/compare/v1.13.3...v1.13.4) (2025-12-11)
+
+
+### Bug Fixes
+
+* remove AppImage target due to unreliable CDN downloads ([6c41ee9](https://github.com/rodrigogs/whats-reader/commit/6c41ee9fcb67aaad5c7a4f3eb46c6a408ce3098e))
+
 ## [1.13.3](https://github.com/rodrigogs/whats-reader/compare/v1.13.2...v1.13.3) (2025-12-11)
 
 
