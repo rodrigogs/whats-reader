@@ -1,3 +1,10 @@
+## [1.16.1](https://github.com/rodrigogs/whats-reader/compare/v1.16.0...v1.16.1) (2025-12-11)
+
+
+### Bug Fixes
+
+* apply biome lint fixes for template literals ([cc7740a](https://github.com/rodrigogs/whats-reader/commit/cc7740a35fea4c3fe7db7f23224a4611a9e3da54))
+
 # [1.16.0](https://github.com/rodrigogs/whats-reader/compare/v1.15.9...v1.16.0) (2025-12-11)
 
 
