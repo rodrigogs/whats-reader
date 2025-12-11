@@ -1,3 +1,10 @@
+## [1.11.1](https://github.com/rodrigogs/whats-reader/compare/v1.11.0...v1.11.1) (2025-12-11)
+
+
+### Bug Fixes
+
+* add actions write permission to release workflow for build triggering ([90c3348](https://github.com/rodrigogs/whats-reader/commit/90c3348755313d2a3993ea11a1d4b499b547e61e))
+
 # [1.11.0](https://github.com/rodrigogs/whats-reader/compare/v1.10.0...v1.11.0) (2025-12-11)
 
 
