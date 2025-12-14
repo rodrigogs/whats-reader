@@ -1,3 +1,10 @@
+## [1.16.2](https://github.com/rodrigogs/whats-reader/compare/v1.16.1...v1.16.2) (2025-12-14)
+
+
+### Bug Fixes
+
+* add retry logic with npm ci for reliable dependency installation ([0ddb07e](https://github.com/rodrigogs/whats-reader/commit/0ddb07e47a983bcfd20b291c33eb5fae505f5e46))
+
 ## [1.16.1](https://github.com/rodrigogs/whats-reader/compare/v1.16.0...v1.16.1) (2025-12-11)
 
 
