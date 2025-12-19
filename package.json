@@ -47,6 +47,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.8",
+		"@electron/notarize": "^3.1.1",
 		"@inlang/cli": "^3.0.12",
 		"@inlang/paraglide-js": "2.6.0",
 		"@inlang/plugin-m-function-matcher": "^2.1.0",
@@ -73,6 +74,7 @@
 		"appId": "com.whatsapp.backup-reader",
 		"productName": "WhatsApp Backup Reader",
 		"afterPack": "./scripts/afterPack.cjs",
+		"afterSign": "./scripts/notarize.cjs",
 		"publish": {
 			"provider": "github",
 			"owner": "rodrigogs",
@@ -109,6 +111,10 @@
 		],
 		"mac": {
 			"category": "public.app-category.utilities",
+			"hardenedRuntime": true,
+			"gatekeeperAssess": false,
+			"entitlements": "electron/entitlements.mac.plist",
+			"entitlementsInherit": "electron/entitlements.mac.inherit.plist",
 			"icon": "static/icon.icns",
 			"target": [
 				{

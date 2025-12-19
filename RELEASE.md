@@ -514,6 +514,56 @@ The workflows use `GITHUB_TOKEN` automatically provided by GitHub Actions:
 
 No manual token configuration needed.
 
+---
+
+## 🔏 Code Signing & Notarization (Recommended)
+
+Unsigned desktop binaries are frequently flagged as “unknown publisher” / “possible malware”, especially on first downloads. The long-term fix is:
+
+- **macOS**: sign with a **Developer ID Application** certificate + **notarize** with Apple.
+- **Windows**: sign with an Authenticode code-signing certificate (EV recommended for faster SmartScreen reputation).
+
+This repo is wired so signing/notarization is **automatic when secrets are present**, and a **no-op** otherwise.
+
+### macOS (sign + notarize)
+
+Requirements:
+- Apple Developer Program membership
+- A `Developer ID Application` certificate exported as a `.p12`
+
+Configure GitHub Actions secrets:
+- `CSC_LINK`: base64-encoded `.p12` contents (or a URL supported by electron-builder)
+- `CSC_KEY_PASSWORD`: the `.p12` password
+
+For notarization, choose one flow:
+
+**Option A: Apple ID (simpler to start)**
+- `APPLE_ID`
+- `APPLE_APP_SPECIFIC_PASSWORD`
+- `APPLE_TEAM_ID`
+
+**Option B: App Store Connect API key (recommended for CI)**
+- `APPLE_API_KEY` (the `.p8` key contents)
+- `APPLE_API_KEY_ID`
+- `APPLE_API_ISSUER`
+
+Notes:
+- The hook is implemented in `scripts/notarize.cjs` and runs as an electron-builder `afterSign` step.
+- If notarization credentials are missing, builds still succeed but the resulting app may trigger Gatekeeper warnings.
+
+### Windows (sign)
+
+Requirements:
+- A Windows code signing certificate (`.p12`/`.pfx`) from a CA.
+
+Configure GitHub Actions secrets:
+- Preferred: `WIN_CSC_LINK`, `WIN_CSC_KEY_PASSWORD`
+- Or reuse: `CSC_LINK`, `CSC_KEY_PASSWORD`
+
+Reality check (SmartScreen):
+- Even properly signed builds can still show warnings until your signer certificate gains reputation.
+- An **EV** certificate generally ramps reputation much faster than a standard certificate.
+
 ### Workflow Permissions
 
 All conditional jobs inherit permissions from the workflow:
