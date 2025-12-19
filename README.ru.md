@@ -98,6 +98,11 @@
   ```bash
   sudo rpm -i whats-reader-{version}.x86_64.rpm
   ```
+- **Другие дистрибутивы (Arch и т.д.)**: Скачайте **WhatsApp-Backup-Reader-{version}.AppImage**
+  ```bash
+  chmod +x WhatsApp-Backup-Reader-{version}.AppImage
+  ./WhatsApp-Backup-Reader-{version}.AppImage
+  ```
 
 > **Или используйте веб-версию**: Посетите [rodrigogs.github.io/whats-reader](https://rodrigogs.github.io/whats-reader) - установка не требуется!
 
@@ -154,7 +159,7 @@ npm run electron:build  # создать установщик для вашей 
 ```bash
 npm run electron:build:mac    # macOS (dmg, zip)
 npm run electron:build:win    # Windows (nsis, portable)
-npm run electron:build:linux  # Linux (AppImage, deb)
+npm run electron:build:linux  # Linux (deb, rpm, AppImage)
 ```
 
 ---
