@@ -51,10 +51,10 @@ dev → main → Semantic Release (draft) → Parallel Builds → Publish OR Cle
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │ Matrix Build Jobs (parallel, ~15 min)               │    │
 │  │  ┌────────────┐ ┌────────────┐ ┌────────────┐      │    │
-│  │  │ macOS      │ │ Windows    │ │ Linux      │      │    │
-│  │  │ - x64      │ │ - x64      │ │ - x64      │      │    │
-│  │  │ - arm64    │ │ - arm64    │ │ - arm64    │      │    │
-│  │  │ → DMG, ZIP │ │ → EXE, ZIP │ │ → DEB, RPM │      │    │
+│  │  │ macOS      │ │ Windows    │ │ Linux            │      │    │
+│  │  │ - x64      │ │ - x64      │ │ - x64            │      │    │
+│  │  │ - arm64    │ │ - arm64    │ │ - arm64          │      │    │
+│  │  │ → DMG, ZIP │ │ → EXE, ZIP │ │ → DEB, RPM, AppImage │  │    │
 │  │  └─────┬──────┘ └─────┬──────┘ └─────┬──────┘      │    │
 │  └────────┼──────────────┼──────────────┼─────────────┘    │
 │           │              │              │                   │
@@ -159,10 +159,10 @@ dev → main → Semantic Release (draft) → Parallel Builds → Publish OR Cle
 |----------|--------------|---------|-------|
 | macOS | x64, arm64 | `.dmg`, `.zip` | 4 files |
 | Windows | x64, arm64 | `.exe` (NSIS installer), portable `.zip` | 4 files |
-| Linux | x64, arm64 | `.deb`, `.rpm` | 4 files |
+| Linux | x64, arm64 | `.deb`, `.rpm`, `.AppImage` | 6 files |
 | Auto-updater | all | `.yml`, `.blockmap` | 5 files |
 
-**Total**: ~17 files per release
+**Total**: ~19 files per release
 
 **Upload targets**:
 - ✅ GitHub Release (attached to draft)
@@ -484,10 +484,10 @@ After automated release (verify):
 - [ ] GitHub release created (check: `gh release list`)
 - [ ] Release is **NOT** a draft (cleanup job would have run if builds failed)
 - [ ] CHANGELOG.md updated in repository
-- [ ] All platform binaries present (~17 files):
+- [ ] All platform binaries present (~19 files):
   - [ ] 4 macOS files (DMG, ZIP for x64 and arm64)
   - [ ] 4 Windows files (EXE, portable ZIP for x64 and arm64)  
-  - [ ] 4 Linux files (DEB, RPM for x64 and arm64)
+  - [ ] 6 Linux files (DEB, RPM, AppImage for x64 and arm64)
   - [ ] 5 Auto-updater files (YML, blockmap)
 - [ ] GitHub Pages deployed successfully
 - [ ] Test download and installation on at least one platform
@@ -575,14 +575,12 @@ Electron Builder settings in `package.json`:
     "linux": {
       "icon": "static/icon.png",
       "category": "Utility",
-      "target": ["deb", "rpm"],
+      "target": ["deb", "rpm", "AppImage"],
       "arch": ["x64", "arm64"]
     }
   }
 }
 ```
-
-**Important**: AppImage removed due to unreliable CDN downloads. DEB and RPM cover the vast majority of Linux users.
 
 ---
 

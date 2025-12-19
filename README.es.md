@@ -98,6 +98,11 @@ Descarga la aplicación para tu plataforma:
   ```bash
   sudo rpm -i whats-reader-{version}.x86_64.rpm
   ```
+- **Otras distros (Arch, etc.)**: Descarga **WhatsApp-Backup-Reader-{version}.AppImage**
+  ```bash
+  chmod +x WhatsApp-Backup-Reader-{version}.AppImage
+  ./WhatsApp-Backup-Reader-{version}.AppImage
+  ```
 
 > **O usa la versión web**: Visita [rodrigogs.github.io/whats-reader](https://rodrigogs.github.io/whats-reader) - ¡sin instalación!
 
@@ -154,7 +159,7 @@ Compilaciones específicas por plataforma:
 ```bash
 npm run electron:build:mac    # macOS (dmg, zip)
 npm run electron:build:win    # Windows (nsis, portable)
-npm run electron:build:linux  # Linux (AppImage, deb)
+npm run electron:build:linux  # Linux (deb, rpm, AppImage)
 ```
 
 ---
