@@ -138,6 +138,7 @@ jobs:
             dist-electron/*.exe
             dist-electron/*.deb
             dist-electron/*.rpm
+            dist-electron/*.AppImage
             dist-electron/*.yml
             dist-electron/*.blockmap
         env:
@@ -153,6 +154,7 @@ jobs:
             dist-electron/*.exe
             dist-electron/*.deb
             dist-electron/*.rpm
+            dist-electron/*.AppImage
           retention-days: 7
 
   publish-release:
