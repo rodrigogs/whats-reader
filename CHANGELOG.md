@@ -1,3 +1,10 @@
+# [1.17.0](https://github.com/rodrigogs/whats-reader/compare/v1.16.2...v1.17.0) (2025-12-19)
+
+
+### Features
+
+* add AppImage build for Linux ([c2a9b49](https://github.com/rodrigogs/whats-reader/commit/c2a9b495e832add275ddcb166bbbd1806c082638))
+
 ## [1.16.2](https://github.com/rodrigogs/whats-reader/compare/v1.16.1...v1.16.2) (2025-12-14)
 
 
