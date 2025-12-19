@@ -98,6 +98,11 @@
   ```bash
   sudo rpm -i whats-reader-{version}.x86_64.rpm
   ```
+- **其他发行版 (Arch等)**: 下载 **WhatsApp-Backup-Reader-{version}.AppImage**
+  ```bash
+  chmod +x WhatsApp-Backup-Reader-{version}.AppImage
+  ./WhatsApp-Backup-Reader-{version}.AppImage
+  ```
 
 > **或使用Web版本**: 访问 [rodrigogs.github.io/whats-reader](https://rodrigogs.github.io/whats-reader) - 无需安装!
 
@@ -154,7 +159,7 @@ npm run electron:build  # 为您的操作系统创建安装程序
 ```bash
 npm run electron:build:mac    # macOS (dmg, zip)
 npm run electron:build:win    # Windows (nsis, portable)
-npm run electron:build:linux  # Linux (AppImage, deb)
+npm run electron:build:linux  # Linux (deb, rpm, AppImage)
 ```
 
 ---

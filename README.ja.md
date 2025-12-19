@@ -98,6 +98,11 @@ WhatsAppからエクスポートした`.zip`ファイルをドラッグ＆ドロ
   ```bash
   sudo rpm -i whats-reader-{version}.x86_64.rpm
   ```
+- **その他のディストリビューション (Arch等)**: **WhatsApp-Backup-Reader-{version}.AppImage** をダウンロード
+  ```bash
+  chmod +x WhatsApp-Backup-Reader-{version}.AppImage
+  ./WhatsApp-Backup-Reader-{version}.AppImage
+  ```
 
 > **またはWeb版を使用**: [rodrigogs.github.io/whats-reader](https://rodrigogs.github.io/whats-reader) にアクセス - インストール不要!
 
@@ -154,7 +159,7 @@ npm run electron:build  # OSのインストーラーを作成
 ```bash
 npm run electron:build:mac    # macOS (dmg, zip)
 npm run electron:build:win    # Windows (nsis, portable)
-npm run electron:build:linux  # Linux (AppImage, deb)
+npm run electron:build:linux  # Linux (deb, rpm, AppImage)
 ```
 
 ---
