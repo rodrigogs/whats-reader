@@ -37,7 +37,7 @@ interface IndexWorkerInput {
  */
 interface DateItem {
 	type: 'date';
-	date: string;
+	dateKey: string; // YYYY-MM-DD
 }
 
 interface MessageItem {
@@ -63,11 +63,7 @@ self.onmessage = (event: MessageEvent<IndexWorkerInput>) => {
 
 	for (const message of messages) {
 		const timestamp = new Date(message.timestamp);
-		const dateKey = timestamp.toLocaleDateString('en-US', {
-			year: 'numeric',
-			month: 'long',
-			day: 'numeric',
-		});
+		const dateKey = timestamp.toISOString().slice(0, 10);
 
 		const existing = groups.get(dateKey) || [];
 		existing.push(message);
@@ -79,8 +75,8 @@ self.onmessage = (event: MessageEvent<IndexWorkerInput>) => {
 	const flatItems: FlatItem[] = [];
 	let flatIndex = 0;
 
-	for (const [date, dayMessages] of groups.entries()) {
-		flatItems.push({ type: 'date', date });
+	for (const [dateKey, dayMessages] of groups.entries()) {
+		flatItems.push({ type: 'date', dateKey });
 		flatIndex++;
 
 		for (const message of dayMessages) {

@@ -2,6 +2,7 @@
 import { untrack } from 'svelte';
 import { type Bookmark, bookmarksState } from '$lib/bookmarks.svelte';
 import * as m from '$lib/paraglide/messages';
+import { getLocale } from '$lib/paraglide/runtime';
 
 // Data needed to create a new bookmark
 interface NewBookmarkData {
@@ -85,7 +86,7 @@ function formatDate(dateOrIsoString: Date | string): string {
 		typeof dateOrIsoString === 'string'
 			? new Date(dateOrIsoString)
 			: dateOrIsoString;
-	return date.toLocaleDateString(undefined, {
+	return date.toLocaleDateString(getLocale(), {
 		day: 'numeric',
 		month: 'short',
 		year: 'numeric',

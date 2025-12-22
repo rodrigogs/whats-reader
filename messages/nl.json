@@ -208,5 +208,14 @@
   "media_gallery_download_failed": "Download mislukt",
   "media_gallery_go_to_date": "Ga naar de datum",
   "media_gallery_no_media_on_date": "Geen media op deze datum",
-  "media_gallery_date_has_media": "{count} items"
+  "media_gallery_date_has_media": "{count} items",
+  "calendar_previous_month": "Vorige maand",
+  "calendar_next_month": "Volgende maand",
+  "calendar_weekday_sun": "Zo",
+  "calendar_weekday_mon": "Ma",
+  "calendar_weekday_tue": "Di",
+  "calendar_weekday_wed": "Wo",
+  "calendar_weekday_thu": "Do",
+  "calendar_weekday_fri": "Vr",
+  "calendar_weekday_sat": "Za"
 }

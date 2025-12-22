@@ -66,9 +66,13 @@ Sprachnachrichten können mit [Whisper](https://openai.com/research/whisper) tra
 |:---:|:---:|
 | <img src="examples/images/5-bookmarks.png" width="400" /> | <img src="examples/images/6-statistics.png" width="400" /> |
 
-| Sprachtranskription |
-|:---:|
-| <img src="examples/images/7-audio-transcription.png" width="400" /> |
+| Sprachtranskription | Mediengalerie |
+|:---:|:---:|
+| <img src="examples/images/7-audio-transcription.png" width="400" /> | <img src="examples/images/8-media-gallery.png" width="400" /> |
+
+| Auswahl herunterladen | Zum Datum gehen |
+|:---:|:---:|
+| <img src="examples/images/9-media-gallery-download-selected.png" width="400" /> | <img src="examples/images/10-media-gallery-goto-date.png" width="400" /> |
 
 </details>
 

@@ -40,7 +40,24 @@ function toGalleryItem(media: MediaFile): GalleryItem {
 /** Extract YYYY-MM-DD from ISO timestamp or return null */
 function toDateKey(timestamp?: string): DateKey | null {
 	if (!timestamp) return null;
-	return timestamp.slice(0, 10); // YYYY-MM-DD
+
+	// Fast path: timestamp already starts with ISO date "YYYY-MM-DD"
+	const isoMatch = /^(\d{4}-\d{2}-\d{2})/.exec(timestamp);
+	if (isoMatch) {
+		return isoMatch[1];
+	}
+
+	// Fallback: try to parse other date formats and normalize to YYYY-MM-DD
+	const date = new Date(timestamp);
+	if (Number.isNaN(date.getTime())) {
+		return null;
+	}
+
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, '0');
+	const day = String(date.getDate()).padStart(2, '0');
+
+	return `${year}-${month}-${day}`;
 }
 
 function createGalleryState() {

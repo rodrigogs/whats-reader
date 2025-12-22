@@ -208,5 +208,14 @@
   "media_gallery_download_failed": "下载失败",
   "media_gallery_go_to_date": "前往日期",
   "media_gallery_no_media_on_date": "当天没有媒体报道",
-  "media_gallery_date_has_media": "{count}项目"
+  "media_gallery_date_has_media": "{count}项目",
+  "calendar_previous_month": "上个月",
+  "calendar_next_month": "下个月",
+  "calendar_weekday_sun": "日",
+  "calendar_weekday_mon": "一",
+  "calendar_weekday_tue": "二",
+  "calendar_weekday_wed": "三",
+  "calendar_weekday_thu": "四",
+  "calendar_weekday_fri": "五",
+  "calendar_weekday_sat": "六"
 }

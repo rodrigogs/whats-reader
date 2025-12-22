@@ -211,7 +211,7 @@ async function handleFilesSelected(files: FileList) {
 						chatTitle: string;
 						indexEntries: [string, number][];
 						flatItems: Array<
-							| { type: 'date'; date: string }
+							| { type: 'date'; dateKey: string }
 							| { type: 'message'; messageId: string }
 						>;
 						serializedMessages: Array<{

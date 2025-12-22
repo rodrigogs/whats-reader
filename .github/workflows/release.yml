@@ -31,6 +31,8 @@ jobs:
           npm ci --prefer-offline || \
           npm ci --prefer-offline || \
           npm ci
+        env:
+          ONNXRUNTIME_NODE_INSTALL_CUDA: skip
 
       - name: Run Semantic Release
         id: semantic

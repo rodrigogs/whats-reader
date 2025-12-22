@@ -32,6 +32,7 @@ jobs:
         env:
           ELECTRON_CACHE: ~/cache/electron
           ELECTRON_BUILDER_CACHE: ~/cache/electron-builder
+          ONNXRUNTIME_NODE_INSTALL_CUDA: skip
 
       - name: Run linter
         run: npm run lint
@@ -61,6 +62,7 @@ jobs:
         env:
           ELECTRON_CACHE: ~/cache/electron
           ELECTRON_BUILDER_CACHE: ~/cache/electron-builder
+          ONNXRUNTIME_NODE_INSTALL_CUDA: skip
 
       - name: Build (generates paraglide files)
         run: npm run build
@@ -93,6 +95,7 @@ jobs:
         env:
           ELECTRON_CACHE: ~/cache/electron
           ELECTRON_BUILDER_CACHE: ~/cache/electron-builder
+          ONNXRUNTIME_NODE_INSTALL_CUDA: skip
 
       - name: Build
         run: npm run build

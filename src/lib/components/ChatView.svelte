@@ -2,10 +2,24 @@
 import { onDestroy, onMount, tick } from 'svelte';
 import { bookmarksState } from '$lib/bookmarks.svelte';
 import * as m from '$lib/paraglide/messages';
+import { getLocale } from '$lib/paraglide/runtime';
 import type { ChatMessage } from '$lib/parser';
 import { groupMessagesByDate } from '$lib/parser';
 import type { FlatItem } from '$lib/parser/zip-parser';
 import MessageBubble from './MessageBubble.svelte';
+
+// Get current locale for date formatting
+const locale = $derived(getLocale());
+
+// Format a date key (YYYY-MM-DD) for display in the current locale
+function formatDateSeparator(dateKey: string): string {
+	const date = new Date(`${dateKey}T00:00:00`);
+	return date.toLocaleDateString(locale, {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric',
+	});
+}
 
 interface Props {
 	messages: ChatMessage[];
@@ -45,7 +59,7 @@ const INITIAL_CHUNKS = 2; // Start with 2 chunks (200 messages from bottom)
 
 // Flatten messages with date separators for virtualization
 type RenderItem =
-	| { type: 'date'; date: string }
+	| { type: 'date'; dateKey: string }
 	| { type: 'message'; message: ChatMessage };
 
 // Check if precomputed data is available
@@ -119,8 +133,8 @@ const fallbackFlatItems = $derived.by(() => {
 	const items: RenderItem[] = [];
 	const indexMap = new Map<string, number>();
 
-	for (const [date, dayMessages] of grouped.entries()) {
-		items.push({ type: 'date', date });
+	for (const [dateKey, dayMessages] of grouped.entries()) {
+		items.push({ type: 'date', dateKey });
 		for (const message of dayMessages) {
 			indexMap.set(message.id, items.length);
 			items.push({ type: 'message', message });
@@ -155,7 +169,7 @@ const renderedItems = $derived.by(() => {
 
 		for (const item of slice) {
 			if (item.type === 'date') {
-				items.push({ type: 'date', date: item.date });
+				items.push({ type: 'date', dateKey: item.dateKey });
 			} else {
 				const message = getMessageById(item.messageId);
 				if (message) {
@@ -566,14 +580,14 @@ function handleScroll() {
 	{/if}
 
 	<!-- Render items -->
-	{#each renderedItems.items as item, idx (item.type === 'date' ? `date-${item.date}-${idx}` : item.message.id)}
+	{#each renderedItems.items as item, idx (item.type === 'date' ? `date-${item.dateKey}-${idx}` : item.message.id)}
 		{#if item.type === 'date'}
 			<!-- Date separator -->
 			<div class="flex justify-center my-4">
 				<div
 					class="bg-white/90 dark:bg-gray-800/90 text-gray-600 dark:text-gray-300 text-xs px-3 py-1 rounded-lg shadow-sm"
 				>
-					{item.date}
+					{formatDateSeparator(item.dateKey)}
 				</div>
 			</div>
 		{:else}

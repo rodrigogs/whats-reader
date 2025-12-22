@@ -208,5 +208,14 @@
   "media_gallery_download_failed": "Download non riuscito",
   "media_gallery_go_to_date": "Vai alla data",
   "media_gallery_no_media_on_date": "Nessun media in questa data",
-  "media_gallery_date_has_media": "{count} elementi"
+  "media_gallery_date_has_media": "{count} elementi",
+  "calendar_previous_month": "Mese precedente",
+  "calendar_next_month": "Il mese prossimo",
+  "calendar_weekday_sun": "Dom",
+  "calendar_weekday_mon": "Lun",
+  "calendar_weekday_tue": "Mar",
+  "calendar_weekday_wed": "Mer",
+  "calendar_weekday_thu": "Gio",
+  "calendar_weekday_fri": "Ven",
+  "calendar_weekday_sat": "Sab"
 }

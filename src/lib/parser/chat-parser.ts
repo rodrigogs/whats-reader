@@ -566,11 +566,7 @@ export function groupMessagesByDate(
 	const groups = new Map<string, ChatMessage[]>();
 
 	for (const message of messages) {
-		const dateKey = message.timestamp.toLocaleDateString('en-US', {
-			year: 'numeric',
-			month: 'long',
-			day: 'numeric',
-		});
+		const dateKey = message.timestamp.toISOString().slice(0, 10);
 
 		const existing = groups.get(dateKey) || [];
 		existing.push(message);
@@ -583,14 +579,13 @@ export function groupMessagesByDate(
 /**
  * Format timestamp for display (full date and time)
  */
-export function formatTime(date: Date): string {
-	return date.toLocaleString('en-US', {
+export function formatTime(date: Date, locale: string): string {
+	return date.toLocaleString(locale, {
 		month: 'short',
 		day: 'numeric',
 		year: 'numeric',
 		hour: '2-digit',
 		minute: '2-digit',
-		hour12: true,
 	});
 }
 

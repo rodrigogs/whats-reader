@@ -206,7 +206,16 @@
   "media_gallery_load_error": "Falha ao carregar a mídia",
   "media_gallery_downloading": "Preparando ZIP... {progress} %",
   "media_gallery_download_failed": "Falha no download",
-  "media_gallery_go_to_date": "Ir a um encontro",
+  "media_gallery_go_to_date": "Ir para a data",
   "media_gallery_no_media_on_date": "Sem notícias nesta data.",
-  "media_gallery_date_has_media": "{count} itens"
+  "media_gallery_date_has_media": "{count} itens",
+  "calendar_previous_month": "Mês anterior",
+  "calendar_next_month": "Próximo mês",
+  "calendar_weekday_sun": "Dom",
+  "calendar_weekday_mon": "Seg",
+  "calendar_weekday_tue": "Ter",
+  "calendar_weekday_wed": "Qua",
+  "calendar_weekday_thu": "Qui",
+  "calendar_weekday_fri": "Sex",
+  "calendar_weekday_sat": "Sáb"
 }

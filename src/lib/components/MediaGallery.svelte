@@ -4,6 +4,7 @@ import { onDestroy, tick } from 'svelte';
 import { type DateKey, galleryState } from '$lib/gallery.svelte';
 import { cleanupThumbnailUrls } from '$lib/gallery-thumbnails';
 import * as m from '$lib/paraglide/messages';
+import { getLocale } from '$lib/paraglide/runtime';
 import { loadMediaFile } from '$lib/parser';
 import { appState } from '$lib/state.svelte';
 import MediaThumbnail from './MediaThumbnail.svelte';
@@ -53,7 +54,10 @@ $effect(() => {
 	const dateKey = scrollToDateKey;
 	if (!dateKey || !scrollContainerRef) return;
 
+	let isCancelled = false;
+
 	tick().then(() => {
+		if (isCancelled) return;
 		const section = scrollContainerRef?.querySelector(
 			`[data-date="${dateKey}"]`,
 		);
@@ -62,6 +66,10 @@ $effect(() => {
 		}
 		galleryState.clearScrollToDate();
 	});
+
+	return () => {
+		isCancelled = true;
+	};
 });
 
 function sanitizeFilename(name: string): string {
@@ -137,16 +145,25 @@ $effect(() => {
 	lightboxLoading = true;
 	lightboxError = null;
 
+	let isCancelled = false;
+
 	loadMediaFile(it.media)
 		.then((url) => {
+			if (isCancelled) return;
 			lightboxUrl = url;
 		})
 		.catch((err) => {
+			if (isCancelled) return;
 			lightboxError = err instanceof Error ? err.message : String(err);
 		})
 		.finally(() => {
+			if (isCancelled) return;
 			lightboxLoading = false;
 		});
+
+	return () => {
+		isCancelled = true;
+	};
 });
 
 function closeLightbox() {
@@ -169,7 +186,7 @@ function handleKeydown(e: KeyboardEvent) {
 function formatDateKey(dateKey: DateKey): string {
 	if (dateKey === 'unknown') return m.media_gallery_unknown_date();
 	const date = new Date(`${dateKey}T00:00:00`);
-	return date.toLocaleDateString(undefined, {
+	return date.toLocaleDateString(getLocale(), {
 		weekday: 'short',
 		month: 'short',
 		day: 'numeric',
@@ -287,6 +304,15 @@ const canGoNextMonth = $derived.by(() => {
 function selectDate(dateKey: DateKey) {
 	showDatePicker = false;
 	galleryState.goToDate(dateKey);
+}
+
+function buildMediaTooltip(images: number, videos: number, audio: number): string {
+	const parts: string[] = [];
+	// Simple approach: "{count} {type}" works reasonably well across languages
+	if (images > 0) parts.push(`${images} ${m.media_photo().toLowerCase()}`);
+	if (videos > 0) parts.push(`${videos} ${m.media_video().toLowerCase()}`);
+	if (audio > 0) parts.push(`${audio} ${m.media_audio().toLowerCase()}`);
+	return parts.join(', ');
 }
 
 function openDatePicker() {
@@ -468,21 +494,21 @@ onDestroy(() => {
 						class="p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed {canGoPrevMonth ? 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700' : 'text-gray-300 dark:text-gray-600'}"
 						onclick={prevMonth}
 						disabled={!canGoPrevMonth}
-						aria-label="Previous month"
+						aria-label={m.calendar_previous_month()}
 					>
 						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 						</svg>
 					</button>
 					<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-						{datePickerMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+						{datePickerMonth.toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' })}
 					</span>
 					<button
 						type="button"
 						class="p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed {canGoNextMonth ? 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700' : 'text-gray-300 dark:text-gray-600'}"
 						onclick={nextMonth}
 						disabled={!canGoNextMonth}
-						aria-label="Next month"
+						aria-label={m.calendar_next_month()}
 					>
 						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -494,7 +520,7 @@ onDestroy(() => {
 				<div class="px-4 pb-4">
 					<!-- Weekday headers -->
 					<div class="grid grid-cols-7 gap-1 mb-1">
-						{#each ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'] as day}
+						{#each [m.calendar_weekday_sun(), m.calendar_weekday_mon(), m.calendar_weekday_tue(), m.calendar_weekday_wed(), m.calendar_weekday_thu(), m.calendar_weekday_fri(), m.calendar_weekday_sat()] as day}
 							<div class="text-center text-xs font-medium text-gray-400 dark:text-gray-500 py-1">{day}</div>
 						{/each}
 					</div>
@@ -503,7 +529,7 @@ onDestroy(() => {
 						{#each getMonthDays(datePickerMonth) as { date, dateKey, inMonth }}
 							{@const hasMedia = datesWithMedia.has(dateKey)}
 							{@const mediaTypes = hasMedia ? galleryState.getMediaTypesForDate(dateKey) : null}
-							{@const tooltipParts = mediaTypes ? [mediaTypes.images > 0 ? `${mediaTypes.images} 📷` : '', mediaTypes.videos > 0 ? `${mediaTypes.videos} 🎬` : '', mediaTypes.audio > 0 ? `${mediaTypes.audio} 🎵` : ''].filter(Boolean).join('  ') : ''}
+							{@const tooltipParts = mediaTypes ? buildMediaTooltip(mediaTypes.images, mediaTypes.videos, mediaTypes.audio) : ''}
 							<button
 								type="button"
 								class="relative aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-colors cursor-pointer
@@ -513,6 +539,7 @@ onDestroy(() => {
 								onclick={() => hasMedia && selectDate(dateKey)}
 								disabled={!hasMedia}
 								title={tooltipParts}
+								aria-label={hasMedia ? `${date.getDate()}, ${tooltipParts}` : `${date.getDate()}`}
 							>
 								<span class="leading-none">{date.getDate()}</span>
 								{#if hasMedia && inMonth && mediaTypes}
@@ -611,11 +638,20 @@ onDestroy(() => {
 						{#if lightboxItem.type === 'image'}
 							<img src={lightboxUrl} alt={lightboxItem.name} class="max-h-[70vh] w-full object-contain" />
 						{:else if lightboxItem.type === 'video'}
-							<video src={lightboxUrl} controls class="max-h-[70vh] w-full">
-								<track kind="captions" />
+							<video
+								src={lightboxUrl}
+								controls
+								class="max-h-[70vh] w-full"
+								aria-label={lightboxItem.name}
+							>
 							</video>
 						{:else if lightboxItem.type === 'audio'}
-							<audio src={lightboxUrl} controls class="w-full p-4"></audio>
+							<audio
+								src={lightboxUrl}
+								controls
+								class="w-full p-4"
+								aria-label={lightboxItem.name}
+							></audio>
 						{:else}
 							<div class="p-6 text-center">
 								<a
