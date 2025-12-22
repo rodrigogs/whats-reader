@@ -217,5 +217,18 @@
   "calendar_weekday_wed": "Qua",
   "calendar_weekday_thu": "Qui",
   "calendar_weekday_fri": "Sex",
-  "calendar_weekday_sat": "Sáb"
+  "calendar_weekday_sat": "Sáb",
+  "stats_unknown": "Desconhecido",
+  "stats_year": "ano",
+  "stats_years": "anos",
+  "stats_month": "mês",
+  "stats_months": "meses",
+  "stats_day": "dia",
+  "stats_days": "dias",
+  "stats_hour_messages": "{count} mensagens",
+  "stats_hour_12am": "00h",
+  "stats_hour_6am": "6h da manhã",
+  "stats_hour_12pm": "12h",
+  "stats_hour_6pm": "18h",
+  "stats_hour_11pm": "23h"
 }

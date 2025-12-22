@@ -217,5 +217,18 @@
   "calendar_weekday_wed": "三",
   "calendar_weekday_thu": "四",
   "calendar_weekday_fri": "五",
-  "calendar_weekday_sat": "六"
+  "calendar_weekday_sat": "六",
+  "stats_unknown": "未知",
+  "stats_year": "年",
+  "stats_years": "年",
+  "stats_month": "月",
+  "stats_months": "几个月",
+  "stats_day": "天",
+  "stats_days": "天",
+  "stats_hour_messages": "{count}消息",
+  "stats_hour_12am": "凌晨12点",
+  "stats_hour_6am": "早上6点",
+  "stats_hour_12pm": "中午12点",
+  "stats_hour_6pm": "下午6点",
+  "stats_hour_11pm": "晚上11点"
 }

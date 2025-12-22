@@ -217,5 +217,18 @@
   "calendar_weekday_wed": "Mi",
   "calendar_weekday_thu": "Do",
   "calendar_weekday_fri": "Fr",
-  "calendar_weekday_sat": "Sa"
+  "calendar_weekday_sat": "Sa",
+  "stats_unknown": "Unbekannt",
+  "stats_year": "Jahr",
+  "stats_years": "Jahre",
+  "stats_month": "Monat",
+  "stats_months": "Monate",
+  "stats_day": "Tag",
+  "stats_days": "Tage",
+  "stats_hour_messages": "{count} Nachrichten",
+  "stats_hour_12am": "0:00 Uhr",
+  "stats_hour_6am": "6 Uhr morgens",
+  "stats_hour_12pm": "12 Uhr",
+  "stats_hour_6pm": "18 Uhr",
+  "stats_hour_11pm": "23 Uhr"
 }

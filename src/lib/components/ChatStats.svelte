@@ -1,6 +1,7 @@
 <script lang="ts">
 import { onMount } from 'svelte';
 import * as m from '$lib/paraglide/messages';
+import { getLocale } from '$lib/paraglide/runtime';
 import type { ChatData } from '$lib/state.svelte';
 
 interface Props {
@@ -23,6 +24,8 @@ let { chat, onClose }: Props = $props();
 let stats = $state<StatsResult | null>(null);
 let isLoading = $state(true);
 let error = $state<string | null>(null);
+
+const locale = $derived(getLocale());
 
 onMount(() => {
 	// Create worker using Vite's recommended syntax for ES module workers
@@ -64,7 +67,7 @@ onMount(() => {
 });
 
 function formatDuration(startDate: Date | null, endDate: Date | null): string {
-	if (!startDate || !endDate) return 'Unknown';
+	if (!startDate || !endDate) return m.stats_unknown();
 
 	const diff = endDate.getTime() - startDate.getTime();
 	const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -72,18 +75,27 @@ function formatDuration(startDate: Date | null, endDate: Date | null): string {
 	const years = Math.floor(days / 365);
 
 	if (years > 0) {
-		return `${years} year${years > 1 ? 's' : ''}, ${months % 12} month${months % 12 !== 1 ? 's' : ''}`;
+		const remainingMonths = months % 12;
+		const yearLabel = years > 1 ? m.stats_years() : m.stats_year();
+		const monthLabel =
+			remainingMonths !== 1 ? m.stats_months() : m.stats_month();
+		return `${years} ${yearLabel}, ${remainingMonths} ${monthLabel}`;
 	}
 	if (months > 0) {
-		return `${months} month${months > 1 ? 's' : ''}, ${days % 30} day${days % 30 !== 1 ? 's' : ''}`;
+		const remainingDays = days % 30;
+		const monthLabel = months > 1 ? m.stats_months() : m.stats_month();
+		const dayLabel = remainingDays !== 1 ? m.stats_days() : m.stats_day();
+		return `${months} ${monthLabel}, ${remainingDays} ${dayLabel}`;
 	}
-	return `${days} day${days !== 1 ? 's' : ''}`;
+	const dayLabel = days !== 1 ? m.stats_days() : m.stats_day();
+	return `${days} ${dayLabel}`;
 }
 
 function formatHour(hour: number): string {
-	const ampm = hour >= 12 ? 'PM' : 'AM';
-	const h = hour % 12 || 12;
-	return `${h} ${ampm}`;
+	// Use locale-aware time formatting
+	const date = new Date();
+	date.setHours(hour, 0, 0, 0);
+	return date.toLocaleTimeString(locale, { hour: 'numeric', hour12: true });
 }
 
 const participantEntries = $derived(
@@ -181,9 +193,9 @@ const maxHourCount = $derived(stats ? Math.max(...stats.messagesByHour) : 0);
 						{formatDuration(chat.startDate, chat.endDate)}
 					</p>
 					<p class="text-sm text-gray-500 dark:text-gray-400">
-						{chat.startDate?.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+						{chat.startDate?.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' })}
 						→
-						{chat.endDate?.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+						{chat.endDate?.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' })}
 					</p>
 				</div>
 
@@ -228,17 +240,17 @@ const maxHourCount = $derived(stats ? Math.max(...stats.messagesByHour) : 0);
 							>
 								<!-- Tooltip -->
 								<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
-									{hour}:00 - {count.toLocaleString()} messages
+									{hour}:00 - {m.stats_hour_messages({ count: count.toLocaleString(locale) })}
 								</div>
 							</div>
 						{/each}
 					</div>
 					<div class="flex justify-between mt-1 text-xs text-gray-400 dark:text-gray-500">
-						<span>12AM</span>
-						<span>6AM</span>
-						<span>12PM</span>
-						<span>6PM</span>
-						<span>11PM</span>
+						<span>{m.stats_hour_12am()}</span>
+						<span>{m.stats_hour_6am()}</span>
+						<span>{m.stats_hour_12pm()}</span>
+						<span>{m.stats_hour_6pm()}</span>
+						<span>{m.stats_hour_11pm()}</span>
 					</div>
 				</div>
 			{/if}

@@ -217,5 +217,18 @@
   "calendar_weekday_wed": "Mer",
   "calendar_weekday_thu": "Jeu",
   "calendar_weekday_fri": "Ven",
-  "calendar_weekday_sat": "Sam"
+  "calendar_weekday_sat": "Sam",
+  "stats_unknown": "Inconnu",
+  "stats_year": "année",
+  "stats_years": "années",
+  "stats_month": "mois",
+  "stats_months": "mois",
+  "stats_day": "jour",
+  "stats_days": "jours",
+  "stats_hour_messages": "{count} messages",
+  "stats_hour_12am": "Minuit",
+  "stats_hour_6am": "6h du matin",
+  "stats_hour_12pm": "12h",
+  "stats_hour_6pm": "18h",
+  "stats_hour_11pm": "23h"
 }

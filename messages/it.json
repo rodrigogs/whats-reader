@@ -217,5 +217,18 @@
   "calendar_weekday_wed": "Mer",
   "calendar_weekday_thu": "Gio",
   "calendar_weekday_fri": "Ven",
-  "calendar_weekday_sat": "Sab"
+  "calendar_weekday_sat": "Sab",
+  "stats_unknown": "Sconosciuto",
+  "stats_year": "anno",
+  "stats_years": "anni",
+  "stats_month": "mese",
+  "stats_months": "mesi",
+  "stats_day": "giorno",
+  "stats_days": "giorni",
+  "stats_hour_messages": "{count} messaggi",
+  "stats_hour_12am": "00:00",
+  "stats_hour_6am": "6 del mattino",
+  "stats_hour_12pm": "12:00",
+  "stats_hour_6pm": "18:00",
+  "stats_hour_11pm": "23:00"
 }

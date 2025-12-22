@@ -217,5 +217,18 @@
   "calendar_weekday_wed": "Ср",
   "calendar_weekday_thu": "Чт",
   "calendar_weekday_fri": "Пт",
-  "calendar_weekday_sat": "Сб"
+  "calendar_weekday_sat": "Сб",
+  "stats_unknown": "Неизвестный",
+  "stats_year": "год",
+  "stats_years": "годы",
+  "stats_month": "месяц",
+  "stats_months": "месяцев",
+  "stats_day": "день",
+  "stats_days": "дни",
+  "stats_hour_messages": "{count} сообщений",
+  "stats_hour_12am": "12:00",
+  "stats_hour_6am": "6 утра",
+  "stats_hour_12pm": "12:00",
+  "stats_hour_6pm": "18:00",
+  "stats_hour_11pm": "23:00"
 }

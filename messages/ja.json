@@ -217,5 +217,18 @@
   "calendar_weekday_wed": "水",
   "calendar_weekday_thu": "木",
   "calendar_weekday_fri": "金",
-  "calendar_weekday_sat": "土"
+  "calendar_weekday_sat": "土",
+  "stats_unknown": "未知",
+  "stats_year": "年",
+  "stats_years": "年",
+  "stats_month": "月",
+  "stats_months": "ヶ月",
+  "stats_day": "日",
+  "stats_days": "日",
+  "stats_hour_messages": "{count}のメッセージ",
+  "stats_hour_12am": "午前0時",
+  "stats_hour_6am": "午前6時",
+  "stats_hour_12pm": "午後12時",
+  "stats_hour_6pm": "午後6時",
+  "stats_hour_11pm": "午後11時"
 }

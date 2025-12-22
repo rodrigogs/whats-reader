@@ -217,5 +217,18 @@
   "calendar_weekday_wed": "Wo",
   "calendar_weekday_thu": "Do",
   "calendar_weekday_fri": "Vr",
-  "calendar_weekday_sat": "Za"
+  "calendar_weekday_sat": "Za",
+  "stats_unknown": "Onbekend",
+  "stats_year": "jaar",
+  "stats_years": "jaren",
+  "stats_month": "maand",
+  "stats_months": "maanden",
+  "stats_day": "dag",
+  "stats_days": "dagen",
+  "stats_hour_messages": "{count} berichten",
+  "stats_hour_12am": "00:00 uur",
+  "stats_hour_6am": "6 uur 's ochtends",
+  "stats_hour_12pm": "12 uur 's middags",
+  "stats_hour_6pm": "18:00 uur",
+  "stats_hour_11pm": "23:00 uur"
 }
