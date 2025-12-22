@@ -1,3 +1,10 @@
+# [1.18.0](https://github.com/rodrigogs/whats-reader/compare/v1.17.0...v1.18.0) (2025-12-22)
+
+
+### Features
+
+* media gallery with go-to-date calendar ([#17](https://github.com/rodrigogs/whats-reader/issues/17)) ([fda4bd6](https://github.com/rodrigogs/whats-reader/commit/fda4bd6705400436350a3262bd76eb48a218d784)), closes [#18](https://github.com/rodrigogs/whats-reader/issues/18)
+
 # [1.17.0](https://github.com/rodrigogs/whats-reader/compare/v1.16.2...v1.17.0) (2025-12-19)
 
 
