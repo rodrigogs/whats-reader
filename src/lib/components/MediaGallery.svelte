@@ -306,7 +306,11 @@ function selectDate(dateKey: DateKey) {
 	galleryState.goToDate(dateKey);
 }
 
-function buildMediaTooltip(images: number, videos: number, audio: number): string {
+function buildMediaTooltip(
+	images: number,
+	videos: number,
+	audio: number,
+): string {
 	const parts: string[] = [];
 	// Simple approach: "{count} {type}" works reasonably well across languages
 	if (images > 0) parts.push(`${images} ${m.media_photo().toLowerCase()}`);
