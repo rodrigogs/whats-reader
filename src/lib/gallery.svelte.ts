@@ -166,9 +166,11 @@ function createGalleryState() {
 	}
 
 	/** Get media type breakdown for a specific date */
-	function getMediaTypesForDate(
-		dateKey: DateKey,
-	): { images: number; videos: number; audio: number } {
+	function getMediaTypesForDate(dateKey: DateKey): {
+		images: number;
+		videos: number;
+		audio: number;
+	} {
 		const dateItems = itemsByDate.map.get(dateKey) ?? [];
 		let images = 0;
 		let videos = 0;
