@@ -281,6 +281,18 @@ npm run electron:build:linux  # Linux (deb, rpm, AppImage)
 
 ---
 
+## История звёзд
+
+<a href="https://star-history.com/#rodrigogs/whats-reader&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=rodrigogs/whats-reader&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=rodrigogs/whats-reader&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=rodrigogs/whats-reader&type=Date" />
+  </picture>
+</a>
+
+---
+
 ## Лицензия
 
 [AGPL-3.0](LICENSE). Вы можете свободно использовать, изменять и распространять это программное обеспечение. Если вы изменяете его и запускаете как сервис или распространяете, вы должны поделиться исходным кодом под той же лицензией.

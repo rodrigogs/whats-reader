@@ -282,6 +282,18 @@ There are example chat files in `examples/chats/` you can use for testing.
 
 ---
 
+## Star History
+
+<a href="https://star-history.com/#rodrigogs/whats-reader&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=rodrigogs/whats-reader&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=rodrigogs/whats-reader&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=rodrigogs/whats-reader&type=Date" />
+  </picture>
+</a>
+
+---
+
 ## License
 
 [AGPL-3.0](LICENSE). You can use, modify, and distribute this software freely. If you modify it and run it as a service or distribute it, you must share your source code under the same license.
