@@ -278,6 +278,19 @@ Bug oder Idee? [Issue öffnen](https://github.com/rodrigogs/whats-reader/issues)
 Möchten Sie Code beitragen? Forken Sie das Repository, nehmen Sie Ihre Änderungen vor und öffnen Sie einen Pull Request.
 
 Es gibt Beispiel-Chat-Dateien in `examples/chats/`, die Sie zum Testen verwenden können.
+
+---
+
+## Sterne im Zeitverlauf
+
+<a href="https://star-history.com/#rodrigogs/whats-reader&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=rodrigogs/whats-reader&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=rodrigogs/whats-reader&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=rodrigogs/whats-reader&type=Date" />
+  </picture>
+</a>
+
 ---
 
 ## Lizenz

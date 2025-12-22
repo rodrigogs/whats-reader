@@ -281,6 +281,18 @@ Há arquivos de chat de exemplo em `examples/chats/` que você pode usar para te
 
 ---
 
+## Histórico de Estrelas
+
+<a href="https://star-history.com/#rodrigogs/whats-reader&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=rodrigogs/whats-reader&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=rodrigogs/whats-reader&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=rodrigogs/whats-reader&type=Date" />
+  </picture>
+</a>
+
+---
+
 ## Licença
 
 [AGPL-3.0](LICENSE). Você pode usar, modificar e distribuir este software livremente. Se você modificá-lo e executá-lo como serviço ou distribuí-lo, deve compartilhar seu código fonte sob a mesma licença.

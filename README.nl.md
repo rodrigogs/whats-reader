@@ -281,6 +281,18 @@ Er zijn voorbeeldchatbestanden in `examples/chats/` die je kunt gebruiken voor t
 
 ---
 
+## Sterrenhistorie
+
+<a href="https://star-history.com/#rodrigogs/whats-reader&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=rodrigogs/whats-reader&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=rodrigogs/whats-reader&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=rodrigogs/whats-reader&type=Date" />
+  </picture>
+</a>
+
+---
+
 ## Licentie
 
 [AGPL-3.0](LICENSE). Je kunt deze software vrij gebruiken, wijzigen en distribueren. Als je het wijzigt en als service draait of distribueert, moet je je broncode delen onder dezelfde licentie.
