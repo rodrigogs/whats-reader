@@ -48,6 +48,8 @@
 
 Drop a WhatsApp `.zip` export and browse your messages, photos, and voice notes. Works with big chats (tested with 10k+ messages).
 
+The **Media Gallery** gives you a visual overview of all photos, videos, and audio files organized by date. Select multiple items and download them as a ZIP file, or click any media to view it full-screen and jump to the original message.
+
 Voice messages can be transcribed using [Whisper](https://openai.com/research/whisper), which runs in your browser via WebGPU. No server, no API key needed.
 
 <details>
@@ -66,9 +68,9 @@ Voice messages can be transcribed using [Whisper](https://openai.com/research/wh
 |:---:|:---:|
 | <img src="examples/images/5-bookmarks.png" width="400" /> | <img src="examples/images/6-statistics.png" width="400" /> |
 
-| Voice Transcription |
-|:---:|
-| <img src="examples/images/7-audio-transcription.png" width="400" /> |
+| Voice Transcription | Media Gallery |
+|:---:|:---:|
+| <img src="examples/images/7-audio-transcription.png" width="400" /> | _Coming soon_ |
 
 </details>
 
@@ -110,6 +112,10 @@ Get the desktop app for your platform:
 
 ## Features
 
+- **Media Gallery**: Browse all photos, videos, and audio in a thumbnail grid view
+  - Date-based organization with calendar navigation
+  - Bulk select and download as ZIP
+  - Lightbox preview with navigation back to original message
 - **Auto-update**: Desktop app automatically checks and installs updates (Electron only)
 - **Voice transcription**: Transcribe audio with Whisper (runs locally, 12+ languages)
 - **Search**: Full-text search across messages and transcriptions

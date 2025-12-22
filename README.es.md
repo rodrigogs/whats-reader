@@ -48,6 +48,8 @@
 
 Arrastra un archivo `.zip` exportado de WhatsApp y navega por tus mensajes, fotos y notas de voz. Funciona con chats grandes (probado con más de 10k mensajes).
 
+La **Galería de Medios** te ofrece una vista visual de todas las fotos, vídeos y archivos de audio organizados por fecha. Selecciona varios elementos y descárgalos como archivo ZIP, o haz clic en cualquier medio para verlo en pantalla completa y saltar al mensaje original.
+
 Los mensajes de voz pueden ser transcritos usando [Whisper](https://openai.com/research/whisper), que se ejecuta en tu navegador vía WebGPU. Sin servidor, sin clave API necesaria.
 
 <details>
@@ -66,9 +68,9 @@ Los mensajes de voz pueden ser transcritos usando [Whisper](https://openai.com/r
 |:---:|:---:|
 | <img src="examples/images/5-bookmarks.png" width="400" /> | <img src="examples/images/6-statistics.png" width="400" /> |
 
-| Transcripción de Voz |
-|:---:|
-| <img src="examples/images/7-audio-transcription.png" width="400" /> |
+| Transcripción de Voz | Galería de Medios |
+|:---:|:---:|
+| <img src="examples/images/7-audio-transcription.png" width="400" /> | _Próximamente_ |
 
 </details>
 
@@ -110,6 +112,10 @@ Descarga la aplicación para tu plataforma:
 
 ## Características
 
+- **Galería de Medios**: Navega por todas las fotos, vídeos y audio en una cuadrícula de miniaturas
+  - Organización por fecha con navegación de calendario
+  - Selección masiva y descarga como ZIP
+  - Vista previa en lightbox con navegación al mensaje original
 - **Transcripción de voz**: Transcribe audio con Whisper (se ejecuta localmente, más de 12 idiomas)
 - **Búsqueda**: Búsqueda de texto completo en mensajes y transcripciones
 - **Marcadores**: Guarda mensajes con notas, exporta/importa como JSON
