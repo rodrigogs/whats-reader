@@ -208,5 +208,14 @@
   "media_gallery_download_failed": "ダウンロードに失敗しました",
   "media_gallery_go_to_date": "日付へ移動",
   "media_gallery_no_media_on_date": "この日はメディアなし",
-  "media_gallery_date_has_media": "{count}項目"
+  "media_gallery_date_has_media": "{count}項目",
+  "calendar_previous_month": "前月",
+  "calendar_next_month": "来月",
+  "calendar_weekday_sun": "日",
+  "calendar_weekday_mon": "月",
+  "calendar_weekday_tue": "火",
+  "calendar_weekday_wed": "水",
+  "calendar_weekday_thu": "木",
+  "calendar_weekday_fri": "金",
+  "calendar_weekday_sat": "土"
 }

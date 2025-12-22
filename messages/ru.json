@@ -208,5 +208,14 @@
   "media_gallery_download_failed": "Загрузка не удалась.",
   "media_gallery_go_to_date": "Перейти к дате",
   "media_gallery_no_media_on_date": "В этот день представители СМИ не присутствуют.",
-  "media_gallery_date_has_media": "{count} items"
+  "media_gallery_date_has_media": "{count} items",
+  "calendar_previous_month": "Предыдущий месяц",
+  "calendar_next_month": "В следующем месяце",
+  "calendar_weekday_sun": "Вс",
+  "calendar_weekday_mon": "Пн",
+  "calendar_weekday_tue": "Вт",
+  "calendar_weekday_wed": "Ср",
+  "calendar_weekday_thu": "Чт",
+  "calendar_weekday_fri": "Пт",
+  "calendar_weekday_sat": "Сб"
 }

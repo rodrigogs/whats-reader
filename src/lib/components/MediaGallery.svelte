@@ -484,7 +484,7 @@ onDestroy(() => {
 						class="p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed {canGoPrevMonth ? 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700' : 'text-gray-300 dark:text-gray-600'}"
 						onclick={prevMonth}
 						disabled={!canGoPrevMonth}
-						aria-label="Previous month"
+						aria-label={m.calendar_previous_month()}
 					>
 						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -498,7 +498,7 @@ onDestroy(() => {
 						class="p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed {canGoNextMonth ? 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700' : 'text-gray-300 dark:text-gray-600'}"
 						onclick={nextMonth}
 						disabled={!canGoNextMonth}
-						aria-label="Next month"
+						aria-label={m.calendar_next_month()}
 					>
 						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -510,7 +510,7 @@ onDestroy(() => {
 				<div class="px-4 pb-4">
 					<!-- Weekday headers -->
 					<div class="grid grid-cols-7 gap-1 mb-1">
-						{#each ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'] as day}
+						{#each [m.calendar_weekday_sun(), m.calendar_weekday_mon(), m.calendar_weekday_tue(), m.calendar_weekday_wed(), m.calendar_weekday_thu(), m.calendar_weekday_fri(), m.calendar_weekday_sat()] as day}
 							<div class="text-center text-xs font-medium text-gray-400 dark:text-gray-500 py-1">{day}</div>
 						{/each}
 					</div>

@@ -208,5 +208,14 @@
   "media_gallery_go_to_date": "Go to date",
   "media_gallery_no_media_on_date": "No media on this date",
   "media_gallery_date_has_media": "{count} items",
+  "calendar_previous_month": "Previous month",
+  "calendar_next_month": "Next month",
+  "calendar_weekday_sun": "Su",
+  "calendar_weekday_mon": "Mo",
+  "calendar_weekday_tue": "Tu",
+  "calendar_weekday_wed": "We",
+  "calendar_weekday_thu": "Th",
+  "calendar_weekday_fri": "Fr",
+  "calendar_weekday_sat": "Sa",
   "close": "Close"
 }
