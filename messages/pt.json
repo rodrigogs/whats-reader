@@ -206,7 +206,7 @@
   "media_gallery_load_error": "Falha ao carregar a mídia",
   "media_gallery_downloading": "Preparando ZIP... {progress} %",
   "media_gallery_download_failed": "Falha no download",
-  "media_gallery_go_to_date": "Ir a um encontro",
+  "media_gallery_go_to_date": "Ir para data",
   "media_gallery_no_media_on_date": "Sem notícias nesta data.",
   "media_gallery_date_has_media": "{count} itens",
   "calendar_previous_month": "Mês anterior",
