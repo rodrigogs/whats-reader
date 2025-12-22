@@ -1,6 +1,7 @@
 <script lang="ts">
 import { type Bookmark, bookmarksState } from '$lib/bookmarks.svelte';
 import * as m from '$lib/paraglide/messages';
+import { getLocale } from '$lib/paraglide/runtime';
 import BookmarkModal from './BookmarkModal.svelte';
 
 interface Props {
@@ -53,7 +54,7 @@ const groupedBookmarks = $derived.by(() => {
 
 function formatDate(isoString: string): string {
 	const date = new Date(isoString);
-	return date.toLocaleDateString(undefined, {
+	return date.toLocaleDateString(getLocale(), {
 		day: 'numeric',
 		month: 'short',
 		hour: '2-digit',

@@ -4,6 +4,7 @@ import { onDestroy, tick } from 'svelte';
 import { type DateKey, galleryState } from '$lib/gallery.svelte';
 import { cleanupThumbnailUrls } from '$lib/gallery-thumbnails';
 import * as m from '$lib/paraglide/messages';
+import { getLocale } from '$lib/paraglide/runtime';
 import { loadMediaFile } from '$lib/parser';
 import { appState } from '$lib/state.svelte';
 import MediaThumbnail from './MediaThumbnail.svelte';
@@ -185,7 +186,7 @@ function handleKeydown(e: KeyboardEvent) {
 function formatDateKey(dateKey: DateKey): string {
 	if (dateKey === 'unknown') return m.media_gallery_unknown_date();
 	const date = new Date(`${dateKey}T00:00:00`);
-	return date.toLocaleDateString(undefined, {
+	return date.toLocaleDateString(getLocale(), {
 		weekday: 'short',
 		month: 'short',
 		day: 'numeric',
@@ -491,7 +492,7 @@ onDestroy(() => {
 						</svg>
 					</button>
 					<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-						{datePickerMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+						{datePickerMonth.toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' })}
 					</span>
 					<button
 						type="button"

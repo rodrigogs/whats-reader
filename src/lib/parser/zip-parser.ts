@@ -28,7 +28,7 @@ export interface MediaFile {
 // Serializable flat item types for pre-computed rendering list
 export interface DateFlatItem {
 	type: 'date';
-	date: string;
+	dateKey: string; // YYYY-MM-DD
 }
 
 export interface MessageFlatItem {

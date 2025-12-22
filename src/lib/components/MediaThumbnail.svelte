@@ -2,6 +2,7 @@
 import { onDestroy, onMount } from 'svelte';
 import type { GalleryItem } from '$lib/gallery.svelte';
 import { getImageThumbnailUrl } from '$lib/gallery-thumbnails';
+import { getLocale } from '$lib/paraglide/runtime';
 
 interface Props {
 	item: GalleryItem;
@@ -135,7 +136,7 @@ onDestroy(() => {
 		</p>
 		{#if item.messageTimestamp}
 			<p class="text-[11px] text-gray-400 truncate">
-				{new Date(item.messageTimestamp).toLocaleString(undefined, {
+				{new Date(item.messageTimestamp).toLocaleString(getLocale(), {
 					month: 'short',
 					day: 'numeric',
 					hour: '2-digit',
