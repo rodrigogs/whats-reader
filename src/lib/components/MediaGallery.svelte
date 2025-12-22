@@ -306,6 +306,15 @@ function selectDate(dateKey: DateKey) {
 	galleryState.goToDate(dateKey);
 }
 
+function buildMediaTooltip(images: number, videos: number, audio: number): string {
+	const parts: string[] = [];
+	// Simple approach: "{count} {type}" works reasonably well across languages
+	if (images > 0) parts.push(`${images} ${m.media_photo().toLowerCase()}`);
+	if (videos > 0) parts.push(`${videos} ${m.media_video().toLowerCase()}`);
+	if (audio > 0) parts.push(`${audio} ${m.media_audio().toLowerCase()}`);
+	return parts.join(', ');
+}
+
 function openDatePicker() {
 	// Start at most recent date with media
 	const firstDate = itemsByDate.sortedKeys.find((k) => k !== 'unknown');
@@ -520,11 +529,7 @@ onDestroy(() => {
 						{#each getMonthDays(datePickerMonth) as { date, dateKey, inMonth }}
 							{@const hasMedia = datesWithMedia.has(dateKey)}
 							{@const mediaTypes = hasMedia ? galleryState.getMediaTypesForDate(dateKey) : null}
-							{@const tooltipParts = mediaTypes ? [
-								mediaTypes.images > 0 ? `${mediaTypes.images} photos` : '',
-								mediaTypes.videos > 0 ? `${mediaTypes.videos} videos` : '',
-								mediaTypes.audio > 0 ? `${mediaTypes.audio} audio` : ''
-							].filter(Boolean).join(', ') : ''}
+							{@const tooltipParts = mediaTypes ? buildMediaTooltip(mediaTypes.images, mediaTypes.videos, mediaTypes.audio) : ''}
 							<button
 								type="button"
 								class="relative aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-colors cursor-pointer
@@ -639,7 +644,6 @@ onDestroy(() => {
 								class="max-h-[70vh] w-full"
 								aria-label={lightboxItem.name}
 							>
-								<track kind="captions" srclang="en" label={lightboxItem.name} />
 							</video>
 						{:else if lightboxItem.type === 'audio'}
 							<audio

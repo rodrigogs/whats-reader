@@ -191,7 +191,12 @@ export async function getImageThumbnailUrl(
 			const url = URL.createObjectURL(outBlob);
 
 			thumbnailUrlCache.set(key, url);
-			thumbnailAccessOrder.push(key); // Track access order for LRU
+			// Track access order for LRU - check for duplicates first
+			const existingIdx = thumbnailAccessOrder.indexOf(key);
+			if (existingIdx !== -1) {
+				thumbnailAccessOrder.splice(existingIdx, 1);
+			}
+			thumbnailAccessOrder.push(key);
 			evictOldestThumbnails();
 
 			return url;
