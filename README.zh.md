@@ -66,9 +66,13 @@
 |:---:|:---:|
 | <img src="examples/images/5-bookmarks.png" width="400" /> | <img src="examples/images/6-statistics.png" width="400" /> |
 
-| 语音转录 |
-|:---:|
-| <img src="examples/images/7-audio-transcription.png" width="400" /> |
+| 语音转录 | 媒体库 |
+|:---:|:---:|
+| <img src="examples/images/7-audio-transcription.png" width="400" /> | <img src="examples/images/8-media-gallery.png" width="400" /> |
+
+| 下载所选 | 前往日期 |
+|:---:|:---:|
+| <img src="examples/images/9-media-gallery-download-selected.png" width="400" /> | <img src="examples/images/10-media-gallery-goto-date.png" width="400" /> |
 
 </details>
 

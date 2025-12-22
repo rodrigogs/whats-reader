@@ -37,7 +37,7 @@ interface IndexWorkerInput {
  */
 interface DateItem {
 	type: 'date';
-	date: string;
+	dateKey: string; // YYYY-MM-DD
 }
 
 interface MessageItem {
@@ -55,6 +55,13 @@ interface IndexWorkerOutput {
 	serializedMessages: SerializedMessage[];
 }
 
+function toLocalDateKey(date: Date): string {
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, '0');
+	const day = String(date.getDate()).padStart(2, '0');
+	return `${year}-${month}-${day}`;
+}
+
 self.onmessage = (event: MessageEvent<IndexWorkerInput>) => {
 	const { messages, chatTitle } = event.data;
 
@@ -63,11 +70,7 @@ self.onmessage = (event: MessageEvent<IndexWorkerInput>) => {
 
 	for (const message of messages) {
 		const timestamp = new Date(message.timestamp);
-		const dateKey = timestamp.toLocaleDateString('en-US', {
-			year: 'numeric',
-			month: 'long',
-			day: 'numeric',
-		});
+		const dateKey = toLocalDateKey(timestamp);
 
 		const existing = groups.get(dateKey) || [];
 		existing.push(message);
@@ -79,8 +82,8 @@ self.onmessage = (event: MessageEvent<IndexWorkerInput>) => {
 	const flatItems: FlatItem[] = [];
 	let flatIndex = 0;
 
-	for (const [date, dayMessages] of groups.entries()) {
-		flatItems.push({ type: 'date', date });
+	for (const [dateKey, dayMessages] of groups.entries()) {
+		flatItems.push({ type: 'date', dateKey });
 		flatIndex++;
 
 		for (const message of dayMessages) {

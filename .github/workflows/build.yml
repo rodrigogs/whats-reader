@@ -36,6 +36,8 @@ jobs:
           npm ci --prefer-offline || \
           npm ci --prefer-offline || \
           npm ci
+        env:
+          ONNXRUNTIME_NODE_INSTALL_CUDA: skip
 
       - name: Build SvelteKit
         run: npm run build
@@ -99,6 +101,8 @@ jobs:
           npm ci --prefer-offline || \
           npm ci --prefer-offline || \
           npm ci
+        env:
+          ONNXRUNTIME_NODE_INSTALL_CUDA: skip
 
       - name: Download SvelteKit build
         uses: actions/download-artifact@v4

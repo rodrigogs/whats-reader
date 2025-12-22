@@ -48,6 +48,8 @@
 
 Arraste um arquivo `.zip` exportado do WhatsApp e navegue suas mensagens, fotos e notas de voz. Funciona com chats grandes (testado com mais de 10k mensagens).
 
+A **Galeria de Mídia** oferece uma visão visual de todas as fotos, vídeos e arquivos de áudio organizados por data. Selecione vários itens e baixe-os como arquivo ZIP, ou clique em qualquer mídia para visualizá-la em tela cheia e ir para a mensagem original.
+
 Mensagens de voz podem ser transcritas usando [Whisper](https://openai.com/research/whisper), que roda no seu navegador via WebGPU. Sem servidor, sem chave de API necessária.
 
 <details>
@@ -66,9 +68,13 @@ Mensagens de voz podem ser transcritas usando [Whisper](https://openai.com/resea
 |:---:|:---:|
 | <img src="examples/images/5-bookmarks.png" width="400" /> | <img src="examples/images/6-statistics.png" width="400" /> |
 
-| Transcrição de Voz |
-|:---:|
-| <img src="examples/images/7-audio-transcription.png" width="400" /> |
+| Transcrição de Voz | Galeria de Mídia |
+|:---:|:---:|
+| <img src="examples/images/7-audio-transcription.png" width="400" /> | <img src="examples/images/8-media-gallery.png" width="400" /> |
+
+| Baixar selecionados | Ir para data |
+|:---:|:---:|
+| <img src="examples/images/9-media-gallery-download-selected.png" width="400" /> | <img src="examples/images/10-media-gallery-goto-date.png" width="400" /> |
 
 </details>
 
@@ -110,6 +116,10 @@ Baixe o aplicativo para sua plataforma:
 
 ## Recursos
 
+- **Galeria de Mídia**: Navegue por todas as fotos, vídeos e áudios em uma grade de miniaturas
+  - Organização por data com navegação por calendário
+  - Seleção em massa e download como ZIP
+  - Visualização em lightbox com navegação para a mensagem original
 - **Transcrição de voz**: Transcreva áudio com Whisper (roda localmente, mais de 12 idiomas)
 - **Busca**: Busca de texto completo em mensagens e transcrições
 - **Marcadores**: Salve mensagens com notas, exporte/importe como JSON

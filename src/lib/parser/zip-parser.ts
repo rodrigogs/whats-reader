@@ -14,6 +14,10 @@ export interface MediaFile {
 	path: string;
 	type: 'image' | 'video' | 'audio' | 'document' | 'other';
 	size: number;
+	// Optional context when we can link this file to a message
+	messageId?: string;
+	messageTimestamp?: string;
+	messageSender?: string;
 	blob?: Blob;
 	url?: string;
 	// For lazy loading
@@ -24,7 +28,7 @@ export interface MediaFile {
 // Serializable flat item types for pre-computed rendering list
 export interface DateFlatItem {
 	type: 'date';
-	date: string;
+	dateKey: string; // YYYY-MM-DD
 }
 
 export interface MessageFlatItem {
@@ -236,6 +240,11 @@ function matchMediaToMessages(
 
 		for (const [key, media] of mediaMap) {
 			if (content.includes(key) || content.includes(media.name.toLowerCase())) {
+				if (!media.messageId) {
+					media.messageId = message.id;
+					media.messageTimestamp = message.timestamp.toISOString();
+					media.messageSender = message.sender || undefined;
+				}
 				return {
 					...message,
 					mediaFile: media,

@@ -2,6 +2,7 @@
 import type { Bookmark } from '$lib/bookmarks.svelte';
 import { bookmarksState } from '$lib/bookmarks.svelte';
 import * as m from '$lib/paraglide/messages';
+import { getLocale } from '$lib/paraglide/runtime';
 import type { ChatMessage } from '$lib/parser';
 import { formatTime, loadMediaFile } from '$lib/parser';
 import type { MediaFile } from '$lib/parser/zip-parser';
@@ -551,7 +552,7 @@ async function transcribeVoiceMessage() {
 			<div
 				class="text-[10px] text-gray-500 dark:text-gray-400 text-right mt-1 -mb-1"
 			>
-				{formatTime(message.timestamp)}
+				{formatTime(message.timestamp, getLocale())}
 			</div>
 		</div>
 

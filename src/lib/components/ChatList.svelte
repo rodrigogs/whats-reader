@@ -1,6 +1,7 @@
 <script lang="ts">
 import { floating } from '$lib/actions/floating';
 import * as m from '$lib/paraglide/messages';
+import { getLocale } from '$lib/paraglide/runtime';
 import type { ChatData } from '$lib/state.svelte';
 import { getAvailableLanguages } from '$lib/transcription.svelte';
 
@@ -121,21 +122,22 @@ function handleAutoLoadToggle() {
 
 function formatDate(date: Date | null): string {
 	if (!date) return '';
+	const locale = getLocale();
 	const now = new Date();
 	const diff = now.getTime() - date.getTime();
 	const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
 	if (days === 0) {
-		return date.toLocaleTimeString('en-US', {
+		return date.toLocaleTimeString(locale, {
 			hour: '2-digit',
 			minute: '2-digit',
 		});
 	} else if (days === 1) {
-		return 'Yesterday';
+		return m.time_yesterday();
 	} else if (days < 7) {
-		return date.toLocaleDateString('en-US', { weekday: 'short' });
+		return date.toLocaleDateString(locale, { weekday: 'short' });
 	} else {
-		return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+		return date.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
 	}
 }
 

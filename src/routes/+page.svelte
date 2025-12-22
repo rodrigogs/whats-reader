@@ -14,6 +14,7 @@ import {
 import AutoUpdateToast from '$lib/components/AutoUpdateToast.svelte';
 import BookmarksPanel from '$lib/components/BookmarksPanel.svelte';
 import LocaleSwitcher from '$lib/components/LocaleSwitcher.svelte';
+import MediaGallery from '$lib/components/MediaGallery.svelte';
 import * as m from '$lib/paraglide/messages';
 import { parseZipFile, readFileAsArrayBuffer } from '$lib/parser';
 import { appState, type ChatData } from '$lib/state.svelte';
@@ -61,6 +62,7 @@ $effect(() => {
 let showStats = $state(false);
 let showSidebar = $state(true);
 let showBookmarks = $state(false);
+let showMediaGallery = $state(false);
 let showParticipants = $state(false);
 let participantStats = $state<Map<string, number> | null>(null);
 let scrollToMessageId = $state<string | null>(null);
@@ -209,7 +211,7 @@ async function handleFilesSelected(files: FileList) {
 						chatTitle: string;
 						indexEntries: [string, number][];
 						flatItems: Array<
-							| { type: 'date'; date: string }
+							| { type: 'date'; dateKey: string }
 							| { type: 'message'; messageId: string }
 						>;
 						serializedMessages: Array<{
@@ -317,6 +319,27 @@ function toggleSidebar() {
 
 function toggleBookmarks() {
 	showBookmarks = !showBookmarks;
+	if (showBookmarks) {
+		showMediaGallery = false;
+	}
+}
+
+function toggleMediaGallery() {
+	showMediaGallery = !showMediaGallery;
+	if (showMediaGallery) {
+		showBookmarks = false;
+	}
+}
+
+async function handleNavigateToMediaMessage(messageId: string) {
+	// Clear any previous scroll target
+	scrollToMessageId = null;
+
+	// Wait for Svelte to process the null value
+	await tick();
+
+	// Set the new scroll target
+	scrollToMessageId = messageId;
 }
 
 async function handleNavigateToBookmark(messageId: string, chatId: string) {
@@ -760,6 +783,33 @@ const currentUser = $derived.by(() => {
 							</div>
 
 							<button
+								class="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer {showMediaGallery ? 'bg-white/20' : ''}"
+								onclick={toggleMediaGallery}
+								title={m.media_gallery_title()}
+								aria-label={m.media_gallery_toggle()}
+							>
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
+									/>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M7 15l3-3 3 3 3-3 2 2"
+									/>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M9 9h.01"
+									/>
+								</svg>
+							</button>
+							<button
 									class="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer {showBookmarks ? 'bg-white/20' : ''}"
 									onclick={toggleBookmarks}
 									title={m.bookmarks_title()}
@@ -877,6 +927,21 @@ const currentUser = $derived.by(() => {
 						precomputedFlatItems={appState.selectedChat.flatItems}
 						precomputedMessagesById={appState.selectedChat.messagesById}
 					/>
+				</div>
+
+				<!-- Media gallery panel (slide from right) -->
+				<div
+					class="gallery-panel w-96 flex-shrink-0 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col {showMediaGallery ? 'gallery-open' : 'gallery-closed'}"
+					class:electron-mac={isElectronMac}
+				>
+					<!-- Header spacer - matches sidebar header -->
+					<div class="h-16 bg-[var(--color-whatsapp-dark-green)] flex-shrink-0"></div>
+					<div class="flex-1 overflow-hidden">
+						<MediaGallery
+							onNavigateToMessage={handleNavigateToMediaMessage}
+							onClose={() => (showMediaGallery = false)}
+						/>
+					</div>
 				</div>
 
 				<!-- Bookmarks panel (slide from right) -->

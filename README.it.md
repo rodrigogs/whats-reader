@@ -66,9 +66,13 @@ I messaggi vocali possono essere trascritti usando [Whisper](https://openai.com/
 |:---:|:---:|
 | <img src="examples/images/5-bookmarks.png" width="400" /> | <img src="examples/images/6-statistics.png" width="400" /> |
 
-| Trascrizione Vocale |
-|:---:|
-| <img src="examples/images/7-audio-transcription.png" width="400" /> |
+| Trascrizione Vocale | Galleria multimediale |
+|:---:|:---:|
+| <img src="examples/images/7-audio-transcription.png" width="400" /> | <img src="examples/images/8-media-gallery.png" width="400" /> |
+
+| Scarica selezionati | Vai alla data |
+|:---:|:---:|
+| <img src="examples/images/9-media-gallery-download-selected.png" width="400" /> | <img src="examples/images/10-media-gallery-goto-date.png" width="400" /> |
 
 </details>
 
