@@ -14,6 +14,7 @@ const MAX_CONCURRENT_THUMBNAILS = 2;
 
 const thumbnailUrlCache = new Map<string, string>();
 const thumbnailPromiseCache = new Map<string, Promise<string | null>>();
+const thumbnailAccessOrder: string[] = []; // Track access order for LRU eviction
 
 let inFlight = 0;
 const queue: Array<() => void> = [];
@@ -42,16 +43,12 @@ function evictOldestThumbnails(): void {
 	if (thumbnailUrlCache.size <= MAX_THUMBNAILS) return;
 
 	const overflow = thumbnailUrlCache.size - MAX_THUMBNAILS;
-	const keysToRemove: string[] = [];
 
-	let i = 0;
-	for (const key of thumbnailUrlCache.keys()) {
-		keysToRemove.push(key);
-		i++;
-		if (i >= overflow) break;
-	}
+	// Evict least recently used thumbnails (from front of access order array)
+	for (let i = 0; i < overflow; i++) {
+		const key = thumbnailAccessOrder.shift();
+		if (!key) break;
 
-	for (const key of keysToRemove) {
 		const url = thumbnailUrlCache.get(key);
 		if (url) URL.revokeObjectURL(url);
 		thumbnailUrlCache.delete(key);
@@ -66,7 +63,8 @@ function getImageMimeType(filename: string): string {
 	if (ext === 'webp') return 'image/webp';
 	if (ext === 'bmp') return 'image/bmp';
 	if (ext === 'svg') return 'image/svg+xml';
-	return 'application/octet-stream';
+	// Use image/jpeg as safer default for unrecognized image files
+	return 'image/jpeg';
 }
 
 async function canvasToBlob(
@@ -103,7 +101,15 @@ export async function getImageThumbnailUrl(
 
 	const key = media.path;
 	const cached = thumbnailUrlCache.get(key);
-	if (cached) return cached;
+	if (cached) {
+		// Move to end of access order (most recently used)
+		const idx = thumbnailAccessOrder.indexOf(key);
+		if (idx !== -1) {
+			thumbnailAccessOrder.splice(idx, 1);
+		}
+		thumbnailAccessOrder.push(key);
+		return cached;
+	}
 
 	const pending = thumbnailPromiseCache.get(key);
 	if (pending) return pending;
@@ -136,8 +142,18 @@ export async function getImageThumbnailUrl(
 					resizeHeight: targetHeight,
 					resizeQuality: 'high',
 				});
-			} catch {
+				// Close original bitmap if resize succeeded
+				if (resized !== bitmap) {
+					bitmap.close();
+				}
+			} catch (error) {
 				// Fallback to original if resize options are not supported.
+				if (typeof console !== 'undefined') {
+					console.debug(
+						'createImageBitmap resize options failed, using original bitmap instead',
+						error,
+					);
+				}
 				resized = bitmap;
 			}
 
@@ -161,14 +177,21 @@ export async function getImageThumbnailUrl(
 			} else {
 				ctx = (canvas as HTMLCanvasElement).getContext('2d');
 			}
-			if (!ctx) return null;
+			if (!ctx) {
+				resized.close();
+				return null;
+			}
 
 			ctx.drawImage(resized, 0, 0, targetWidth, targetHeight);
+
+			// Close the ImageBitmap to free memory
+			resized.close();
 
 			const outBlob = await canvasToBlob(canvas, 'image/webp', quality);
 			const url = URL.createObjectURL(outBlob);
 
 			thumbnailUrlCache.set(key, url);
+			thumbnailAccessOrder.push(key); // Track access order for LRU
 			evictOldestThumbnails();
 
 			return url;
@@ -187,4 +210,5 @@ export function cleanupThumbnailUrls(): void {
 	}
 	thumbnailUrlCache.clear();
 	thumbnailPromiseCache.clear();
+	thumbnailAccessOrder.length = 0; // Clear access order tracking
 }

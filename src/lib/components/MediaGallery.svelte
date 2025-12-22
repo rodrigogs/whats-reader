@@ -53,7 +53,10 @@ $effect(() => {
 	const dateKey = scrollToDateKey;
 	if (!dateKey || !scrollContainerRef) return;
 
+	let isCancelled = false;
+
 	tick().then(() => {
+		if (isCancelled) return;
 		const section = scrollContainerRef?.querySelector(
 			`[data-date="${dateKey}"]`,
 		);
@@ -62,6 +65,10 @@ $effect(() => {
 		}
 		galleryState.clearScrollToDate();
 	});
+
+	return () => {
+		isCancelled = true;
+	};
 });
 
 function sanitizeFilename(name: string): string {
@@ -137,16 +144,25 @@ $effect(() => {
 	lightboxLoading = true;
 	lightboxError = null;
 
+	let isCancelled = false;
+
 	loadMediaFile(it.media)
 		.then((url) => {
+			if (isCancelled) return;
 			lightboxUrl = url;
 		})
 		.catch((err) => {
+			if (isCancelled) return;
 			lightboxError = err instanceof Error ? err.message : String(err);
 		})
 		.finally(() => {
+			if (isCancelled) return;
 			lightboxLoading = false;
 		});
+
+	return () => {
+		isCancelled = true;
+	};
 });
 
 function closeLightbox() {
@@ -503,7 +519,11 @@ onDestroy(() => {
 						{#each getMonthDays(datePickerMonth) as { date, dateKey, inMonth }}
 							{@const hasMedia = datesWithMedia.has(dateKey)}
 							{@const mediaTypes = hasMedia ? galleryState.getMediaTypesForDate(dateKey) : null}
-							{@const tooltipParts = mediaTypes ? [mediaTypes.images > 0 ? `${mediaTypes.images} 📷` : '', mediaTypes.videos > 0 ? `${mediaTypes.videos} 🎬` : '', mediaTypes.audio > 0 ? `${mediaTypes.audio} 🎵` : ''].filter(Boolean).join('  ') : ''}
+							{@const tooltipParts = mediaTypes ? [
+								mediaTypes.images > 0 ? `${mediaTypes.images} photos` : '',
+								mediaTypes.videos > 0 ? `${mediaTypes.videos} videos` : '',
+								mediaTypes.audio > 0 ? `${mediaTypes.audio} audio` : ''
+							].filter(Boolean).join(', ') : ''}
 							<button
 								type="button"
 								class="relative aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-colors cursor-pointer
@@ -513,6 +533,7 @@ onDestroy(() => {
 								onclick={() => hasMedia && selectDate(dateKey)}
 								disabled={!hasMedia}
 								title={tooltipParts}
+								aria-label={hasMedia ? `${date.getDate()}, ${tooltipParts}` : `${date.getDate()}`}
 							>
 								<span class="leading-none">{date.getDate()}</span>
 								{#if hasMedia && inMonth && mediaTypes}
@@ -611,11 +632,21 @@ onDestroy(() => {
 						{#if lightboxItem.type === 'image'}
 							<img src={lightboxUrl} alt={lightboxItem.name} class="max-h-[70vh] w-full object-contain" />
 						{:else if lightboxItem.type === 'video'}
-							<video src={lightboxUrl} controls class="max-h-[70vh] w-full">
-								<track kind="captions" />
+							<video
+								src={lightboxUrl}
+								controls
+								class="max-h-[70vh] w-full"
+								aria-label={lightboxItem.name}
+							>
+								<track kind="captions" srclang="en" label={lightboxItem.name} />
 							</video>
 						{:else if lightboxItem.type === 'audio'}
-							<audio src={lightboxUrl} controls class="w-full p-4"></audio>
+							<audio
+								src={lightboxUrl}
+								controls
+								class="w-full p-4"
+								aria-label={lightboxItem.name}
+							></audio>
 						{:else}
 							<div class="p-6 text-center">
 								<a

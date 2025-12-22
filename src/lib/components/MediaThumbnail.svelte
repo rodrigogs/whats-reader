@@ -29,6 +29,7 @@ function mediaIconPath(type: GalleryItem['type']): string {
 	if (type === 'document') {
 		return 'M7 2h8l4 4v14a2 2 0 01-2 2H7a2 2 0 01-2-2V4a2 2 0 012-2z';
 	}
+	// Generic icon for 'other' and unrecognized media types
 	return 'M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z';
 }
 
@@ -52,8 +53,10 @@ onMount(() => {
 			for (const entry of entries) {
 				if (!entry.isIntersecting) continue;
 				ensureThumbnail();
-				observer?.disconnect();
-				observer = null;
+				if (observer) {
+					observer.disconnect();
+					observer = null;
+				}
 			}
 		},
 		{ root: null, rootMargin: '200px' },
@@ -63,7 +66,10 @@ onMount(() => {
 });
 
 onDestroy(() => {
-	observer?.disconnect();
+	if (observer) {
+		observer.disconnect();
+		observer = null;
+	}
 });
 </script>
 
