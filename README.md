@@ -70,7 +70,11 @@ Voice messages can be transcribed using [Whisper](https://openai.com/research/wh
 
 | Voice Transcription | Media Gallery |
 |:---:|:---:|
-| <img src="examples/images/7-audio-transcription.png" width="400" /> | _Coming soon_ |
+| <img src="examples/images/7-audio-transcription.png" width="400" /> | <img src="examples/images/8-media-gallery.png" width="400" /> |
+
+| Download Selected | Go to date |
+|:---:|:---:|
+| <img src="examples/images/9-media-gallery-download-selected.png" width="400" /> | <img src="examples/images/10-media-gallery-goto-date.png" width="400" /> |
 
 </details>
 

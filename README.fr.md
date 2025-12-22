@@ -66,9 +66,13 @@ Les messages vocaux peuvent être transcrits en utilisant [Whisper](https://open
 |:---:|:---:|
 | <img src="examples/images/5-bookmarks.png" width="400" /> | <img src="examples/images/6-statistics.png" width="400" /> |
 
-| Transcription Vocale |
-|:---:|
-| <img src="examples/images/7-audio-transcription.png" width="400" /> |
+| Transcription Vocale | Galerie Multimédia |
+|:---:|:---:|
+| <img src="examples/images/7-audio-transcription.png" width="400" /> | <img src="examples/images/8-media-gallery.png" width="400" /> |
+
+| Télécharger la sélection | Aller à la date |
+|:---:|:---:|
+| <img src="examples/images/9-media-gallery-download-selected.png" width="400" /> | <img src="examples/images/10-media-gallery-goto-date.png" width="400" /> |
 
 </details>
 

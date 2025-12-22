@@ -70,7 +70,11 @@ Mensagens de voz podem ser transcritas usando [Whisper](https://openai.com/resea
 
 | Transcrição de Voz | Galeria de Mídia |
 |:---:|:---:|
-| <img src="examples/images/7-audio-transcription.png" width="400" /> | _Em breve_ |
+| <img src="examples/images/7-audio-transcription.png" width="400" /> | <img src="examples/images/8-media-gallery.png" width="400" /> |
+
+| Baixar selecionados | Ir para data |
+|:---:|:---:|
+| <img src="examples/images/9-media-gallery-download-selected.png" width="400" /> | <img src="examples/images/10-media-gallery-goto-date.png" width="400" /> |
 
 </details>
 
