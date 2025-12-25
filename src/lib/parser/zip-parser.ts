@@ -311,14 +311,66 @@ export async function parseZipFile(
 
 		let titleHint = chatFilename;
 		if (isIosGenericChatName) {
+			// iOS exports always use "_chat.txt" - we need to extract a better name
+			// Try multiple strategies in order of preference:
+			
+			// Strategy 1: Extract from parent folder name
+			// e.g., "WhatsApp/Conversa do WhatsApp com GTR administração/_chat.txt"
 			const parts = (chatEntryPath ?? '')
 				.split('/')
 				.map((p) => p.trim())
 				.filter(Boolean);
 			const parentFolder = parts.length >= 2 ? parts[parts.length - 2] : null;
-			const zipBaseName =
-				file instanceof File ? file.name.replace(/\.zip$/i, '') : null;
-			titleHint = parentFolder || zipBaseName || chatFilename;
+			
+			// Strategy 2: Extract from ZIP filename
+			// e.g., "WhatsApp.Chat.-.+20.109.870.8253.zip" or "Chat with John.zip"
+			let zipBaseName: string | null = null;
+			if (file instanceof File) {
+				zipBaseName = file.name.replace(/\.zip$/i, '');
+				// Clean up common patterns from iOS/Android exports
+				zipBaseName = zipBaseName
+					.replace(/^WhatsApp\.Chat\.-\./, '') // "WhatsApp.Chat.-." prefix
+					.replace(/^WhatsApp[-_\s]+(Chat|Conversa|Plausch|チャット|聊天)/i, '') // "WhatsApp Chat" in various languages
+					.replace(/[-_\s]+(Chat|Conversa|Plausch|チャット|聊天)[-_\s]+/gi, ' ') // " Chat " or " Conversa " in the middle
+					.replace(/^(Chat|Conversa|Plausch|チャット|聊天)[-_\s]+with[-_\s]+/i, '') // "Chat with" prefix
+					.replace(/\+/g, ' ') // Replace + with space
+					.trim();
+			}
+			
+			// Strategy 3: Parse the first few lines of the chat for contact/group info
+			// Some iOS exports include the chat name in the first system message
+			let contentHint: string | null = null;
+			const firstLines = chatContent.split(/\r?\n/).slice(0, 5);
+			for (const line of firstLines) {
+				// Look for patterns like "Messages to this chat and calls are now secured with end-to-end encryption"
+				// or group subject changes
+				if (line.includes('group subject') || line.includes('assunto do grupo')) {
+					const match = line.match(/(?:group subject|assunto do grupo)[:\s]+["']?([^"'\n]+)["']?/i);
+					if (match?.[1]) {
+						contentHint = match[1].trim();
+						break;
+					}
+				}
+			}
+			
+			// Choose the best available name
+			if (parentFolder && !parentFolder.toLowerCase().includes('whatsapp')) {
+				// Parent folder is the best if it's not just "WhatsApp" itself
+				titleHint = parentFolder
+					.replace(/^(WhatsApp|Conversa do WhatsApp com|Chat with|Plausch mit)\s+/i, '')
+					.trim();
+			} else if (zipBaseName && zipBaseName.length > 0) {
+				// ZIP filename is second best
+				titleHint = zipBaseName;
+			} else if (contentHint) {
+				// Content extraction is third best
+				titleHint = contentHint;
+			} else {
+				// Fallback: use a generic but clear name instead of "_chat"
+				titleHint = 'iOS Chat Export';
+			}
+			
+			console.log(`iOS export detected. Original: "${chatFilename}", Derived title: "${titleHint}"`);
 		}
 
 		parsedChat = parseChat(chatContent, titleHint);
