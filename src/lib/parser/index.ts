@@ -19,7 +19,6 @@ export type {
 } from './zip-parser';
 export {
 	cleanupMediaUrls,
-	formatFileSize,
 	loadMediaFile,
 	parseZipFile,
 	preloadMedia,

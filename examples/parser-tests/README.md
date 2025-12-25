@@ -80,6 +80,30 @@ The parser supports the following date patterns:
    - Example: `[10/12/24, 14:30:45]`
    - Some older WhatsApp versions
 
+8. **iOS Bracketed Format (12h)**: `[DD/MM/YYYY, HH:MM:SS AM/PM]`
+   - Example: `[13/11/2025, 12:25:55 PM]`
+   - iOS WhatsApp exports
+   - Uses 12-hour format with AM/PM
+   - May contain Unicode whitespace (U+202F) before AM/PM
+   - File typically named `_chat.txt` (with underscore prefix)
+
+## Test Files
+
+### 1. `german-format-test.txt` (see above)
+### 2. `spanish-format-test.txt` (see above)
+### 3. `french-format-test.txt` (see above)
+### 4. `asian-format-test.txt` (see above)
+### 5. `dash-format-test.txt` (see above)
+### 6. `ios-format-test.txt`
+- **Date Format**: `[DD/MM/YYYY, HH:MM:SS AM/PM]`
+- **Example**: `[13/11/2025, 12:25:55 PM]`
+- **Locale**: iOS (all locales)
+- **Features Tested**:
+  - iOS bracketed date format with AM/PM
+  - Unicode whitespace character (U+202F) between time and AM/PM
+  - Underscore-prefixed filename (`_chat.txt`)
+  - Right-to-left language support (Arabic text)
+
 ## Media Indicators Supported
 
 The parser recognizes media indicators in multiple languages:
