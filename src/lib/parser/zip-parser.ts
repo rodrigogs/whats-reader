@@ -282,9 +282,11 @@ export async function parseZipFile(
 	// Log the first few lines of the chat file for debugging
 	const firstLines = chatContent.split(/\r?\n/).slice(0, 5);
 	console.log(`Parsing chat file: ${chatFilename}`);
-	console.log('First 5 lines of chat file:');
+	console.log('First 5 lines of chat file (for format debugging):');
 	for (let i = 0; i < firstLines.length; i++) {
-		console.log(`  ${i + 1}: ${firstLines[i].substring(0, 100)}`);
+		// Only show first 80 chars to minimize exposure of sensitive content
+		const preview = firstLines[i].substring(0, 80);
+		console.log(`  ${i + 1}: ${preview}${firstLines[i].length > 80 ? '...' : ''}`);
 	}
 
 	// Check if the content is potentially parseable

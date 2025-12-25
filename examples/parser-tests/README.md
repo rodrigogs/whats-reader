@@ -89,6 +89,11 @@ The parser supports the following date patterns:
 
 ## Test Files
 
+### 1. `german-format-test.txt` (see above)
+### 2. `spanish-format-test.txt` (see above)
+### 3. `french-format-test.txt` (see above)
+### 4. `asian-format-test.txt` (see above)
+### 5. `dash-format-test.txt` (see above)
 ### 6. `ios-format-test.txt`
 - **Date Format**: `[DD/MM/YYYY, HH:MM:SS AM/PM]`
 - **Example**: `[13/11/2025, 12:25:55 PM]`
