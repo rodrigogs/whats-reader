@@ -264,7 +264,26 @@ const DATE_PATTERNS = [
 			);
 		},
 	},
-	// [DD/MM/YY, HH:MM:SS] - Bracketed format
+	// [DD/MM/YYYY, HH:MM:SS AM/PM] - iOS bracketed format with 12-hour time
+	// Note: May contain Unicode whitespace characters (U+202F, U+00A0) before AM/PM
+	// MUST be checked before non-AM/PM bracketed format
+	{
+		regex:
+			/^\[(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2}):(\d{2})\s*([AP]M)\]\s*/i,
+		parse: (match: RegExpMatchArray) => {
+			const [, day, month, year, hours, minutes, seconds, ampm] = match;
+			return parseDateTime(
+				parseInt(day, 10),
+				parseInt(month, 10),
+				normalizeYear(parseInt(year, 10)),
+				parseInt(hours, 10),
+				parseInt(minutes, 10),
+				parseInt(seconds, 10),
+				ampm,
+			);
+		},
+	},
+	// [DD/MM/YY, HH:MM:SS] - Bracketed format (24-hour)
 	{
 		regex:
 			/^\[(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2}):(\d{2})\]\s*/,

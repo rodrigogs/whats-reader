@@ -106,6 +106,33 @@ export interface ParseProgress {
 }
 
 /**
+ * Check if content looks like a WhatsApp chat export
+ * by looking for timestamp patterns in the first few lines
+ */
+function looksLikeChatContent(content: string): boolean {
+	const lines = content.split(/\r?\n/).slice(0, 10); // Check first 10 lines
+
+	// Common timestamp patterns from WhatsApp exports
+	const timestampPatterns = [
+		/^\d{1,2}\/\d{1,2}\/\d{2,4},?\s+\d{1,2}:\d{2}/, // MM/DD/YY or DD/MM/YY
+		/^\d{4}[-/]\d{1,2}[-/]\d{1,2},?\s+\d{1,2}:\d{2}/, // YYYY-MM-DD or YYYY/MM/DD
+		/^\d{1,2}\.\d{1,2}\.\d{2,4},?\s+\d{1,2}:\d{2}/, // DD.MM.YY (German)
+		/^\[\d{1,2}\/\d{1,2}\/\d{2,4},?\s+\d{1,2}:\d{2}:\d{2}/, // [DD/MM/YY, HH:MM:SS] (iOS bracketed)
+	];
+
+	// Count lines that match timestamp patterns
+	let matchCount = 0;
+	for (const line of lines) {
+		if (line.trim() && timestampPatterns.some((pattern) => pattern.test(line))) {
+			matchCount++;
+		}
+	}
+
+	// If at least 2 lines match timestamp patterns, it's likely a chat file
+	return matchCount >= 2;
+}
+
+/**
  * Parse a WhatsApp ZIP export file
  * Uses lazy loading for media files to handle large backups efficiently
  */
@@ -135,24 +162,58 @@ export async function parseZipFile(
 	const totalFiles = fileEntries.length;
 	let processedFiles = 0;
 
+	// Track all files for debugging
+	const allFiles: Array<{ path: string; name: string; size: number }> = [];
+
 	// First pass: find the chat text file, catalog VCF files, and catalog media files
 	for (const [path, zipEntry] of fileEntries) {
 		const filename = path.split('/').pop() || path;
+		const fileSize = zipEntry._data?.uncompressedSize || 0;
 
-		if (filename.endsWith('.txt') && !filename.startsWith('.')) {
+		// Track for debugging
+		allFiles.push({ path, name: filename, size: fileSize });
+
+		// Remove any potential BOM (Byte Order Mark) from filename for comparison
+		const cleanFilename = filename.replace(/^\uFEFF/, '');
+		const lowerFilename = cleanFilename.toLowerCase();
+
+		// More flexible chat file detection
+		// Check for:
+		// 1. Files ending with .txt (case-insensitive)
+		// 2. Files that might contain "chat" or "conversation" in the name
+		// 3. Not hidden files (starting with . but underscore prefix is OK for iOS exports)
+		const isTxtFile = lowerFilename.endsWith('.txt');
+		const isChatLikeFile =
+			lowerFilename.includes('chat') ||
+			lowerFilename.includes('conversation') ||
+			lowerFilename.includes('whatsapp');
+		const isNotHidden = !cleanFilename.startsWith('.');
+
+		if (isTxtFile && isNotHidden) {
 			// This is likely the chat file - load it immediately (it's small)
 			chatContent = await zipEntry.async('string');
-			chatFilename = filename;
-		} else if (filename.toLowerCase().endsWith('.vcf')) {
+			chatFilename = cleanFilename;
+			console.log(`Found chat file: ${cleanFilename} (${path})`);
+		} else if (isChatLikeFile && isNotHidden && !chatContent) {
+			// Try loading files that might be chat files even without .txt extension
+			console.log(`Trying potential chat file: ${cleanFilename} (${path})`);
+			const content = await zipEntry.async('string');
+			// Check if it looks like a chat file (contains timestamp patterns)
+			if (looksLikeChatContent(content)) {
+				chatContent = content;
+				chatFilename = cleanFilename;
+				console.log(`Detected chat file without .txt extension: ${cleanFilename}`);
+			}
+		} else if (lowerFilename.endsWith('.vcf')) {
 			// This is a vCard file - save for parsing
-			vcfEntries.push({ filename, entry: zipEntry });
+			vcfEntries.push({ filename: cleanFilename, entry: zipEntry });
 		} else {
 			// This is a media file - catalog it but don't load yet
-			const mediaType = getMediaType(filename);
+			const mediaType = getMediaType(cleanFilename);
 
-			if (mediaType !== 'other' || !filename.startsWith('.')) {
+			if (mediaType !== 'other' || !isNotHidden) {
 				mediaFiles.push({
-					name: filename,
+					name: cleanFilename,
 					path,
 					type: mediaType,
 					size: 0, // Will be set when loaded
@@ -188,13 +249,88 @@ export async function parseZipFile(
 	}
 
 	if (!chatContent) {
-		throw new Error('No chat file found in ZIP archive');
+		// Provide detailed error message with debugging information
+		console.error('No chat file found in ZIP archive');
+		console.error('Files found in ZIP:');
+		for (const file of allFiles) {
+			console.error(
+				`  - ${file.path} (${file.name}) - ${formatFileSize(file.size)}`,
+			);
+		}
+
+		// Create a user-friendly error message
+		const fileList = allFiles
+			.map((f) => `  • ${f.name} (${formatFileSize(f.size)})`)
+			.join('\n');
+
+		throw new Error(
+			`No WhatsApp chat file found in ZIP archive.\n\n` +
+				`Expected: A .txt file containing chat history (e.g., "WhatsApp Chat with Contact.txt")\n\n` +
+				`Files found in archive (${allFiles.length} total):\n${fileList}\n\n` +
+				`Please ensure you exported the chat correctly:\n` +
+				`1. Open WhatsApp\n` +
+				`2. Open the chat you want to export\n` +
+				`3. Tap the contact/group name at the top\n` +
+				`4. Scroll down and tap "Export Chat"\n` +
+				`5. Choose "Include Media" or "Without Media"\n` +
+				`6. Save the ZIP file and try again`,
+		);
 	}
 
 	onProgress?.({ stage: 'parsing', progress: 0 });
 
+	// Log the first few lines of the chat file for debugging
+	const firstLines = chatContent.split(/\r?\n/).slice(0, 5);
+	console.log(`Parsing chat file: ${chatFilename}`);
+	console.log('First 5 lines of chat file:');
+	for (let i = 0; i < firstLines.length; i++) {
+		console.log(`  ${i + 1}: ${firstLines[i].substring(0, 100)}`);
+	}
+
+	// Check if the content is potentially parseable
+	if (!chatContent.trim()) {
+		throw new Error(
+			`Chat file is empty: ${chatFilename}\n\n` +
+				`The file exists but contains no content. Please check if the export was completed correctly.`,
+		);
+	}
+
 	// Parse the chat content
-	const parsedChat = parseChat(chatContent, chatFilename);
+	let parsedChat: ParsedChat;
+	try {
+		parsedChat = parseChat(chatContent, chatFilename);
+	} catch (error) {
+		console.error('Failed to parse chat file:', error);
+		throw new Error(
+			`Failed to parse chat file: ${chatFilename}\n\n` +
+				`Error: ${error instanceof Error ? error.message : String(error)}\n\n` +
+				`The file format may not be supported or the file may be corrupted.`,
+		);
+	}
+
+	// Validate that we got at least some messages
+	if (parsedChat.messages.length === 0) {
+		console.warn(
+			'No messages were parsed from the chat file. First few lines:',
+		);
+		for (let i = 0; i < Math.min(10, firstLines.length); i++) {
+			console.warn(`  Line ${i + 1}: ${firstLines[i]}`);
+		}
+
+		throw new Error(
+			`No messages found in chat file: ${chatFilename}\n\n` +
+				`The file was loaded but no messages could be parsed. This may indicate:\n` +
+				`1. The date format is not recognized\n` +
+				`2. The file structure is different from expected\n` +
+				`3. The file may be corrupted\n\n` +
+				`First line of file: "${firstLines[0]}"\n\n` +
+				`Please report this issue with information about your WhatsApp version and phone model.`,
+		);
+	}
+
+	console.log(
+		`Successfully parsed ${parsedChat.messages.length} messages from ${chatFilename}`,
+	);
 
 	onProgress?.({ stage: 'parsing', progress: 50 });
 
