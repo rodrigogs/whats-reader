@@ -154,6 +154,7 @@ export async function parseZipFile(
 
 	let chatContent = '';
 	let chatFilename = 'WhatsApp Chat';
+	let chatEntryPath: string | null = null;
 	const mediaFiles: MediaFile[] = [];
 	const contacts = new Map<string, ContactInfo>();
 	const vcfEntries: Array<{ filename: string; entry: JSZip.JSZipObject }> = [];
@@ -195,6 +196,7 @@ export async function parseZipFile(
 			// This is likely the chat file - load it immediately (it's small)
 			chatContent = await zipEntry.async('string');
 			chatFilename = cleanFilename;
+			chatEntryPath = path;
 			console.log(`Found chat file: ${cleanFilename} (${path})`);
 		} else if (isChatLikeFile && isNotHidden && !chatContent) {
 			// Try loading files that might be chat files even without .txt extension
@@ -204,6 +206,7 @@ export async function parseZipFile(
 			if (looksLikeChatContent(content)) {
 				chatContent = content;
 				chatFilename = cleanFilename;
+				chatEntryPath = path;
 				console.log(
 					`Detected chat file without .txt extension: ${cleanFilename}`,
 				);
@@ -302,7 +305,23 @@ export async function parseZipFile(
 	// Parse the chat content
 	let parsedChat: ParsedChat;
 	try {
-		parsedChat = parseChat(chatContent, chatFilename);
+		const lower = chatFilename.toLowerCase();
+		const isIosGenericChatName =
+			lower === '_chat.txt' || lower.startsWith('_chat');
+
+		let titleHint = chatFilename;
+		if (isIosGenericChatName) {
+			const parts = (chatEntryPath ?? '')
+				.split('/')
+				.map((p) => p.trim())
+				.filter(Boolean);
+			const parentFolder = parts.length >= 2 ? parts[parts.length - 2] : null;
+			const zipBaseName =
+				file instanceof File ? file.name.replace(/\.zip$/i, '') : null;
+			titleHint = parentFolder || zipBaseName || chatFilename;
+		}
+
+		parsedChat = parseChat(chatContent, titleHint);
 	} catch (error) {
 		console.error('Failed to parse chat file:', error);
 		throw new Error(
