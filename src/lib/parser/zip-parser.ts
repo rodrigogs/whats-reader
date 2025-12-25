@@ -166,15 +166,14 @@ export async function parseZipFile(
 	let processedFiles = 0;
 
 	// Track all files for debugging
-	const allFiles: Array<{ path: string; name: string; size: number }> = [];
+	const allFiles: Array<{ path: string; name: string }> = [];
 
 	// First pass: find the chat text file, catalog VCF files, and catalog media files
 	for (const [path, zipEntry] of fileEntries) {
 		const filename = path.split('/').pop() || path;
-		const fileSize = zipEntry._data?.uncompressedSize || 0;
 
 		// Track for debugging
-		allFiles.push({ path, name: filename, size: fileSize });
+		allFiles.push({ path, name: filename });
 
 		// Remove any potential BOM (Byte Order Mark) from filename for comparison
 		const cleanFilename = filename.replace(/^\uFEFF/, '');
@@ -258,15 +257,11 @@ export async function parseZipFile(
 		console.error('No chat file found in ZIP archive');
 		console.error('Files found in ZIP:');
 		for (const file of allFiles) {
-			console.error(
-				`  - ${file.path} (${file.name}) - ${formatFileSize(file.size)}`,
-			);
+			console.error(`  - ${file.path} (${file.name})`);
 		}
 
 		// Create a user-friendly error message
-		const fileList = allFiles
-			.map((f) => `  • ${f.name} (${formatFileSize(f.size)})`)
-			.join('\n');
+		const fileList = allFiles.map((f) => `  • ${f.name}`).join('\n');
 
 		throw new Error(
 			`No WhatsApp chat file found in ZIP archive.\n\n` +
@@ -561,20 +556,4 @@ export async function preloadMedia(mediaFiles: MediaFile[]): Promise<void> {
 				.map((m) => loadMediaFile(m).catch(() => {})), // Ignore individual failures
 		);
 	}
-}
-
-/**
- * Get file size in human-readable format
- */
-export function formatFileSize(bytes: number): string {
-	const units = ['B', 'KB', 'MB', 'GB'];
-	let size = bytes;
-	let unitIndex = 0;
-
-	while (size >= 1024 && unitIndex < units.length - 1) {
-		size /= 1024;
-		unitIndex++;
-	}
-
-	return `${size.toFixed(1)} ${units[unitIndex]}`;
 }
