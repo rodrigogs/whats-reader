@@ -211,7 +211,7 @@ export async function parseZipFile(
 			// This is a media file - catalog it but don't load yet
 			const mediaType = getMediaType(cleanFilename);
 
-			if (mediaType !== 'other' || !isNotHidden) {
+			if (mediaType !== 'other' || isNotHidden) {
 				mediaFiles.push({
 					name: cleanFilename,
 					path,
