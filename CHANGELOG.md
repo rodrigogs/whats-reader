@@ -1,3 +1,19 @@
+# [1.19.0](https://github.com/rodrigogs/whats-reader/compare/v1.18.0...v1.19.0) (2025-12-25)
+
+
+### Bug Fixes
+
+* correct media file filtering logic for hidden files ([4955587](https://github.com/rodrigogs/whats-reader/commit/4955587ad3806a4b75f3a2434e71429739b59de8))
+* extract better chat titles from iOS _chat.txt exports ([e7f76fe](https://github.com/rodrigogs/whats-reader/commit/e7f76fe65d16d0a622d1fb8e87fbc3403bd19879))
+* **parser:** derive iOS _chat title from zip ([981af9d](https://github.com/rodrigogs/whats-reader/commit/981af9daa91cc46fcc361248520a3029cdc0f0a4))
+* remove TypeScript error by eliminating private _data property access ([25ce061](https://github.com/rodrigogs/whats-reader/commit/25ce06115e60702cca0747ba9cf2f7b002fbe815))
+
+
+### Features
+
+* add distinct Android and iOS example chats with improved documentation ([b8f41f7](https://github.com/rodrigogs/whats-reader/commit/b8f41f7559fd4bfe08467181418f0aeec975d3c4))
+* add support for iOS WhatsApp export format with enhanced error handling ([8a8e8ea](https://github.com/rodrigogs/whats-reader/commit/8a8e8ead22c91b76a25935442891310afa9472d6))
+
 # [1.18.0](https://github.com/rodrigogs/whats-reader/compare/v1.17.0...v1.18.0) (2025-12-22)
 
 
