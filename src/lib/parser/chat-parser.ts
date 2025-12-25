@@ -269,7 +269,7 @@ const DATE_PATTERNS = [
 	// MUST be checked before non-AM/PM bracketed format
 	{
 		regex:
-			/^\[(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2}):(\d{2})\s*([AP]M)\]\s*/i,
+			/^\[(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2}):(\d{2})[\s\u202F\u00A0]*([AP]M)\]\s*/i,
 		parse: (match: RegExpMatchArray) => {
 			const [, day, month, year, hours, minutes, seconds, ampm] = match;
 			return parseDateTime(
