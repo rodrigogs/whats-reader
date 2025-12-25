@@ -123,7 +123,10 @@ function looksLikeChatContent(content: string): boolean {
 	// Count lines that match timestamp patterns
 	let matchCount = 0;
 	for (const line of lines) {
-		if (line.trim() && timestampPatterns.some((pattern) => pattern.test(line))) {
+		if (
+			line.trim() &&
+			timestampPatterns.some((pattern) => pattern.test(line))
+		) {
 			matchCount++;
 		}
 	}
@@ -202,7 +205,9 @@ export async function parseZipFile(
 			if (looksLikeChatContent(content)) {
 				chatContent = content;
 				chatFilename = cleanFilename;
-				console.log(`Detected chat file without .txt extension: ${cleanFilename}`);
+				console.log(
+					`Detected chat file without .txt extension: ${cleanFilename}`,
+				);
 			}
 		} else if (lowerFilename.endsWith('.vcf')) {
 			// This is a vCard file - save for parsing
@@ -286,7 +291,9 @@ export async function parseZipFile(
 	for (let i = 0; i < firstLines.length; i++) {
 		// Only show first 80 chars to minimize exposure of sensitive content
 		const preview = firstLines[i].substring(0, 80);
-		console.log(`  ${i + 1}: ${preview}${firstLines[i].length > 80 ? '...' : ''}`);
+		console.log(
+			`  ${i + 1}: ${preview}${firstLines[i].length > 80 ? '...' : ''}`,
+		);
 	}
 
 	// Check if the content is potentially parseable
