@@ -1,3 +1,10 @@
+## [1.20.1](https://github.com/rodrigogs/whats-reader/compare/v1.20.0...v1.20.1) (2025-12-26)
+
+
+### Bug Fixes
+
+* **chat:** prevent scrollHeight errors with null checks ([#29](https://github.com/rodrigogs/whats-reader/issues/29)) ([afa848e](https://github.com/rodrigogs/whats-reader/commit/afa848ebc9386204473ade11d7fb7de8b414e8d1))
+
 # [1.20.0](https://github.com/rodrigogs/whats-reader/compare/v1.19.0...v1.20.0) (2025-12-26)
 
 
