@@ -1,3 +1,10 @@
+# [1.20.0](https://github.com/rodrigogs/whats-reader/compare/v1.19.0...v1.20.0) (2025-12-26)
+
+
+### Features
+
+* **gallery:** enhance media thumbnails with video preview, audio duration, and improved document display ([#26](https://github.com/rodrigogs/whats-reader/issues/26)) ([53b79dd](https://github.com/rodrigogs/whats-reader/commit/53b79dd1bc6d49c6220d93d53af245c9b87f7200))
+
 # [1.19.0](https://github.com/rodrigogs/whats-reader/compare/v1.18.0...v1.19.0) (2025-12-25)
 
 
