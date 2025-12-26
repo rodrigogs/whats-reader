@@ -75,7 +75,11 @@ export async function extractVideoFrames(
 			// Guard against infinite or invalid durations (live streams, corrupted files)
 			if (!Number.isFinite(duration) || duration <= 0) {
 				URL.revokeObjectURL(objectUrl);
-				reject(new Error('Invalid video duration: video may be a live stream or corrupted'));
+				reject(
+					new Error(
+						'Invalid video duration: video may be a live stream or corrupted',
+					),
+				);
 				return;
 			}
 
@@ -261,7 +265,11 @@ export async function extractVideoThumbnail(
 			// but guard against infinite or invalid durations.
 			let targetTime: number;
 
-			if (typeof timestamp === 'number' && Number.isFinite(timestamp) && timestamp >= 0) {
+			if (
+				typeof timestamp === 'number' &&
+				Number.isFinite(timestamp) &&
+				timestamp >= 0
+			) {
 				targetTime = timestamp;
 			} else if (Number.isFinite(video.duration) && video.duration > 0) {
 				targetTime = video.duration * 0.1;
