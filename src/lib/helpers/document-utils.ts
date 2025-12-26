@@ -8,7 +8,8 @@
  * @returns Formatted string (e.g., "1 MB", "234 KB")
  */
 export function formatFileSize(bytes: number): string {
-	if (bytes === 0) return '0 B';
+	// Guard against negative or non-finite values to avoid confusing output like "-5 B" or "NaN B"
+	if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
 	if (bytes < 1024) return `${Math.round(bytes)} B`;
 
 	const kb = bytes / 1024;
@@ -27,7 +28,14 @@ export function formatFileSize(bytes: number): string {
  * @returns Uppercase extension without dot (e.g., "PDF", "DOCX"), or empty string if none
  */
 export function getFileExtension(filename: string): string {
-	const ext = filename.toLowerCase().split('.').pop() || '';
+	const lastDotIndex = filename.lastIndexOf('.');
+
+	// No dot, leading dot, or trailing dot: treat as no extension
+	if (lastDotIndex <= 0 || lastDotIndex === filename.length - 1) {
+		return '';
+	}
+
+	const ext = filename.slice(lastDotIndex + 1).toLowerCase();
 	return ext.toUpperCase();
 }
 
