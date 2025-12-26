@@ -219,11 +219,15 @@ export async function parseZipFile(
 			const mediaType = getMediaType(cleanFilename);
 
 			if (mediaType !== 'other' || isNotHidden) {
+				// Access uncompressed size from JSZip internal structure
+				// biome-ignore lint/suspicious/noExplicitAny: JSZip doesn't expose _data in its type definitions
+				const size = (zipEntry as any)._data?.uncompressedSize || 0;
+
 				mediaFiles.push({
 					name: cleanFilename,
 					path,
 					type: mediaType,
-					size: 0, // Will be set when loaded
+					size,
 					_zipEntry: zipEntry,
 					_loaded: false,
 				});
@@ -449,21 +453,42 @@ function matchMediaToMessages(
 ): ChatMessage[] {
 	// Create a map of media files by name for quick lookup
 	const mediaMap = new Map<string, MediaFile>();
+	const duplicateNames = new Map<string, number>();
+
 	for (const media of mediaFiles) {
-		mediaMap.set(media.name.toLowerCase(), media);
-		// Also add without extension for partial matching
-		const nameWithoutExt = media.name.toLowerCase().replace(/\.[^.]+$/, '');
-		mediaMap.set(nameWithoutExt, media);
+		const lowerName = media.name.toLowerCase();
+		if (mediaMap.has(lowerName)) {
+			duplicateNames.set(lowerName, (duplicateNames.get(lowerName) || 1) + 1);
+		}
+		mediaMap.set(lowerName, media);
+		// Only add without extension for partial matching if name is long enough
+		// to avoid short names like "a.svg" matching everything containing "a"
+		const nameWithoutExt = lowerName.replace(/\.[^.]+$/, '');
+		if (nameWithoutExt.length >= 10) {
+			mediaMap.set(nameWithoutExt, media);
+		}
 	}
 
-	return messages.map((message) => {
+	// Regex to strip zero-width and invisible Unicode characters
+	// U+200E (LTR mark), U+200F (RTL mark), U+200B (zero-width space), U+FEFF (BOM), etc.
+	const invisibleCharsRegex = /[\u200B-\u200F\u2028-\u202F\uFEFF]/g;
+
+	const result = messages.map((message) => {
 		if (!message.isMediaMessage) return message;
 
 		// Try to find a matching media file
-		const content = message.content.toLowerCase();
+		// Strip invisible Unicode chars that WhatsApp adds before filenames
+		const content = message.content
+			.toLowerCase()
+			.replace(invisibleCharsRegex, '');
 
 		for (const [key, media] of mediaMap) {
-			if (content.includes(key) || content.includes(media.name.toLowerCase())) {
+			const cleanKey = key.replace(invisibleCharsRegex, '');
+			const cleanMediaName = media.name
+				.toLowerCase()
+				.replace(invisibleCharsRegex, '');
+
+			if (content.includes(cleanKey) || content.includes(cleanMediaName)) {
 				if (!media.messageId) {
 					media.messageId = message.id;
 					media.messageTimestamp = message.timestamp.toISOString();
@@ -478,6 +503,8 @@ function matchMediaToMessages(
 
 		return message;
 	});
+
+	return result;
 }
 
 /**
