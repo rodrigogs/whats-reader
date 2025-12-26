@@ -264,7 +264,7 @@ function setupIntersectionObserver() {
 }
 
 function loadMoreMessages() {
-	if (isLoadingMore || !renderedItems.hasMore) return;
+	if (isLoadingMore || !renderedItems.hasMore || !chatContainer) return;
 
 	isLoadingMore = true;
 
@@ -305,8 +305,10 @@ $effect(() => {
 $effect(() => {
 	if (messages.length > 0 && chatContainer && !hasScrolledToBottom) {
 		requestAnimationFrame(() => {
-			chatContainer.scrollTop = chatContainer.scrollHeight;
-			hasScrolledToBottom = true;
+			if (chatContainer) {
+				chatContainer.scrollTop = chatContainer.scrollHeight;
+				hasScrolledToBottom = true;
+			}
 		});
 	}
 });
