@@ -10,6 +10,21 @@ export interface VideoFrameCache {
 }
 
 const frameCache = new Map<string, VideoFrameCache>();
+const frameCacheAccessOrder: string[] = [];
+const MAX_FRAME_CACHE_SIZE = 20; // Maximum number of videos to keep in cache
+const MAX_CANVAS_DIMENSION = 512; // Cap canvas size for consistent memory usage
+
+/**
+ * Evict oldest frame caches to stay within memory limits
+ */
+function evictOldestFrameCaches(): void {
+	while (frameCacheAccessOrder.length > MAX_FRAME_CACHE_SIZE) {
+		const oldestKey = frameCacheAccessOrder.shift();
+		if (oldestKey) {
+			frameCache.delete(oldestKey);
+		}
+	}
+}
 
 /**
  * Extract multiple frames from a video blob for scrubbing preview
@@ -26,6 +41,12 @@ export async function extractVideoFrames(
 	// Check cache first
 	const cached = frameCache.get(videoId);
 	if (cached) {
+		// Update access order
+		const existingIdx = frameCacheAccessOrder.indexOf(videoId);
+		if (existingIdx !== -1) {
+			frameCacheAccessOrder.splice(existingIdx, 1);
+		}
+		frameCacheAccessOrder.push(videoId);
 		return cached;
 	}
 
@@ -51,10 +72,16 @@ export async function extractVideoFrames(
 		video.addEventListener('loadedmetadata', () => {
 			duration = video.duration;
 
-			// Set canvas size to video dimensions (scaled down for performance)
-			const scale = 0.5; // Scale down to 50% for smaller data URLs
-			canvas.width = video.videoWidth * scale;
-			canvas.height = video.videoHeight * scale;
+			// Cap canvas dimensions to prevent excessive memory usage for high-res videos
+			// Calculate aspect ratio and scale to fit within MAX_CANVAS_DIMENSION
+			const aspectRatio = video.videoWidth / video.videoHeight;
+			if (video.videoWidth > video.videoHeight) {
+				canvas.width = Math.min(video.videoWidth, MAX_CANVAS_DIMENSION);
+				canvas.height = canvas.width / aspectRatio;
+			} else {
+				canvas.height = Math.min(video.videoHeight, MAX_CANVAS_DIMENSION);
+				canvas.width = canvas.height * aspectRatio;
+			}
 
 			// Start extracting frames
 			extractNextFrame();
@@ -71,32 +98,45 @@ export async function extractVideoFrames(
 				URL.revokeObjectURL(objectUrl);
 				const cache: VideoFrameCache = { frames, duration, frameCount };
 				frameCache.set(videoId, cache);
+				frameCacheAccessOrder.push(videoId);
+				evictOldestFrameCaches();
 				resolve(cache);
 				return;
 			}
 
-			// Calculate timestamp for this frame
-			const timestamp = (duration / (frameCount - 1)) * currentFrameIndex;
+			// Calculate timestamp for this frame, avoiding the exact end to prevent codec issues
+			// Spread frames across [0, 99% of duration] instead of [0, 100%]
+			let timestamp: number;
+			if (frameCount <= 1) {
+				timestamp = 0;
+			} else {
+				const progress = currentFrameIndex / frameCount;
+				timestamp = duration * progress * 0.99;
+			}
 
 			video.currentTime = timestamp;
 		}
 
-		video.addEventListener('seeked', function onSeeked() {
-			try {
-				// Draw current video frame to canvas
-				ctx!.drawImage(video, 0, 0, canvas.width, canvas.height);
+		video.addEventListener(
+			'seeked',
+			function onSeeked() {
+				try {
+					// Draw current video frame to canvas
+					ctx!.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-				// Convert to data URL
-				const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-				frames.push(dataUrl);
+					// Convert to data URL
+					const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+					frames.push(dataUrl);
 
-				currentFrameIndex++;
-				extractNextFrame();
-			} catch (err) {
-				URL.revokeObjectURL(objectUrl);
-				reject(err);
-			}
-		});
+					currentFrameIndex++;
+					extractNextFrame();
+				} catch (err) {
+					URL.revokeObjectURL(objectUrl);
+					reject(err);
+				}
+			},
+			{ once: false },
+		); // Note: Cannot use { once: true } as this handler is called multiple times
 
 		video.load();
 	});
@@ -125,6 +165,10 @@ export function getFrameIndexFromPosition(
  */
 export function clearFrameCache(videoId: string): void {
 	frameCache.delete(videoId);
+	const idx = frameCacheAccessOrder.indexOf(videoId);
+	if (idx !== -1) {
+		frameCacheAccessOrder.splice(idx, 1);
+	}
 }
 
 /**
@@ -132,6 +176,7 @@ export function clearFrameCache(videoId: string): void {
  */
 export function clearAllFrameCaches(): void {
 	frameCache.clear();
+	frameCacheAccessOrder.length = 0;
 }
 
 /**
@@ -167,10 +212,15 @@ export async function extractVideoThumbnail(
 		video.preload = 'metadata';
 
 		video.addEventListener('loadedmetadata', () => {
-			// Set canvas size (scaled down for performance)
-			const scale = 0.5;
-			canvas.width = video.videoWidth * scale;
-			canvas.height = video.videoHeight * scale;
+			// Cap canvas dimensions to prevent excessive memory usage for high-res videos
+			const aspectRatio = video.videoWidth / video.videoHeight;
+			if (video.videoWidth > video.videoHeight) {
+				canvas.width = Math.min(video.videoWidth, MAX_CANVAS_DIMENSION);
+				canvas.height = canvas.width / aspectRatio;
+			} else {
+				canvas.height = Math.min(video.videoHeight, MAX_CANVAS_DIMENSION);
+				canvas.width = canvas.height * aspectRatio;
+			}
 
 			// Use provided timestamp or default to 10% into the video
 			const targetTime = timestamp ?? video.duration * 0.1;
@@ -182,17 +232,21 @@ export async function extractVideoThumbnail(
 			reject(new Error('Failed to load video'));
 		});
 
-		video.addEventListener('seeked', function onSeeked() {
-			try {
-				ctx!.drawImage(video, 0, 0, canvas.width, canvas.height);
-				const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-				URL.revokeObjectURL(objectUrl);
-				resolve(dataUrl);
-			} catch (err) {
-				URL.revokeObjectURL(objectUrl);
-				reject(err);
-			}
-		});
+		video.addEventListener(
+			'seeked',
+			function onSeeked() {
+				try {
+					ctx!.drawImage(video, 0, 0, canvas.width, canvas.height);
+					const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+					URL.revokeObjectURL(objectUrl);
+					resolve(dataUrl);
+				} catch (err) {
+					URL.revokeObjectURL(objectUrl);
+					reject(err);
+				}
+			},
+			{ once: true },
+		);
 
 		video.load();
 	});

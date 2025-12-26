@@ -127,7 +127,8 @@ export async function getImageThumbnailUrl(
 			// Special handling for SVG files
 			if (mimeType === 'image/svg+xml') {
 				// For SVG, we can directly create an object URL
-				// SVG files are usually small and scale perfectly
+				// SVG files are usually small and scale perfectly, but still follow
+				// the same cache eviction policy as raster images for consistency
 				const url = URL.createObjectURL(blob);
 				thumbnailUrlCache.set(key, url);
 				const existingIdx = thumbnailAccessOrder.indexOf(key);

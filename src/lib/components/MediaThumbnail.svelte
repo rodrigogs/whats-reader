@@ -8,6 +8,7 @@ import {
 	getFileExtension,
 } from '$lib/helpers/document-utils';
 import {
+	clearFrameCache,
 	extractAudioDuration,
 	extractVideoFrames,
 	extractVideoThumbnail,
@@ -146,6 +147,35 @@ function handleVideoMouseMove(event: MouseEvent): void {
 	currentFrameIndex = frameIndex;
 }
 
+function handleVideoFocus(): void {
+	if (item.type !== 'video') return;
+	isHoveringVideo = true;
+	loadVideoFrames();
+}
+
+function handleVideoBlur(): void {
+	isHoveringVideo = false;
+	currentFrameIndex = 0;
+}
+
+function handleVideoKeyDown(event: KeyboardEvent): void {
+	if (item.type !== 'video' || !videoFrameCache) return;
+
+	if (event.key === 'ArrowLeft') {
+		event.preventDefault();
+		currentFrameIndex = Math.max(0, currentFrameIndex - 1);
+	} else if (event.key === 'ArrowRight') {
+		event.preventDefault();
+		currentFrameIndex = Math.min(
+			videoFrameCache.frameCount - 1,
+			currentFrameIndex + 1,
+		);
+	} else if (event.key === 'Enter' || event.key === ' ') {
+		event.preventDefault();
+		onOpen(item.path);
+	}
+}
+
 onMount(() => {
 	if (!rootEl) return;
 
@@ -177,6 +207,10 @@ onDestroy(() => {
 		observer.disconnect();
 		observer = null;
 	}
+	// Cleanup video frame cache to prevent memory leaks
+	if (item.type === 'video' && videoFrameCache) {
+		clearFrameCache(item.path);
+	}
 });
 </script>
 
@@ -188,10 +222,15 @@ onDestroy(() => {
 		type="button"
 		bind:this={videoPreviewEl}
 		class="relative block w-full aspect-square bg-gray-50 dark:bg-gray-900/40 cursor-pointer"
+		class:hover:cursor-ew-resize={item.type === 'video'}
 		onclick={() => onOpen(item.path)}
 		onmouseenter={handleVideoMouseEnter}
 		onmouseleave={handleVideoMouseLeave}
 		onmousemove={handleVideoMouseMove}
+		onfocus={handleVideoFocus}
+		onblur={handleVideoBlur}
+		onkeydown={handleVideoKeyDown}
+		aria-label={`Open ${item.name}`}
 	>
 		{#if item.type === 'image' && thumbnailUrl}
 			<img
@@ -249,13 +288,30 @@ onDestroy(() => {
 							<div class="absolute inset-0 bg-white dark:bg-gray-200 rounded shadow-md border border-gray-200 dark:border-gray-300"></div>
 							<!-- Folded corner -->
 							<div class="absolute top-0 right-0 w-4 h-4 bg-gray-100 dark:bg-gray-300 rounded-bl shadow-inner"></div>
-							<!-- Extension badge -->
-							<div
-								class="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-sm"
-								style:background-color={color}
-							>
-								{ext}
-							</div>
+							<!-- Extension badge (only show if extension exists) -->
+							{#if ext}
+								<div
+									class="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-sm"
+									style:background-color={color}
+								>
+									{ext}
+								</div>
+							{:else}
+								<!-- Generic document icon for files without extension -->
+								<svg
+									class="absolute bottom-2 left-1/2 -translate-x-1/2 w-6 h-6 text-gray-400"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									viewBox="0 0 24 24"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+									/>
+								</svg>
+							{/if}
 						</div>
 						{#if item.size > 0}
 							<span class="text-[11px] text-gray-500 dark:text-gray-400">
