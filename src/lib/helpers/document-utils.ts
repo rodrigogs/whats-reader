@@ -5,30 +5,30 @@
 /**
  * Format file size in bytes to human-readable format
  * @param bytes File size in bytes
- * @returns Formatted string (e.g., "1.5 MB", "234 KB")
+ * @returns Formatted string (e.g., "1 MB", "234 KB")
  */
 export function formatFileSize(bytes: number): string {
 	if (bytes === 0) return '0 B';
-	if (bytes < 1024) return `${bytes} B`;
+	if (bytes < 1024) return `${Math.round(bytes)} B`;
 
 	const kb = bytes / 1024;
-	if (kb < 1024) return `${kb.toFixed(1)} KB`;
+	if (kb < 1024) return `${Math.round(kb)} KB`;
 
 	const mb = kb / 1024;
-	if (mb < 1024) return `${mb.toFixed(1)} MB`;
+	if (mb < 1024) return `${Math.round(mb)} MB`;
 
 	const gb = mb / 1024;
-	return `${gb.toFixed(1)} GB`;
+	return `${Math.round(gb)} GB`;
 }
 
 /**
  * Get file extension in uppercase for display
  * @param filename File name
- * @returns Uppercase extension without dot (e.g., "PDF", "DOCX")
+ * @returns Uppercase extension without dot (e.g., "PDF", "DOCX"), or empty string if none
  */
 export function getFileExtension(filename: string): string {
 	const ext = filename.toLowerCase().split('.').pop() || '';
-	return ext.toUpperCase() || 'FILE';
+	return ext.toUpperCase();
 }
 
 /**
@@ -70,7 +70,9 @@ export function getDocumentColor(filename: string): string {
 		CSS: '#7C3AED',
 		JS: '#7C3AED',
 		TS: '#7C3AED',
-		// Images (if shown as documents)
+		// SVG files - Amber (when categorized as documents)
+		// Note: SVG files are primarily handled as images in gallery-thumbnails.ts
+		// but may appear as documents in some contexts
 		SVG: '#F59E0B',
 	};
 
