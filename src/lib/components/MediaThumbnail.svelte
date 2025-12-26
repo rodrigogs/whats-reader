@@ -211,6 +211,8 @@ onDestroy(() => {
 	if (item.type === 'video' && videoFrameCache) {
 		clearFrameCache(item.path);
 	}
+	// Release video thumbnail data URL to help garbage collection
+	videoThumbnailUrl = null;
 });
 </script>
 
@@ -221,8 +223,7 @@ onDestroy(() => {
 	<button
 		type="button"
 		bind:this={videoPreviewEl}
-		class="relative block w-full aspect-square bg-gray-50 dark:bg-gray-900/40 cursor-pointer"
-		class:hover:cursor-ew-resize={item.type === 'video'}
+		class={`relative block w-full aspect-square bg-gray-50 dark:bg-gray-900/40 cursor-pointer${item.type === 'video' ? ' hover:cursor-ew-resize' : ''}`}
 		onclick={() => onOpen(item.path)}
 		onmouseenter={handleVideoMouseEnter}
 		onmouseleave={handleVideoMouseLeave}
@@ -251,7 +252,7 @@ onDestroy(() => {
 			<div class="absolute bottom-0 left-0 right-0 h-1 bg-black/30 backdrop-blur-sm">
 				<div
 					class="h-full bg-[var(--color-whatsapp-teal)]"
-					style:width="{((currentFrameIndex + 1) / videoFrameCache.frameCount) * 100}%"
+					style:width="{(videoFrameCache.frameCount > 1 ? currentFrameIndex / (videoFrameCache.frameCount - 1) : 1) * 100}%"
 				></div>
 			</div>
 		{:else if item.type === 'video' && videoThumbnailUrl}

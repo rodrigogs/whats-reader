@@ -72,9 +72,29 @@ export async function extractVideoFrames(
 		video.addEventListener('loadedmetadata', () => {
 			duration = video.duration;
 
+			// Guard against infinite or invalid durations (live streams, corrupted files)
+			if (!Number.isFinite(duration) || duration <= 0) {
+				URL.revokeObjectURL(objectUrl);
+				reject(new Error('Invalid video duration: video may be a live stream or corrupted'));
+				return;
+			}
+
+			// Validate dimensions before calculating aspect ratio
+			if (video.videoWidth <= 0 || video.videoHeight <= 0) {
+				URL.revokeObjectURL(objectUrl);
+				reject(new Error('Invalid video dimensions'));
+				return;
+			}
+
 			// Cap canvas dimensions to prevent excessive memory usage for high-res videos
 			// Calculate aspect ratio and scale to fit within MAX_CANVAS_DIMENSION
 			const aspectRatio = video.videoWidth / video.videoHeight;
+			if (!Number.isFinite(aspectRatio) || aspectRatio <= 0) {
+				URL.revokeObjectURL(objectUrl);
+				reject(new Error('Invalid video aspect ratio'));
+				return;
+			}
+
 			if (video.videoWidth > video.videoHeight) {
 				canvas.width = Math.min(video.videoWidth, MAX_CANVAS_DIMENSION);
 				canvas.height = canvas.width / aspectRatio;
@@ -105,13 +125,15 @@ export async function extractVideoFrames(
 			}
 
 			// Calculate timestamp for this frame, avoiding the exact end to prevent codec issues
-			// Spread frames across [0, 99% of duration] instead of [0, 100%]
+			// Spread frames evenly across [0, 99% of duration], sampling mid-intervals
+			// This provides better coverage: 4.95%, 14.85%, 24.75%, ..., 94.05%
 			let timestamp: number;
 			if (frameCount <= 1) {
 				timestamp = 0;
 			} else {
-				const progress = currentFrameIndex / frameCount;
-				timestamp = duration * progress * 0.99;
+				const baseProgress = (currentFrameIndex + 0.5) / frameCount;
+				const progress = baseProgress * 0.99;
+				timestamp = duration * progress;
 			}
 
 			video.currentTime = timestamp;
@@ -212,8 +234,21 @@ export async function extractVideoThumbnail(
 		video.preload = 'metadata';
 
 		video.addEventListener('loadedmetadata', () => {
+			// Validate dimensions before calculating aspect ratio
+			if (video.videoWidth <= 0 || video.videoHeight <= 0) {
+				URL.revokeObjectURL(objectUrl);
+				reject(new Error('Invalid video dimensions'));
+				return;
+			}
+
 			// Cap canvas dimensions to prevent excessive memory usage for high-res videos
 			const aspectRatio = video.videoWidth / video.videoHeight;
+			if (!Number.isFinite(aspectRatio) || aspectRatio <= 0) {
+				URL.revokeObjectURL(objectUrl);
+				reject(new Error('Invalid video aspect ratio'));
+				return;
+			}
+
 			if (video.videoWidth > video.videoHeight) {
 				canvas.width = Math.min(video.videoWidth, MAX_CANVAS_DIMENSION);
 				canvas.height = canvas.width / aspectRatio;
@@ -222,8 +257,19 @@ export async function extractVideoThumbnail(
 				canvas.width = canvas.height * aspectRatio;
 			}
 
-			// Use provided timestamp or default to 10% into the video
-			const targetTime = timestamp ?? video.duration * 0.1;
+			// Use provided timestamp or default to 10% into the video,
+			// but guard against infinite or invalid durations.
+			let targetTime: number;
+
+			if (typeof timestamp === 'number' && Number.isFinite(timestamp) && timestamp >= 0) {
+				targetTime = timestamp;
+			} else if (Number.isFinite(video.duration) && video.duration > 0) {
+				targetTime = video.duration * 0.1;
+			} else {
+				// Fallback for live streams or invalid duration metadata
+				targetTime = 0;
+			}
+
 			video.currentTime = targetTime;
 		});
 

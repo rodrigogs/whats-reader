@@ -229,7 +229,16 @@ export async function parseZipFile(
 					}
 				} catch (err) {
 					// Fallback to 0 if _data is not available or errors
-					console.warn(`Could not read size for ${cleanFilename}:`, err);
+					const errorMessage = err instanceof Error ? err.message : String(err);
+					const errorStack = err instanceof Error ? err.stack : undefined;
+					console.warn(
+						`Could not read size for ${cleanFilename}: ${errorMessage}`,
+						{
+							error: err,
+							stack: errorStack,
+							path,
+						},
+					);
 				}
 
 				mediaFiles.push({
@@ -473,12 +482,17 @@ function matchMediaToMessages(
 	for (const media of mediaFiles) {
 		const lowerName = media.name.toLowerCase().replace(invisibleCharsRegex, '');
 
-		// Track duplicates for potential future handling
+		// Track duplicates for logging and potential future handling
 		if (mediaMap.has(lowerName)) {
 			const count = duplicateNames.get(lowerName) || 1;
 			duplicateNames.set(lowerName, count + 1);
 			// Note: Last file with duplicate name will overwrite earlier ones in the map
 			// This is a known limitation - only the last duplicate will be matchable
+			// Messages referencing earlier files with same name will be incorrectly matched to the last file
+			console.warn(
+				`Duplicate filename detected: "${media.name}". Only the last file with this name will be linkable to messages. ` +
+					`This may cause messages to be linked to the wrong media file if multiple files share the same name.`,
+			);
 		}
 
 		mediaMap.set(lowerName, media);
