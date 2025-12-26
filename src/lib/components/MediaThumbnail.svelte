@@ -212,7 +212,9 @@ onDestroy(() => {
 		clearFrameCache(item.path);
 	}
 	// Release video thumbnail data URL to help garbage collection
-	videoThumbnailUrl = null;
+	if (item.type === 'video' && videoThumbnailUrl) {
+		videoThumbnailUrl = null;
+	}
 });
 </script>
 

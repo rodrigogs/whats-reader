@@ -489,10 +489,6 @@ function matchMediaToMessages(
 			// Note: Last file with duplicate name will overwrite earlier ones in the map
 			// This is a known limitation - only the last duplicate will be matchable
 			// Messages referencing earlier files with same name will be incorrectly matched to the last file
-			console.warn(
-				`Duplicate filename detected: "${media.name}". Only the last file with this name will be linkable to messages. ` +
-					`This may cause messages to be linked to the wrong media file if multiple files share the same name.`,
-			);
 		}
 
 		mediaMap.set(lowerName, media);
@@ -506,11 +502,14 @@ function matchMediaToMessages(
 		}
 	}
 
-	// Log if duplicates were found
+	// Log consolidated warning for all duplicates found
 	if (duplicateNames.size > 0) {
 		console.warn(
-			'Found duplicate media filenames:',
-			Array.from(duplicateNames.entries()),
+			`Found ${duplicateNames.size} duplicate filename(s). Only the last file with each duplicate name will be linkable to messages. ` +
+				`This may cause messages to be linked to the wrong media file. Duplicates:`,
+			Array.from(duplicateNames.entries()).map(
+				([name, count]) => `"${name}" (${count} occurrences)`,
+			),
 		);
 	}
 
