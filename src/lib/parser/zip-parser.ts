@@ -219,11 +219,33 @@ export async function parseZipFile(
 			const mediaType = getMediaType(cleanFilename);
 
 			if (mediaType !== 'other' || isNotHidden) {
+				// Access uncompressed size from JSZip internal structure with fallback
+				let size = 0;
+				try {
+					// biome-ignore lint/suspicious/noExplicitAny: JSZip doesn't expose _data in its type definitions
+					const zipData = (zipEntry as any)._data;
+					if (zipData && typeof zipData.uncompressedSize === 'number') {
+						size = zipData.uncompressedSize;
+					}
+				} catch (err) {
+					// Fallback to 0 if _data is not available or errors
+					const errorMessage = err instanceof Error ? err.message : String(err);
+					const errorStack = err instanceof Error ? err.stack : undefined;
+					console.warn(
+						`Could not read size for ${cleanFilename}: ${errorMessage}`,
+						{
+							error: err,
+							stack: errorStack,
+							path,
+						},
+					);
+				}
+
 				mediaFiles.push({
 					name: cleanFilename,
 					path,
 					type: mediaType,
-					size: 0, // Will be set when loaded
+					size,
 					_zipEntry: zipEntry,
 					_loaded: false,
 				});
@@ -447,23 +469,62 @@ function matchMediaToMessages(
 	messages: ChatMessage[],
 	mediaFiles: MediaFile[],
 ): ChatMessage[] {
-	// Create a map of media files by name for quick lookup
+	// Regex to strip zero-width and invisible Unicode characters
+	// U+200E (LTR mark), U+200F (RTL mark), U+200B (zero-width space), U+FEFF (BOM), etc.
+	const invisibleCharsRegex = /[\u200B-\u200F\u2028-\u202F\uFEFF]/g;
+
+	// Create a map of media files by cleaned name for quick lookup
+	// Strip invisible characters once during map building for efficiency
 	const mediaMap = new Map<string, MediaFile>();
+	// Track duplicate filenames to help with debugging
+	const duplicateNames = new Map<string, number>();
+
 	for (const media of mediaFiles) {
-		mediaMap.set(media.name.toLowerCase(), media);
-		// Also add without extension for partial matching
-		const nameWithoutExt = media.name.toLowerCase().replace(/\.[^.]+$/, '');
-		mediaMap.set(nameWithoutExt, media);
+		const lowerName = media.name.toLowerCase().replace(invisibleCharsRegex, '');
+
+		// Track duplicates for logging and potential future handling
+		if (mediaMap.has(lowerName)) {
+			const count = duplicateNames.get(lowerName) || 1;
+			duplicateNames.set(lowerName, count + 1);
+			// Note: Last file with duplicate name will overwrite earlier ones in the map
+			// This is a known limitation - only the last duplicate will be matchable
+			// Messages referencing earlier files with same name will be incorrectly matched to the last file
+		}
+
+		mediaMap.set(lowerName, media);
+
+		// Only add without extension for partial matching if name is long enough
+		// Lowered threshold from 10 to 8 chars to catch legitimate short filenames like "document.pdf"
+		// Still prevents very short names like "a.svg" from matching everything
+		const nameWithoutExt = lowerName.replace(/\.[^.]+$/, '');
+		if (nameWithoutExt.length >= 8) {
+			mediaMap.set(nameWithoutExt, media);
+		}
 	}
 
-	return messages.map((message) => {
+	// Log consolidated warning for all duplicates found
+	if (duplicateNames.size > 0) {
+		console.warn(
+			`Found ${duplicateNames.size} duplicate filename(s). Only the last file with each duplicate name will be linkable to messages. ` +
+				`This may cause messages to be linked to the wrong media file. Duplicates:`,
+			Array.from(duplicateNames.entries()).map(
+				([name, count]) => `"${name}" (${count} occurrences)`,
+			),
+		);
+	}
+
+	const result = messages.map((message) => {
 		if (!message.isMediaMessage) return message;
 
-		// Try to find a matching media file
-		const content = message.content.toLowerCase();
+		// Strip invisible Unicode chars from message content once
+		const content = message.content
+			.toLowerCase()
+			.replace(invisibleCharsRegex, '');
 
-		for (const [key, media] of mediaMap) {
-			if (content.includes(key) || content.includes(media.name.toLowerCase())) {
+		// Try to find a matching media file
+		// Keys in mediaMap are already cleaned, so no need to clean again
+		for (const [cleanKey, media] of mediaMap) {
+			if (content.includes(cleanKey)) {
 				if (!media.messageId) {
 					media.messageId = message.id;
 					media.messageTimestamp = message.timestamp.toISOString();
@@ -478,6 +539,8 @@ function matchMediaToMessages(
 
 		return message;
 	});
+
+	return result;
 }
 
 /**

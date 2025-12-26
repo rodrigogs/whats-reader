@@ -97,7 +97,6 @@ export async function getImageThumbnailUrl(
 ): Promise<string | null> {
 	if (media.type !== 'image') return null;
 	if (!media._zipEntry) return null;
-	if (typeof createImageBitmap === 'undefined') return null;
 
 	const key = media.path;
 	const cached = thumbnailUrlCache.get(key);
@@ -122,9 +121,27 @@ export async function getImageThumbnailUrl(
 			const arrayBuffer = await media._zipEntry?.async('arraybuffer');
 			if (!arrayBuffer) return null;
 
-			const blob = new Blob([arrayBuffer], {
-				type: getImageMimeType(media.name),
-			});
+			const mimeType = getImageMimeType(media.name);
+			const blob = new Blob([arrayBuffer], { type: mimeType });
+
+			// Special handling for SVG files
+			if (mimeType === 'image/svg+xml') {
+				// For SVG, we can directly create an object URL
+				// SVG files are usually small and scale perfectly, but still follow
+				// the same cache eviction policy as raster images for consistency
+				const url = URL.createObjectURL(blob);
+				thumbnailUrlCache.set(key, url);
+				const existingIdx = thumbnailAccessOrder.indexOf(key);
+				if (existingIdx !== -1) {
+					thumbnailAccessOrder.splice(existingIdx, 1);
+				}
+				thumbnailAccessOrder.push(key);
+				evictOldestThumbnails();
+				return url;
+			}
+
+			// For raster images, use ImageBitmap for efficient decoding and scaling
+			if (typeof createImageBitmap === 'undefined') return null;
 
 			// Decode and downscale using ImageBitmap resize options.
 			const bitmap = await createImageBitmap(blob);

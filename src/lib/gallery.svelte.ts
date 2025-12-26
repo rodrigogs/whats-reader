@@ -16,6 +16,7 @@ export interface GalleryItem {
 	name: string;
 	path: string;
 	type: MediaFile['type'];
+	size: number;
 	messageId?: string;
 	messageTimestamp?: string;
 	messageSender?: string;
@@ -31,6 +32,7 @@ function toGalleryItem(media: MediaFile): GalleryItem {
 		name: media.name,
 		path: media.path,
 		type: media.type,
+		size: media.size,
 		messageId: media.messageId,
 		messageTimestamp: media.messageTimestamp,
 		messageSender: media.messageSender,
