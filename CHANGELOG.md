@@ -1,3 +1,10 @@
+## [1.21.6](https://github.com/rodrigogs/whats-reader/compare/v1.21.5...v1.21.6) (2025-12-29)
+
+
+### Bug Fixes
+
+* **ci:** create PR instead of direct push for main→dev sync ([51e1e84](https://github.com/rodrigogs/whats-reader/commit/51e1e847b3865c2a6d9b1f4a1bc7dae06fa13486))
+
 ## [1.21.5](https://github.com/rodrigogs/whats-reader/compare/v1.21.4...v1.21.5) (2025-12-29)
 
 
