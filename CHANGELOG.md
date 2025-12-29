@@ -1,3 +1,10 @@
+## [1.21.4](https://github.com/rodrigogs/whats-reader/compare/v1.21.3...v1.21.4) (2025-12-29)
+
+
+### Bug Fixes
+
+* **build:** split Windows builds into separate x64 and arm64 jobs ([7976c47](https://github.com/rodrigogs/whats-reader/commit/7976c47763928856518221964992429a8a881f5b))
+
 ## [1.21.3](https://github.com/rodrigogs/whats-reader/compare/v1.21.2...v1.21.3) (2025-12-29)
 
 
