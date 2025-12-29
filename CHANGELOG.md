@@ -1,3 +1,10 @@
+## [1.21.1](https://github.com/rodrigogs/whats-reader/compare/v1.21.0...v1.21.1) (2025-12-29)
+
+
+### Bug Fixes
+
+* **ci:** remove duplicate release asset uploads ([c451a83](https://github.com/rodrigogs/whats-reader/commit/c451a8394caf439afd29d4dedc3dfaf2ab27b779))
+
 # [1.21.0](https://github.com/rodrigogs/whats-reader/compare/v1.20.1...v1.21.0) (2025-12-29)
 
 
