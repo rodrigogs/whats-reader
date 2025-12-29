@@ -1,3 +1,59 @@
+## [1.21.6](https://github.com/rodrigogs/whats-reader/compare/v1.21.5...v1.21.6) (2025-12-29)
+
+
+### Bug Fixes
+
+* **ci:** create PR instead of direct push for main→dev sync ([51e1e84](https://github.com/rodrigogs/whats-reader/commit/51e1e847b3865c2a6d9b1f4a1bc7dae06fa13486))
+
+## [1.21.5](https://github.com/rodrigogs/whats-reader/compare/v1.21.4...v1.21.5) (2025-12-29)
+
+
+### Bug Fixes
+
+* **build:** add arch suffix to Windows installer filenames ([7bb7cac](https://github.com/rodrigogs/whats-reader/commit/7bb7caccfb28a0d90e2eb9452b1e6dc804ee1ea9))
+
+## [1.21.4](https://github.com/rodrigogs/whats-reader/compare/v1.21.3...v1.21.4) (2025-12-29)
+
+
+### Bug Fixes
+
+* **build:** split Windows builds into separate x64 and arm64 jobs ([7976c47](https://github.com/rodrigogs/whats-reader/commit/7976c47763928856518221964992429a8a881f5b))
+
+## [1.21.3](https://github.com/rodrigogs/whats-reader/compare/v1.21.2...v1.21.3) (2025-12-29)
+
+
+### Bug Fixes
+
+* **ci:** split Windows installers and sync main to dev ([d2c4a95](https://github.com/rodrigogs/whats-reader/commit/d2c4a953e8d417f9d0144df5bdc9feea9a418519))
+
+## [1.21.2](https://github.com/rodrigogs/whats-reader/compare/v1.21.1...v1.21.2) (2025-12-29)
+
+
+### Bug Fixes
+
+* **build:** split Windows installers by architecture ([e5e3c0e](https://github.com/rodrigogs/whats-reader/commit/e5e3c0eff297501a71c4a84a1b2fc9cdc08dcbc6))
+
+## [1.21.1](https://github.com/rodrigogs/whats-reader/compare/v1.21.0...v1.21.1) (2025-12-29)
+
+
+### Bug Fixes
+
+* **ci:** remove duplicate release asset uploads ([c451a83](https://github.com/rodrigogs/whats-reader/commit/c451a8394caf439afd29d4dedc3dfaf2ab27b779))
+
+# [1.21.0](https://github.com/rodrigogs/whats-reader/compare/v1.20.1...v1.21.0) (2025-12-29)
+
+
+### Bug Fixes
+
+* address code review comments - improve video handling, error checking, and file size handling ([88a6b47](https://github.com/rodrigogs/whats-reader/commit/88a6b4760dcda38046a495951e2d56450a177a0f))
+* address code review comments for gallery enhancements ([2e4e7d0](https://github.com/rodrigogs/whats-reader/commit/2e4e7d0de251d69d357be560f5e87f92c5c83629))
+* **chat:** add null checks for chatContainer to prevent scrollHeight errors ([d122385](https://github.com/rodrigogs/whats-reader/commit/d12238502643b94fac81162863c92311b1149559))
+
+
+### Features
+
+* **gallery:** enhance media thumbnails with video preview, audio duration, and improved document display ([8e8b1a4](https://github.com/rodrigogs/whats-reader/commit/8e8b1a49bef6afc0860a48bd05b8e0c0078d415a))
+
 ## [1.20.1](https://github.com/rodrigogs/whats-reader/compare/v1.20.0...v1.20.1) (2025-12-26)
 
 

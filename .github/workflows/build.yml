@@ -50,7 +50,7 @@ jobs:
           retention-days: 1
 
   build:
-    name: Build (${{ matrix.os }})
+    name: Build (${{ matrix.platform }})
     runs-on: ${{ matrix.os }}
     needs: prebuild
     strategy:
@@ -60,7 +60,11 @@ jobs:
           - os: macos-latest
             platform: mac
           - os: windows-latest
-            platform: win
+            platform: win-x64
+            arch: x64
+          - os: windows-latest
+            platform: win-arm64
+            arch: arm64
           - os: ubuntu-latest
             platform: linux
 
@@ -115,38 +119,21 @@ jobs:
 
       - name: Build Electron (macOS)
         if: matrix.platform == 'mac'
-        run: npm run electron:build:mac -- --x64 --arm64
+        run: npm run electron:build:mac
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Electron (Windows)
-        if: matrix.platform == 'win'
-        run: npm run electron:build:win -- --x64 --arm64
+        if: startsWith(matrix.platform, 'win-')
+        run: npm run electron:build:win -- --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Electron (Linux)
         if: matrix.platform == 'linux'
-        run: npm run electron:build:linux -- --x64 --arm64
+        run: npm run electron:build:linux
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload to Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.version.outputs.version }}
-          draft: true  # Keep as draft, publish-release job will make public
-          files: |
-            dist-electron/*.dmg
-            dist-electron/*.zip
-            dist-electron/*.exe
-            dist-electron/*.deb
-            dist-electron/*.rpm
-            dist-electron/*.AppImage
-            dist-electron/*.yml
-            dist-electron/*.blockmap
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
