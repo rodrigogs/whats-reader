@@ -1,3 +1,10 @@
+## [1.21.7](https://github.com/rodrigogs/whats-reader/compare/v1.21.6...v1.21.7) (2025-12-29)
+
+
+### Performance Improvements
+
+* **build:** split macOS builds into parallel x64/arm64 jobs ([cbda8f2](https://github.com/rodrigogs/whats-reader/commit/cbda8f20db49845251fc27f95face06ff45f7af8))
+
 ## [1.21.6](https://github.com/rodrigogs/whats-reader/compare/v1.21.5...v1.21.6) (2025-12-29)
 
 
