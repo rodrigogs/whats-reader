@@ -1,3 +1,10 @@
+## [1.21.9](https://github.com/rodrigogs/whats-reader/compare/v1.21.8...v1.21.9) (2025-12-29)
+
+
+### Bug Fixes
+
+* **build:** fix race condition by letting CLI control architecture ([a142434](https://github.com/rodrigogs/whats-reader/commit/a142434281754018ceaa3405c8cbf50e667a3649))
+
 ## [1.21.8](https://github.com/rodrigogs/whats-reader/compare/v1.21.7...v1.21.8) (2025-12-29)
 
 
