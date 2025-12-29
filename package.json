@@ -1,7 +1,7 @@
 {
 	"name": "whats-reader",
 	"productName": "WhatsApp Backup Reader",
-	"version": "1.21.4",
+	"version": "1.21.5",
 	"description": "A desktop app to read and visualize WhatsApp chat exports",
 	"license": "AGPL-3.0",
 	"author": {
@@ -130,7 +130,10 @@
 		},
 		"win": {
 			"icon": "static/icon.ico",
-			"target": ["nsis", "portable"],
+			"target": [
+				"nsis",
+				"portable"
+			],
 			"artifactName": "${productName}-${version}-${arch}.${ext}"
 		},
 		"linux": {

@@ -1,3 +1,10 @@
+## [1.21.5](https://github.com/rodrigogs/whats-reader/compare/v1.21.4...v1.21.5) (2025-12-29)
+
+
+### Bug Fixes
+
+* **build:** add arch suffix to Windows installer filenames ([7bb7cac](https://github.com/rodrigogs/whats-reader/commit/7bb7caccfb28a0d90e2eb9452b1e6dc804ee1ea9))
+
 ## [1.21.4](https://github.com/rodrigogs/whats-reader/compare/v1.21.3...v1.21.4) (2025-12-29)
 
 
