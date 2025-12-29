@@ -50,7 +50,7 @@ jobs:
           retention-days: 1
 
   build:
-    name: Build (${{ matrix.os }})
+    name: Build (${{ matrix.platform }})
     runs-on: ${{ matrix.os }}
     needs: prebuild
     strategy:
@@ -60,7 +60,11 @@ jobs:
           - os: macos-latest
             platform: mac
           - os: windows-latest
-            platform: win
+            platform: win-x64
+            arch: x64
+          - os: windows-latest
+            platform: win-arm64
+            arch: arm64
           - os: ubuntu-latest
             platform: linux
 
@@ -120,8 +124,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Electron (Windows)
-        if: matrix.platform == 'win'
-        run: npm run electron:build:win
+        if: startsWith(matrix.platform, 'win-')
+        run: npm run electron:build:win -- --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
