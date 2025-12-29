@@ -131,23 +131,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload to Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.version.outputs.version }}
-          draft: true  # Keep as draft, publish-release job will make public
-          files: |
-            dist-electron/*.dmg
-            dist-electron/*.zip
-            dist-electron/*.exe
-            dist-electron/*.deb
-            dist-electron/*.rpm
-            dist-electron/*.AppImage
-            dist-electron/*.yml
-            dist-electron/*.blockmap
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
