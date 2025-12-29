@@ -1,3 +1,10 @@
+## [1.21.8](https://github.com/rodrigogs/whats-reader/compare/v1.21.7...v1.21.8) (2025-12-29)
+
+
+### Bug Fixes
+
+* **build:** use macos-14 for both mac architectures ([494ca74](https://github.com/rodrigogs/whats-reader/commit/494ca74dd8a5e6422d9f0999a9364dde24d54f60))
+
 ## [1.21.7](https://github.com/rodrigogs/whats-reader/compare/v1.21.6...v1.21.7) (2025-12-29)
 
 
