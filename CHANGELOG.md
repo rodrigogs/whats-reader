@@ -1,3 +1,17 @@
+# [1.21.0](https://github.com/rodrigogs/whats-reader/compare/v1.20.1...v1.21.0) (2025-12-29)
+
+
+### Bug Fixes
+
+* address code review comments - improve video handling, error checking, and file size handling ([88a6b47](https://github.com/rodrigogs/whats-reader/commit/88a6b4760dcda38046a495951e2d56450a177a0f))
+* address code review comments for gallery enhancements ([2e4e7d0](https://github.com/rodrigogs/whats-reader/commit/2e4e7d0de251d69d357be560f5e87f92c5c83629))
+* **chat:** add null checks for chatContainer to prevent scrollHeight errors ([d122385](https://github.com/rodrigogs/whats-reader/commit/d12238502643b94fac81162863c92311b1149559))
+
+
+### Features
+
+* **gallery:** enhance media thumbnails with video preview, audio duration, and improved document display ([8e8b1a4](https://github.com/rodrigogs/whats-reader/commit/8e8b1a49bef6afc0860a48bd05b8e0c0078d415a))
+
 ## [1.20.1](https://github.com/rodrigogs/whats-reader/compare/v1.20.0...v1.20.1) (2025-12-26)
 
 
