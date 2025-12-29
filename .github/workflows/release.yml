@@ -68,3 +68,11 @@ jobs:
               workflow_id: 'deploy.yml',
               ref: 'main'
             })
+
+      - name: Sync main to dev
+        if: steps.semantic.outputs.new_release_published == 'true'
+        run: |
+          git fetch origin dev
+          git checkout dev
+          git merge origin/main --no-edit
+          git push origin dev
