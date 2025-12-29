@@ -130,10 +130,8 @@
 		},
 		"win": {
 			"icon": "static/icon.ico",
-			"target": [
-				"nsis",
-				"portable"
-			]
+			"target": ["nsis", "portable"],
+			"artifactName": "${productName}-${version}-${arch}.${ext}"
 		},
 		"linux": {
 			"icon": "static/icon.png",
@@ -165,7 +163,8 @@
 		"nsis": {
 			"oneClick": false,
 			"allowToChangeInstallationDirectory": true,
-			"differentialPackage": true
+			"differentialPackage": true,
+			"artifactName": "${productName}-Setup-${version}-${arch}.${ext}"
 		},
 		"generateUpdatesFilesForAllChannels": true,
 		"npmRebuild": false,
