@@ -111,22 +111,7 @@
 		"mac": {
 			"category": "public.app-category.utilities",
 			"icon": "static/icon.icns",
-			"target": [
-				{
-					"target": "dmg",
-					"arch": [
-						"x64",
-						"arm64"
-					]
-				},
-				{
-					"target": "zip",
-					"arch": [
-						"x64",
-						"arm64"
-					]
-				}
-			],
+			"target": ["dmg", "zip"],
 			"artifactName": "${productName}-${version}-${arch}.${ext}"
 		},
 		"win": {
@@ -139,30 +124,9 @@
 		},
 		"linux": {
 			"icon": "static/icon.png",
-			"target": [
-				{
-					"target": "deb",
-					"arch": [
-						"x64",
-						"arm64"
-					]
-				},
-				{
-					"target": "rpm",
-					"arch": [
-						"x64",
-						"arm64"
-					]
-				},
-				{
-					"target": "AppImage",
-					"arch": [
-						"x64",
-						"arm64"
-					]
-				}
-			],
-			"category": "Utility"
+			"target": ["deb", "rpm", "AppImage"],
+			"category": "Utility",
+			"artifactName": "${productName}-${version}-${arch}.${ext}"
 		},
 		"nsis": {
 			"oneClick": false,

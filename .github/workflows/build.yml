@@ -70,7 +70,11 @@ jobs:
             platform: win-arm64
             arch: arm64
           - os: ubuntu-latest
-            platform: linux
+            platform: linux-x64
+            arch: x64
+          - os: ubuntu-latest
+            platform: linux-arm64
+            arch: arm64
 
     steps:
       - name: Checkout
@@ -134,8 +138,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Electron (Linux)
-        if: matrix.platform == 'linux'
-        run: npm run electron:build:linux
+        if: startsWith(matrix.platform, 'linux-')
+        run: npm run electron:build:linux -- --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
