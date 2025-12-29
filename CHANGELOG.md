@@ -1,3 +1,10 @@
+## [1.21.3](https://github.com/rodrigogs/whats-reader/compare/v1.21.2...v1.21.3) (2025-12-29)
+
+
+### Bug Fixes
+
+* **ci:** split Windows installers and sync main to dev ([d2c4a95](https://github.com/rodrigogs/whats-reader/commit/d2c4a953e8d417f9d0144df5bdc9feea9a418519))
+
 ## [1.21.2](https://github.com/rodrigogs/whats-reader/compare/v1.21.1...v1.21.2) (2025-12-29)
 
 
