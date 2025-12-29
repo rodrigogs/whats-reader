@@ -57,8 +57,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
-            platform: mac
+          - os: macos-14
+            platform: mac-arm64
+            arch: arm64
+          - os: macos-13
+            platform: mac-x64
+            arch: x64
           - os: windows-latest
             platform: win-x64
             arch: x64
@@ -118,8 +122,8 @@ jobs:
         run: npm version ${{ steps.version.outputs.version }} --no-git-tag-version --allow-same-version
 
       - name: Build Electron (macOS)
-        if: matrix.platform == 'mac'
-        run: npm run electron:build:mac
+        if: startsWith(matrix.platform, 'mac-')
+        run: npm run electron:build:mac -- --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

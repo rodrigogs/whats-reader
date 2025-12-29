@@ -126,7 +126,8 @@
 						"arm64"
 					]
 				}
-			]
+			],
+			"artifactName": "${productName}-${version}-${arch}.${ext}"
 		},
 		"win": {
 			"icon": "static/icon.ico",
