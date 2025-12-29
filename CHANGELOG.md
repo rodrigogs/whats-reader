@@ -1,3 +1,10 @@
+## [1.21.2](https://github.com/rodrigogs/whats-reader/compare/v1.21.1...v1.21.2) (2025-12-29)
+
+
+### Bug Fixes
+
+* **build:** split Windows installers by architecture ([e5e3c0e](https://github.com/rodrigogs/whats-reader/commit/e5e3c0eff297501a71c4a84a1b2fc9cdc08dcbc6))
+
 ## [1.21.1](https://github.com/rodrigogs/whats-reader/compare/v1.21.0...v1.21.1) (2025-12-29)
 
 
