@@ -72,9 +72,11 @@ jobs:
           - os: ubuntu-latest
             platform: linux-x64
             arch: x64
-          - os: ubuntu-24.04-arm64
+            linux_targets: deb rpm AppImage
+          - os: ubuntu-latest
             platform: linux-arm64
             arch: arm64
+            linux_targets: AppImage
 
     steps:
       - name: Checkout
@@ -143,7 +145,7 @@ jobs:
 
       - name: Build Electron (Linux)
         if: startsWith(matrix.platform, 'linux-')
-        run: npm run electron:build:linux -- --${{ matrix.arch }}
+        run: npm run build && npx electron-builder --linux ${{ matrix.linux_targets }} --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ELECTRON_CACHE: ${{ runner.temp }}/electron
