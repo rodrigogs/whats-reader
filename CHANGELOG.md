@@ -1,3 +1,10 @@
+## [1.21.19](https://github.com/rodrigogs/whats-reader/compare/v1.21.18...v1.21.19) (2025-12-30)
+
+
+### Bug Fixes
+
+* **ci:** add actions:write permission to trigger deploy ([cdeffb8](https://github.com/rodrigogs/whats-reader/commit/cdeffb8ec2404723e890a1e396c8904e625932b3))
+
 ## [1.21.18](https://github.com/rodrigogs/whats-reader/compare/v1.21.17...v1.21.18) (2025-12-30)
 
 
