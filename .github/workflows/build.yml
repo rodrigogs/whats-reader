@@ -222,17 +222,43 @@ jobs:
             });
 
             if (comparison.ahead_by > 0) {
-              try {
-                await github.rest.repos.merge({
+              // Check for existing PR
+              const { data: prs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head: `${context.repo.owner}:main`,
+                base: 'dev',
+                state: 'open'
+              });
+
+              let pr;
+              if (prs.length > 0) {
+                pr = prs[0];
+                console.log(`📋 Found existing PR #${pr.number}`);
+              } else {
+                const { data: newPr } = await github.rest.pulls.create({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  base: 'dev',
                   head: 'main',
-                  commit_message: 'chore: sync main to dev after ${{ steps.version.outputs.version }}'
+                  base: 'dev',
+                  title: 'chore: sync main to dev after ${{ steps.version.outputs.version }}',
+                  body: 'Automated PR to sync release changes from main to dev.'
                 });
-                console.log('✅ Synced main to dev');
+                pr = newPr;
+                console.log(`📋 Created PR #${pr.number}`);
+              }
+
+              // Enable auto-merge
+              try {
+                await github.rest.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  merge_method: 'merge'
+                });
+                console.log('✅ Merged PR');
               } catch (e) {
-                console.log('⚠️ Could not sync:', e.message);
+                console.log('⚠️ Could not merge (may need manual approval):', e.message);
               }
             } else {
               console.log('ℹ️ dev is up to date with main');
