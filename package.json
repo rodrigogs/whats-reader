@@ -135,6 +135,9 @@
 			"category": "Utility",
 			"artifactName": "${productName}-${version}-${arch}.${ext}"
 		},
+		"dmg": {
+			"format": "ULFO"
+		},
 		"nsis": {
 			"oneClick": false,
 			"allowToChangeInstallationDirectory": true,
