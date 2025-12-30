@@ -57,8 +57,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
-            platform: mac
+          - os: macos-14
+            platform: mac-arm64
+            arch: arm64
+          - os: macos-14
+            platform: mac-x64
+            arch: x64
           - os: windows-latest
             platform: win-x64
             arch: x64
@@ -66,7 +70,13 @@ jobs:
             platform: win-arm64
             arch: arm64
           - os: ubuntu-latest
-            platform: linux
+            platform: linux-x64
+            arch: x64
+            linux_targets: deb rpm AppImage
+          - os: ubuntu-latest
+            platform: linux-arm64
+            arch: arm64
+            linux_targets: AppImage
 
     steps:
       - name: Checkout
@@ -96,9 +106,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/cache/electron
-            ~/cache/electron-builder
-          key: ${{ runner.os }}-electron-${{ hashFiles('**/package-lock.json') }}
+            ${{ runner.temp }}/electron
+            ${{ runner.temp }}/electron-builder
+          key: ${{ runner.os }}-${{ matrix.arch }}-electron-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
         run: |
@@ -118,22 +128,28 @@ jobs:
         run: npm version ${{ steps.version.outputs.version }} --no-git-tag-version --allow-same-version
 
       - name: Build Electron (macOS)
-        if: matrix.platform == 'mac'
-        run: npm run electron:build:mac
+        if: startsWith(matrix.platform, 'mac-')
+        run: npm run electron:build:mac -- --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ELECTRON_CACHE: ${{ runner.temp }}/electron
+          ELECTRON_BUILDER_CACHE: ${{ runner.temp }}/electron-builder
 
       - name: Build Electron (Windows)
         if: startsWith(matrix.platform, 'win-')
         run: npm run electron:build:win -- --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ELECTRON_CACHE: ${{ runner.temp }}/electron
+          ELECTRON_BUILDER_CACHE: ${{ runner.temp }}/electron-builder
 
       - name: Build Electron (Linux)
-        if: matrix.platform == 'linux'
-        run: npm run electron:build:linux
+        if: startsWith(matrix.platform, 'linux-')
+        run: npm run build && npx electron-builder --linux ${{ matrix.linux_targets }} --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ELECTRON_CACHE: ${{ runner.temp }}/electron
+          ELECTRON_BUILDER_CACHE: ${{ runner.temp }}/electron-builder
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4

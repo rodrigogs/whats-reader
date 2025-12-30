@@ -1,3 +1,52 @@
+## [1.21.13](https://github.com/rodrigogs/whats-reader/compare/v1.21.12...v1.21.13) (2025-12-30)
+
+
+### Bug Fixes
+
+* **ci:** use x64 runner for linux-arm64 with AppImage only ([94d85b8](https://github.com/rodrigogs/whats-reader/commit/94d85b8af1757f5834c2d3acb7a3e3187222028b))
+
+## [1.21.12](https://github.com/rodrigogs/whats-reader/compare/v1.21.11...v1.21.12) (2025-12-30)
+
+
+### Bug Fixes
+
+* **ci:** use runner.temp for electron cache paths ([1145384](https://github.com/rodrigogs/whats-reader/commit/1145384c26b4fdc4792329e70f12868c2d2afd57))
+
+## [1.21.11](https://github.com/rodrigogs/whats-reader/compare/v1.21.10...v1.21.11) (2025-12-30)
+
+
+### Bug Fixes
+
+* **ci:** use native ARM64 runner for linux-arm64 builds ([68675e6](https://github.com/rodrigogs/whats-reader/commit/68675e6a4cb134717a76c6fcce529998df03d2e0))
+
+## [1.21.10](https://github.com/rodrigogs/whats-reader/compare/v1.21.9...v1.21.10) (2025-12-30)
+
+
+### Performance Improvements
+
+* **build:** use ULFO format for DMG (faster lzfse compression) ([76f2077](https://github.com/rodrigogs/whats-reader/commit/76f20771986a5b1395b5229c8ac3c4e01986bbb4))
+
+## [1.21.9](https://github.com/rodrigogs/whats-reader/compare/v1.21.8...v1.21.9) (2025-12-29)
+
+
+### Bug Fixes
+
+* **build:** fix race condition by letting CLI control architecture ([a142434](https://github.com/rodrigogs/whats-reader/commit/a142434281754018ceaa3405c8cbf50e667a3649))
+
+## [1.21.8](https://github.com/rodrigogs/whats-reader/compare/v1.21.7...v1.21.8) (2025-12-29)
+
+
+### Bug Fixes
+
+* **build:** use macos-14 for both mac architectures ([494ca74](https://github.com/rodrigogs/whats-reader/commit/494ca74dd8a5e6422d9f0999a9364dde24d54f60))
+
+## [1.21.7](https://github.com/rodrigogs/whats-reader/compare/v1.21.6...v1.21.7) (2025-12-29)
+
+
+### Performance Improvements
+
+* **build:** split macOS builds into parallel x64/arm64 jobs ([cbda8f2](https://github.com/rodrigogs/whats-reader/commit/cbda8f20db49845251fc27f95face06ff45f7af8))
+
 ## [1.21.6](https://github.com/rodrigogs/whats-reader/compare/v1.21.5...v1.21.6) (2025-12-29)
 
 
