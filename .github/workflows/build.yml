@@ -210,18 +210,33 @@ jobs:
 
       - name: Sync main to dev
         continue-on-error: true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          AHEAD=$(gh api repos/${{ github.repository }}/compare/dev...main --jq '.ahead_by')
-          if [ "$AHEAD" -gt 0 ]; then
-            EXISTING_PR=$(gh pr list --base dev --head main --json number --jq '.[0].number')
-            if [ -n "$EXISTING_PR" ]; then
-              gh pr merge "$EXISTING_PR" --merge --auto
-            else
-              gh api repos/${{ github.repository }}/merges -f base=dev -f head=main -f commit_message="chore: sync main to dev after ${{ steps.version.outputs.version }}"
-            fi
-          fi
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: comparison } = await github.rest.repos.compareCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: 'dev',
+              head: 'main'
+            });
+
+            if (comparison.ahead_by > 0) {
+              try {
+                await github.rest.repos.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  base: 'dev',
+                  head: 'main',
+                  commit_message: 'chore: sync main to dev after ${{ steps.version.outputs.version }}'
+                });
+                console.log('✅ Synced main to dev');
+              } catch (e) {
+                console.log('⚠️ Could not sync:', e.message);
+              }
+            } else {
+              console.log('ℹ️ dev is up to date with main');
+            }
 
       - name: Trigger Deploy Workflow
         uses: actions/github-script@v7
