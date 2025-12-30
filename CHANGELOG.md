@@ -1,3 +1,10 @@
+## [1.21.20](https://github.com/rodrigogs/whats-reader/compare/v1.21.19...v1.21.20) (2025-12-30)
+
+
+### Bug Fixes
+
+* **ci:** use GitHub API for branch sync (no git repo needed) ([35e1007](https://github.com/rodrigogs/whats-reader/commit/35e100721b61ba4fcda921110af203bea0b0de8d))
+
 ## [1.21.19](https://github.com/rodrigogs/whats-reader/compare/v1.21.18...v1.21.19) (2025-12-30)
 
 
