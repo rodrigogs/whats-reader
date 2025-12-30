@@ -207,6 +207,21 @@ jobs:
               console.log('⚠️ No draft release found for ${{ steps.version.outputs.version }}');
             }
 
+      - name: Sync main to dev
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          AHEAD=$(gh api repos/${{ github.repository }}/compare/dev...main --jq '.ahead_by')
+          if [ "$AHEAD" -gt 0 ]; then
+            EXISTING_PR=$(gh pr list --base dev --head main --json number --jq '.[0].number')
+            if [ -n "$EXISTING_PR" ]; then
+              gh pr merge "$EXISTING_PR" --merge --auto
+            else
+              gh api repos/${{ github.repository }}/merges -f base=dev -f head=main -f commit_message="chore: sync main to dev after ${{ steps.version.outputs.version }}"
+            fi
+          fi
+
   cleanup-failed-release:
     name: Cleanup Failed Release
     runs-on: ubuntu-latest
