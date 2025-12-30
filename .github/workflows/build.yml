@@ -104,8 +104,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cache/electron
-            ~/.cache/electron-builder
+            ${{ runner.temp }}/electron
+            ${{ runner.temp }}/electron-builder
           key: ${{ runner.os }}-${{ matrix.arch }}-electron-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
@@ -130,24 +130,24 @@ jobs:
         run: npm run electron:build:mac -- --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ELECTRON_CACHE: ~/.cache/electron
-          ELECTRON_BUILDER_CACHE: ~/.cache/electron-builder
+          ELECTRON_CACHE: ${{ runner.temp }}/electron
+          ELECTRON_BUILDER_CACHE: ${{ runner.temp }}/electron-builder
 
       - name: Build Electron (Windows)
         if: startsWith(matrix.platform, 'win-')
         run: npm run electron:build:win -- --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ELECTRON_CACHE: ~/.cache/electron
-          ELECTRON_BUILDER_CACHE: ~/.cache/electron-builder
+          ELECTRON_CACHE: ${{ runner.temp }}/electron
+          ELECTRON_BUILDER_CACHE: ${{ runner.temp }}/electron-builder
 
       - name: Build Electron (Linux)
         if: startsWith(matrix.platform, 'linux-')
         run: npm run electron:build:linux -- --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ELECTRON_CACHE: ~/.cache/electron
-          ELECTRON_BUILDER_CACHE: ~/.cache/electron-builder
+          ELECTRON_CACHE: ${{ runner.temp }}/electron
+          ELECTRON_BUILDER_CACHE: ${{ runner.temp }}/electron-builder
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
