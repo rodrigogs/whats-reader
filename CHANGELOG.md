@@ -1,3 +1,10 @@
+## [1.21.10](https://github.com/rodrigogs/whats-reader/compare/v1.21.9...v1.21.10) (2025-12-30)
+
+
+### Performance Improvements
+
+* **build:** use ULFO format for DMG (faster lzfse compression) ([76f2077](https://github.com/rodrigogs/whats-reader/commit/76f20771986a5b1395b5229c8ac3c4e01986bbb4))
+
 ## [1.21.9](https://github.com/rodrigogs/whats-reader/compare/v1.21.8...v1.21.9) (2025-12-29)
 
 
