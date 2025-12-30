@@ -1,3 +1,10 @@
+## [1.21.17](https://github.com/rodrigogs/whats-reader/compare/v1.21.16...v1.21.17) (2025-12-30)
+
+
+### Bug Fixes
+
+* **ci:** sync main to dev after release is published ([6969a70](https://github.com/rodrigogs/whats-reader/commit/6969a70f8ca5bf826d2ca974d0556b1186664bcd))
+
 ## [1.21.16](https://github.com/rodrigogs/whats-reader/compare/v1.21.15...v1.21.16) (2025-12-30)
 
 
