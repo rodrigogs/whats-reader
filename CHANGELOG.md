@@ -1,3 +1,10 @@
+## [1.21.13](https://github.com/rodrigogs/whats-reader/compare/v1.21.12...v1.21.13) (2025-12-30)
+
+
+### Bug Fixes
+
+* **ci:** use x64 runner for linux-arm64 with AppImage only ([94d85b8](https://github.com/rodrigogs/whats-reader/commit/94d85b8af1757f5834c2d3acb7a3e3187222028b))
+
 ## [1.21.12](https://github.com/rodrigogs/whats-reader/compare/v1.21.11...v1.21.12) (2025-12-30)
 
 
