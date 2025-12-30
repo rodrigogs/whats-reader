@@ -1,3 +1,10 @@
+## [1.21.11](https://github.com/rodrigogs/whats-reader/compare/v1.21.10...v1.21.11) (2025-12-30)
+
+
+### Bug Fixes
+
+* **ci:** use native ARM64 runner for linux-arm64 builds ([68675e6](https://github.com/rodrigogs/whats-reader/commit/68675e6a4cb134717a76c6fcce529998df03d2e0))
+
 ## [1.21.10](https://github.com/rodrigogs/whats-reader/compare/v1.21.9...v1.21.10) (2025-12-30)
 
 
