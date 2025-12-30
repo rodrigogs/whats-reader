@@ -1,3 +1,10 @@
+## [1.21.14](https://github.com/rodrigogs/whats-reader/compare/v1.21.13...v1.21.14) (2025-12-30)
+
+
+### Bug Fixes
+
+* **ci:** cleanup draft releases on cancelled builds ([00d3fc1](https://github.com/rodrigogs/whats-reader/commit/00d3fc1b75300a6e8836a05de9ae35fa8f866b2f))
+
 ## [1.21.13](https://github.com/rodrigogs/whats-reader/compare/v1.21.12...v1.21.13) (2025-12-30)
 
 
