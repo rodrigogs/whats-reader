@@ -1,3 +1,10 @@
+## [1.21.15](https://github.com/rodrigogs/whats-reader/compare/v1.21.14...v1.21.15) (2025-12-30)
+
+
+### Performance Improvements
+
+* **ci:** fix electron cache to persist between builds ([fb5104f](https://github.com/rodrigogs/whats-reader/commit/fb5104f0c5492d334f21e4f57ef5dc0f3105865b))
+
 ## [1.21.14](https://github.com/rodrigogs/whats-reader/compare/v1.21.13...v1.21.14) (2025-12-30)
 
 
