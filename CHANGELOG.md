@@ -1,3 +1,10 @@
+## [1.21.18](https://github.com/rodrigogs/whats-reader/compare/v1.21.17...v1.21.18) (2025-12-30)
+
+
+### Bug Fixes
+
+* **ci:** trigger deploy from build workflow after publish ([74c1567](https://github.com/rodrigogs/whats-reader/commit/74c1567b5f9458b0782affab397d8515476bfa92))
+
 ## [1.21.17](https://github.com/rodrigogs/whats-reader/compare/v1.21.16...v1.21.17) (2025-12-30)
 
 
