@@ -1,3 +1,52 @@
+## [1.21.20](https://github.com/rodrigogs/whats-reader/compare/v1.21.19...v1.21.20) (2025-12-30)
+
+
+### Bug Fixes
+
+* **ci:** use GitHub API for branch sync (no git repo needed) ([35e1007](https://github.com/rodrigogs/whats-reader/commit/35e100721b61ba4fcda921110af203bea0b0de8d))
+
+## [1.21.19](https://github.com/rodrigogs/whats-reader/compare/v1.21.18...v1.21.19) (2025-12-30)
+
+
+### Bug Fixes
+
+* **ci:** add actions:write permission to trigger deploy ([cdeffb8](https://github.com/rodrigogs/whats-reader/commit/cdeffb8ec2404723e890a1e396c8904e625932b3))
+
+## [1.21.18](https://github.com/rodrigogs/whats-reader/compare/v1.21.17...v1.21.18) (2025-12-30)
+
+
+### Bug Fixes
+
+* **ci:** trigger deploy from build workflow after publish ([74c1567](https://github.com/rodrigogs/whats-reader/commit/74c1567b5f9458b0782affab397d8515476bfa92))
+
+## [1.21.17](https://github.com/rodrigogs/whats-reader/compare/v1.21.16...v1.21.17) (2025-12-30)
+
+
+### Bug Fixes
+
+* **ci:** sync main to dev after release is published ([6969a70](https://github.com/rodrigogs/whats-reader/commit/6969a70f8ca5bf826d2ca974d0556b1186664bcd))
+
+## [1.21.16](https://github.com/rodrigogs/whats-reader/compare/v1.21.15...v1.21.16) (2025-12-30)
+
+
+### Bug Fixes
+
+* **ci:** trigger deploy only after release is published ([f257908](https://github.com/rodrigogs/whats-reader/commit/f257908d446ad6af6651a8e676ab1adcf6eaeeb0))
+
+## [1.21.15](https://github.com/rodrigogs/whats-reader/compare/v1.21.14...v1.21.15) (2025-12-30)
+
+
+### Performance Improvements
+
+* **ci:** fix electron cache to persist between builds ([fb5104f](https://github.com/rodrigogs/whats-reader/commit/fb5104f0c5492d334f21e4f57ef5dc0f3105865b))
+
+## [1.21.14](https://github.com/rodrigogs/whats-reader/compare/v1.21.13...v1.21.14) (2025-12-30)
+
+
+### Bug Fixes
+
+* **ci:** cleanup draft releases on cancelled builds ([00d3fc1](https://github.com/rodrigogs/whats-reader/commit/00d3fc1b75300a6e8836a05de9ae35fa8f866b2f))
+
 ## [1.21.13](https://github.com/rodrigogs/whats-reader/compare/v1.21.12...v1.21.13) (2025-12-30)
 
 

@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   # Pre-build SvelteKit app once and share across all platforms
@@ -106,9 +107,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ${{ runner.temp }}/electron
-            ${{ runner.temp }}/electron-builder
+            ~/Library/Caches/electron
+            ~/Library/Caches/electron-builder
+            ~/.cache/electron
+            ~/.cache/electron-builder
+            ~/AppData/Local/electron/Cache
+            ~/AppData/Local/electron-builder/Cache
           key: ${{ runner.os }}-${{ matrix.arch }}-electron-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.arch }}-electron-
 
       - name: Install dependencies
         run: |
@@ -132,24 +139,18 @@ jobs:
         run: npm run electron:build:mac -- --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ELECTRON_CACHE: ${{ runner.temp }}/electron
-          ELECTRON_BUILDER_CACHE: ${{ runner.temp }}/electron-builder
 
       - name: Build Electron (Windows)
         if: startsWith(matrix.platform, 'win-')
         run: npm run electron:build:win -- --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ELECTRON_CACHE: ${{ runner.temp }}/electron
-          ELECTRON_BUILDER_CACHE: ${{ runner.temp }}/electron-builder
 
       - name: Build Electron (Linux)
         if: startsWith(matrix.platform, 'linux-')
         run: npm run build && npx electron-builder --linux ${{ matrix.linux_targets }} --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ELECTRON_CACHE: ${{ runner.temp }}/electron
-          ELECTRON_BUILDER_CACHE: ${{ runner.temp }}/electron-builder
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -207,11 +208,79 @@ jobs:
               console.log('⚠️ No draft release found for ${{ steps.version.outputs.version }}');
             }
 
+      - name: Sync main to dev
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: comparison } = await github.rest.repos.compareCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: 'dev',
+              head: 'main'
+            });
+
+            if (comparison.ahead_by > 0) {
+              // Check for existing PR
+              const { data: prs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head: `${context.repo.owner}:main`,
+                base: 'dev',
+                state: 'open'
+              });
+
+              let pr;
+              if (prs.length > 0) {
+                pr = prs[0];
+                console.log(`📋 Found existing PR #${pr.number}`);
+              } else {
+                const { data: newPr } = await github.rest.pulls.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  head: 'main',
+                  base: 'dev',
+                  title: 'chore: sync main to dev after ${{ steps.version.outputs.version }}',
+                  body: 'Automated PR to sync release changes from main to dev.'
+                });
+                pr = newPr;
+                console.log(`📋 Created PR #${pr.number}`);
+              }
+
+              // Enable auto-merge
+              try {
+                await github.rest.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  merge_method: 'merge'
+                });
+                console.log('✅ Merged PR');
+              } catch (e) {
+                console.log('⚠️ Could not merge (may need manual approval):', e.message);
+              }
+            } else {
+              console.log('ℹ️ dev is up to date with main');
+            }
+
+      - name: Trigger Deploy Workflow
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy.yml',
+              ref: 'main'
+            })
+
   cleanup-failed-release:
     name: Cleanup Failed Release
     runs-on: ubuntu-latest
     needs: build
-    if: failure()
+    if: failure() || cancelled()
     steps:
       - name: Get version from input
         id: version
