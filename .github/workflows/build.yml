@@ -222,6 +222,18 @@ jobs:
             fi
           fi
 
+      - name: Trigger Deploy Workflow
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy.yml',
+              ref: 'main'
+            })
+
   cleanup-failed-release:
     name: Cleanup Failed Release
     runs-on: ubuntu-latest
