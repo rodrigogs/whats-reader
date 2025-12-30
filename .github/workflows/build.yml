@@ -211,7 +211,7 @@ jobs:
     name: Cleanup Failed Release
     runs-on: ubuntu-latest
     needs: build
-    if: failure()
+    if: failure() || cancelled()
     steps:
       - name: Get version from input
         id: version
