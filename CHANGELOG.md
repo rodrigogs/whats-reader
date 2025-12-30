@@ -1,3 +1,10 @@
+## [1.21.12](https://github.com/rodrigogs/whats-reader/compare/v1.21.11...v1.21.12) (2025-12-30)
+
+
+### Bug Fixes
+
+* **ci:** use runner.temp for electron cache paths ([1145384](https://github.com/rodrigogs/whats-reader/commit/1145384c26b4fdc4792329e70f12868c2d2afd57))
+
 ## [1.21.11](https://github.com/rodrigogs/whats-reader/compare/v1.21.10...v1.21.11) (2025-12-30)
 
 
