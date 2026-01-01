@@ -131,7 +131,7 @@ const maxHourCount = $derived(stats ? Math.max(...stats.messagesByHour) : 0);
 		<div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
 			<h2 id="stats-title" class="text-xl font-bold text-gray-800 dark:text-white">{m.stats_title()}</h2>
 			<button
-				class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+				class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
 				onclick={onClose}
 				aria-label={m.stats_close()}
 			>
