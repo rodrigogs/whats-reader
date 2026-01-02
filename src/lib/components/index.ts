@@ -3,6 +3,8 @@ export { default as Button } from './Button.svelte';
 export { default as ChatList } from './ChatList.svelte';
 export { default as ChatStats } from './ChatStats.svelte';
 export { default as ChatView } from './ChatView.svelte';
+export { default as Collapsible } from './Collapsible.svelte';
+export { default as FeatureItem } from './FeatureItem.svelte';
 export { default as FileDropZone } from './FileDropZone.svelte';
 export { default as Icon } from './Icon.svelte';
 export { default as IconButton } from './IconButton.svelte';

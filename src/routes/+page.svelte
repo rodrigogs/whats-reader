@@ -7,6 +7,8 @@ import {
 	ChatList,
 	ChatStats,
 	ChatView,
+	Collapsible,
+	FeatureItem,
 	FileDropZone,
 	SearchBar,
 	VersionBadge,
@@ -474,74 +476,26 @@ const currentUser = $derived.by(() => {
 					{/if}
 
 				<!-- Instructions - Collapsible -->
-				<details class="mt-6 w-full group">
-					<summary class="flex items-center justify-center gap-2 cursor-pointer text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors select-none">
-						<Icon name="chevron-right" size="sm" class="transition-transform group-open:rotate-90" />
-						{m.export_instructions_title()}
-					</summary>
-					<div class="mt-3 grid grid-cols-1 gap-2 text-xs text-gray-600 dark:text-gray-400">
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center font-bold">1</span>
-							<span>{m.export_step_1()}</span>
-						</div>
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center font-bold">2</span>
-							<span>{m.export_step_2()}</span>
-						</div>
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center font-bold">3</span>
-							<span>{m.export_step_3()}</span>
-						</div>
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center font-bold">4</span>
-							<span>{m.export_step_4()}</span>
-						</div>
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center font-bold">5</span>
-							<span>{m.export_step_5()}</span>
-						</div>
+				<Collapsible title={m.export_instructions_title()} class="mt-6 w-full">
+					<div class="grid grid-cols-1 gap-2">
+						<FeatureItem badge={1}>{m.export_step_1()}</FeatureItem>
+						<FeatureItem badge={2}>{m.export_step_2()}</FeatureItem>
+						<FeatureItem badge={3}>{m.export_step_3()}</FeatureItem>
+						<FeatureItem badge={4}>{m.export_step_4()}</FeatureItem>
+						<FeatureItem badge={5}>{m.export_step_5()}</FeatureItem>
 					</div>
-				</details>
+				</Collapsible>
 
 				<!-- Privacy & Security - Collapsible -->
-				<details class="mt-4 w-full group">
-					<summary class="flex items-center justify-center gap-2 cursor-pointer text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors select-none">
-						<Icon name="chevron-right" size="sm" class="transition-transform group-open:rotate-90" />
-						{m.privacy_title()}
-					</summary>
-					<div class="mt-3 grid grid-cols-1 gap-2 text-xs text-gray-600 dark:text-gray-400">
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center">
-								<Icon name="wifi-off" size="xs" stroke-width="2" />
-							</span>
-							<span>{m.privacy_offline()}</span>
-						</div>
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center">
-								<Icon name="shield" size="xs" stroke-width="2" />
-							</span>
-							<span>{m.privacy_local_processing()}</span>
-						</div>
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center">
-								<Icon name="code" size="xs" stroke-width="2" />
-							</span>
-							<span>{m.privacy_local_ai()}</span>
-						</div>
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center">
-								<Icon name="eye-off" size="xs" stroke-width="2" />
-							</span>
-							<span>{m.privacy_no_tracking()}</span>
-						</div>
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center">
-								<Icon name="code" size="xs" stroke-width="2" />
-							</span>
-							<span>{m.privacy_open_source()}</span>
-						</div>
+				<Collapsible title={m.privacy_title()} class="mt-4 w-full">
+					<div class="grid grid-cols-1 gap-2">
+						<FeatureItem icon="wifi-off" variant="icon">{m.privacy_offline()}</FeatureItem>
+						<FeatureItem icon="shield" variant="icon">{m.privacy_local_processing()}</FeatureItem>
+						<FeatureItem icon="code" variant="icon">{m.privacy_local_ai()}</FeatureItem>
+						<FeatureItem icon="eye-off" variant="icon">{m.privacy_no_tracking()}</FeatureItem>
+						<FeatureItem icon="code" variant="icon">{m.privacy_open_source()}</FeatureItem>
 					</div>
-				</details>
+				</Collapsible>
 
 				<!-- GitHub Star -->
 				<div class="mt-4 flex flex-col items-center gap-1.5">
