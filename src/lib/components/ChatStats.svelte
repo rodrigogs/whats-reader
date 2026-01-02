@@ -3,6 +3,8 @@ import { onMount } from 'svelte';
 import * as m from '$lib/paraglide/messages';
 import { getLocale } from '$lib/paraglide/runtime';
 import type { ChatData } from '$lib/state.svelte';
+import Icon from './Icon.svelte';
+import IconButton from './IconButton.svelte';
 
 interface Props {
 	chat: ChatData;
@@ -130,15 +132,9 @@ const maxHourCount = $derived(stats ? Math.max(...stats.messagesByHour) : 0);
 		<!-- Header -->
 		<div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
 			<h2 id="stats-title" class="text-xl font-bold text-gray-800 dark:text-white">{m.stats_title()}</h2>
-			<button
-				class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-				onclick={onClose}
-				aria-label={m.stats_close()}
-			>
-				<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-				</svg>
-			</button>
+			<IconButton size="lg" onclick={onClose} aria-label={m.stats_close()}>
+				<Icon name="close" size="lg" />
+			</IconButton>
 		</div>
 
 		<!-- Content -->
@@ -152,9 +148,7 @@ const maxHourCount = $derived(stats ? Math.max(...stats.messagesByHour) : 0);
 			{:else if error}
 				<!-- Error state -->
 				<div class="flex flex-col items-center justify-center py-16">
-					<svg class="w-12 h-12 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-					</svg>
+				<Icon name="alert" size="2xl" class="text-red-500 mb-4" />
 					<p class="text-red-500">{error}</p>
 				</div>
 			{:else if stats}

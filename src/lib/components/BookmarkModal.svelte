@@ -3,6 +3,9 @@ import { untrack } from 'svelte';
 import { type Bookmark, bookmarksState } from '$lib/bookmarks.svelte';
 import * as m from '$lib/paraglide/messages';
 import { getLocale } from '$lib/paraglide/runtime';
+import Button from './Button.svelte';
+import Icon from './Icon.svelte';
+import IconButton from './IconButton.svelte';
 
 // Data needed to create a new bookmark
 interface NewBookmarkData {
@@ -127,16 +130,14 @@ const displayPreview = $derived(
 				<h2 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-gray-100">
 					{isCreateMode ? m.bookmarks_add_title() : m.bookmarks_edit_title()}
 				</h2>
-				<button
-					type="button"
-					class="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+				<IconButton
+					theme="light"
+					size="sm"
 					onclick={onClose}
 					aria-label={m.bookmarks_close_modal()}
 				>
-					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-					</svg>
-				</button>
+					<Icon name="close" />
+				</IconButton>
 			</div>
 		</div>
 
@@ -176,31 +177,19 @@ const displayPreview = $derived(
 		<!-- Footer -->
 		<div class="px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 flex items-center justify-between">
 			{#if !isCreateMode}
-				<button
-					type="button"
-					class="px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
-					onclick={handleDelete}
-				>
-					Delete bookmark
-				</button>
+				<Button variant="danger" size="sm" onclick={handleDelete}>
+					{m.bookmarks_delete_button()}
+				</Button>
 			{:else}
 				<div></div>
 			{/if}
 			<div class="flex gap-2">
-				<button
-					type="button"
-					class="px-4 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
-					onclick={onClose}
-				>
-					Cancel
-				</button>
-				<button
-					type="button"
-					class="px-4 py-1.5 text-sm bg-[var(--color-whatsapp-teal)] hover:brightness-110 hover:shadow-md text-white rounded-lg transition-all cursor-pointer"
-					onclick={handleSave}
-				>
-					Save
-				</button>
+				<Button variant="ghost" size="sm" onclick={onClose}>
+					{m.bookmarks_cancel()}
+				</Button>
+				<Button variant="primary" size="sm" onclick={handleSave}>
+					{m.bookmarks_save()}
+				</Button>
 			</div>
 		</div>
 	</div>
