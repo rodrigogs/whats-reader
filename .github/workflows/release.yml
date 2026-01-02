@@ -40,25 +40,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Sync dev with main
-        if: steps.semantic.outputs.new_release_published == 'true'
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: sync-main-to-dev-${{ steps.semantic.outputs.new_release_version }}
-          base: dev
-          title: 'chore: sync dev with main after release v${{ steps.semantic.outputs.new_release_version }}'
-          body: |
-            Automatic sync of dev branch with main after semantic release.
-            
-            **Release**: v${{ steps.semantic.outputs.new_release_version }}
-            **Changes**: Updated package.json version and CHANGELOG.md
-            
-            This PR will be automatically merged if no conflicts exist.
-          labels: automated
-          delete-branch: true
-          commit-message: 'chore: sync dev with main after release v${{ steps.semantic.outputs.new_release_version }}'
-
       - name: Trigger Build Workflow
         if: steps.semantic.outputs.new_release_published == 'true'
         uses: actions/github-script@v7
