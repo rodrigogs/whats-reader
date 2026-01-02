@@ -367,7 +367,7 @@ function getLastMessage(chat: ChatData): string {
 				}}
 			>
 				<Icon name="trash" size="sm" />
-				Remove Chat
+				{m.context_menu_remove()}
 			</ListItemButton>
 		</div>
 	{/if}

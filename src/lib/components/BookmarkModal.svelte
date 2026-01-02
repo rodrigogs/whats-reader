@@ -178,17 +178,17 @@ const displayPreview = $derived(
 		<div class="px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 flex items-center justify-between">
 			{#if !isCreateMode}
 				<Button variant="danger" size="sm" onclick={handleDelete}>
-					Delete bookmark
+					{m.bookmarks_delete_button()}
 				</Button>
 			{:else}
 				<div></div>
 			{/if}
 			<div class="flex gap-2">
 				<Button variant="ghost" size="sm" onclick={onClose}>
-					Cancel
+					{m.bookmarks_cancel()}
 				</Button>
 				<Button variant="primary" size="sm" onclick={handleSave}>
-					Save
+					{m.bookmarks_save()}
 				</Button>
 			</div>
 		</div>
