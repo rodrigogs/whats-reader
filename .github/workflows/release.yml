@@ -42,34 +42,13 @@ jobs:
 
       - name: Sync dev with main
         if: steps.semantic.outputs.new_release_published == 'true'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            // Create PR to sync dev with main
-            try {
-              const { data: pr } = await github.rest.pulls.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title: 'chore: sync dev with main after release ${{ steps.semantic.outputs.new_release_version }}',
-                head: 'main',
-                base: 'dev',
-                body: 'Automatic sync of dev branch with main after semantic release.\n\nRelease: v${{ steps.semantic.outputs.new_release_version }}'
-              });
-              console.log(`Created PR #${pr.number}`);
-              
-              // Auto-merge the PR
-              await github.rest.pulls.merge({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pr.number,
-                merge_method: 'merge'
-              });
-              console.log(`Merged PR #${pr.number}`);
-            } catch (error) {
-              console.log('Error syncing branches:', error.message);
-              throw error;
-            }
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin dev
+          git checkout dev
+          git merge origin/main --no-edit -m "chore: sync dev with main after release"
+          git push origin dev
 
       - name: Trigger Build Workflow
         if: steps.semantic.outputs.new_release_published == 'true'

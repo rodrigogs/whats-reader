@@ -1,3 +1,10 @@
+## [1.21.23](https://github.com/rodrigogs/whats-reader/compare/v1.21.22...v1.21.23) (2026-01-02)
+
+
+### Bug Fixes
+
+* add JSDoc comment to IconName type ([#38](https://github.com/rodrigogs/whats-reader/issues/38)) ([905164d](https://github.com/rodrigogs/whats-reader/commit/905164dfeb23547d3aa8e53cd798149d5e5c899c)), closes [#33](https://github.com/rodrigogs/whats-reader/issues/33)
+
 ## [1.21.22](https://github.com/rodrigogs/whats-reader/compare/v1.21.21...v1.21.22) (2026-01-02)
 
 ## [1.21.21](https://github.com/rodrigogs/whats-reader/compare/v1.21.20...v1.21.21) (2025-12-30)
