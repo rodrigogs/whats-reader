@@ -1,3 +1,10 @@
+# [1.23.0](https://github.com/rodrigogs/whats-reader/compare/v1.22.2...v1.23.0) (2026-01-02)
+
+
+### Features
+
+* UI componentization with reusable components ([47f0496](https://github.com/rodrigogs/whats-reader/commit/47f04961283f85198f36fed3b9b75fd06f4e6d41))
+
 ## [1.22.2](https://github.com/rodrigogs/whats-reader/compare/v1.22.1...v1.22.2) (2026-01-02)
 
 
