@@ -4,6 +4,9 @@ import * as m from '$lib/paraglide/messages';
 import { getLocale } from '$lib/paraglide/runtime';
 import type { ChatData } from '$lib/state.svelte';
 import { getAvailableLanguages } from '$lib/transcription.svelte';
+import Icon from './Icon.svelte';
+import IconButton from './IconButton.svelte';
+import ListItemButton from './ListItemButton.svelte';
 
 interface LoadingChat {
 	id: string;
@@ -166,9 +169,7 @@ function getLastMessage(chat: ChatData): string {
 				>
 					<!-- Animated avatar skeleton -->
 					<div class="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0 overflow-hidden">
-						<svg class="w-6 h-6 text-gray-400 dark:text-gray-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-						</svg>
+						<Icon name="upload" size="lg" class="text-gray-400 dark:text-gray-500 animate-pulse" />
 					</div>
 
 					<!-- Loading info -->
@@ -239,8 +240,10 @@ function getLastMessage(chat: ChatData): string {
 					<!-- Action buttons -->
 					<div class="flex flex-col gap-1 flex-shrink-0">
 						<!-- Remove button -->
-						<button
-							class="p-1 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+						<IconButton
+							theme="subtle"
+							size="sm"
+							dangerHover
 							onclick={(e) => {
 								e.stopPropagation();
 								onRemove(index);
@@ -248,13 +251,12 @@ function getLastMessage(chat: ChatData): string {
 							title={m.chat_remove()}
 							aria-label={m.chat_remove()}
 						>
-							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-							</svg>
-						</button>
+							<Icon name="close" size="md" />
+						</IconButton>
 						<!-- Menu button -->
-						<button
-							class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
+						<IconButton
+							theme="subtle"
+							size="sm"
 							onclick={(e) => {
 								e.stopPropagation();
 								openContextMenu(e, index, e.currentTarget as HTMLButtonElement);
@@ -262,10 +264,8 @@ function getLastMessage(chat: ChatData): string {
 							title={m.chat_options()}
 							aria-label={m.chat_options()}
 						>
-							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-							</svg>
-						</button>
+							<Icon name="dots-vertical" size="md" />
+						</IconButton>
 					</div>
 				</div>
 			{/each}
@@ -294,44 +294,32 @@ function getLastMessage(chat: ChatData): string {
 		>
 			<!-- Auto-load media toggle -->
 			{#if chats[contextMenuIndex]?.mediaCount > 0}
-				<button
-					type="button"
-					class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300"
-					onclick={handleAutoLoadToggle}
-				>
-					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-					</svg>
-					<span class="flex-1">Auto-load Media</span>
+				<ListItemButton class="justify-between" onclick={handleAutoLoadToggle}>
+					<span class="flex items-center gap-2">
+					<Icon name="image" size="sm" />
+						Auto-load Media
+					</span>
 					{#if isAutoLoadEnabled(chats[contextMenuIndex]?.title || '')}
-						<svg class="w-4 h-4 text-[var(--color-whatsapp-teal)]" fill="currentColor" viewBox="0 0 20 20">
-							<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-						</svg>
+						<Icon name="check" size="sm" class="text-[var(--color-whatsapp-teal)]" />
 					{/if}
-				</button>
+				</ListItemButton>
 			{/if}
 			
 			<!-- Language submenu trigger -->
 			<div class="relative">
-				<button
-					bind:this={languageTriggerRef}
-					type="button"
-					class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center justify-between gap-2 text-gray-700 dark:text-gray-300"
+				<ListItemButton
+					bind:ref={languageTriggerRef}
+					class="justify-between"
 					onmouseenter={showSubmenu}
 					onmouseleave={hideSubmenuDelayed}
 					onclick={() => showLanguageSubmenu = !showLanguageSubmenu}
 				>
 					<span class="flex items-center gap-2">
-						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-						</svg>
+						<Icon name="language" size="sm" />
 						{m.transcription_language()}
 					</span>
-					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-					</svg>
-				</button>
-				
+				<Icon name="chevron-right" size="sm" />
+			</ListItemButton>
 				<!-- Language submenu -->
 				{#if showLanguageSubmenu && languageTriggerRef}
 					<!-- svelte-ignore a11y_interactive_supports_focus -->
@@ -353,14 +341,13 @@ function getLastMessage(chat: ChatData): string {
 						</div>
 						{#each availableLanguages as lang}
 							{@const currentLang = getLanguageForChat(chats[contextMenuIndex]?.title || '')}
-							<button
-								type="button"
-								class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2 {currentLang === lang.code ? 'text-[var(--color-whatsapp-teal)] font-medium bg-gray-50 dark:bg-gray-700/50' : 'text-gray-700 dark:text-gray-300'}"
+							<ListItemButton
+								active={currentLang === lang.code}
 								onclick={() => handleLanguageSelect(lang.code)}
 							>
 								<span class="w-5 text-center">{currentLang === lang.code ? '✓' : ''}</span>
 								<span>{lang.name}</span>
-							</button>
+							</ListItemButton>
 						{/each}
 					</div>
 				{/if}
@@ -370,9 +357,8 @@ function getLastMessage(chat: ChatData): string {
 			<div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
 			
 			<!-- Remove chat -->
-			<button
-				type="button"
-				class="w-full px-3 py-2 text-left text-sm hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer flex items-center gap-2 text-red-600 dark:text-red-400"
+			<ListItemButton
+				danger
 				onclick={() => {
 					if (contextMenuIndex !== null) {
 						onRemove(contextMenuIndex);
@@ -380,11 +366,9 @@ function getLastMessage(chat: ChatData): string {
 					closeContextMenu();
 				}}
 			>
-				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-				</svg>
-				Remove Chat
-			</button>
+				<Icon name="trash" size="sm" />
+				{m.context_menu_remove()}
+			</ListItemButton>
 		</div>
 	{/if}
 </div>

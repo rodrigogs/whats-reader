@@ -13,6 +13,9 @@ import {
 } from '$lib/components';
 import AutoUpdateToast from '$lib/components/AutoUpdateToast.svelte';
 import BookmarksPanel from '$lib/components/BookmarksPanel.svelte';
+import Icon from '$lib/components/Icon.svelte';
+import IconButton from '$lib/components/IconButton.svelte';
+import ListItemButton from '$lib/components/ListItemButton.svelte';
 import LocaleSwitcher from '$lib/components/LocaleSwitcher.svelte';
 import MediaGallery from '$lib/components/MediaGallery.svelte';
 import * as m from '$lib/paraglide/messages';
@@ -432,14 +435,10 @@ const currentUser = $derived.by(() => {
 				>
 					{#if isDarkMode}
 						<!-- Sun icon -->
-						<svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-						</svg>
+						<Icon name="sun" size="sm" class="text-yellow-500" />
 					{:else}
 						<!-- Moon icon -->
-						<svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-						</svg>
+						<Icon name="moon" size="sm" class="text-gray-600 dark:text-gray-400" />
 					{/if}
 				</button>
 			</div>
@@ -451,9 +450,7 @@ const currentUser = $derived.by(() => {
 					<!-- Logo and title -->
 					<div class="text-center mb-6">
 						<div class="w-16 h-16 mx-auto mb-3 rounded-full bg-[var(--color-whatsapp-green)] flex items-center justify-center shadow-lg">
-							<svg class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
-								<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-							</svg>
+							<Icon name="whatsapp" size="2xl" class="text-white" />
 						</div>
 						<h1 class="text-2xl font-bold text-gray-800 dark:text-white mb-1">
 							{m.app_title()}
@@ -479,9 +476,7 @@ const currentUser = $derived.by(() => {
 				<!-- Instructions - Collapsible -->
 				<details class="mt-6 w-full group">
 					<summary class="flex items-center justify-center gap-2 cursor-pointer text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors select-none">
-						<svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-						</svg>
+						<Icon name="chevron-right" size="sm" class="transition-transform group-open:rotate-90" />
 						{m.export_instructions_title()}
 					</summary>
 					<div class="mt-3 grid grid-cols-1 gap-2 text-xs text-gray-600 dark:text-gray-400">
@@ -511,49 +506,37 @@ const currentUser = $derived.by(() => {
 				<!-- Privacy & Security - Collapsible -->
 				<details class="mt-4 w-full group">
 					<summary class="flex items-center justify-center gap-2 cursor-pointer text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors select-none">
-						<svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-						</svg>
+						<Icon name="chevron-right" size="sm" class="transition-transform group-open:rotate-90" />
 						{m.privacy_title()}
 					</summary>
 					<div class="mt-3 grid grid-cols-1 gap-2 text-xs text-gray-600 dark:text-gray-400">
 						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
 							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center">
-								<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728M5.636 18.364a9 9 0 010-12.728M12 12v.01"/>
-								</svg>
+								<Icon name="wifi-off" size="xs" stroke-width="2" />
 							</span>
 							<span>{m.privacy_offline()}</span>
 						</div>
 						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
 							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center">
-								<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-								</svg>
+								<Icon name="shield" size="xs" stroke-width="2" />
 							</span>
 							<span>{m.privacy_local_processing()}</span>
 						</div>
 						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
 							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center">
-								<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-								</svg>
+								<Icon name="code" size="xs" stroke-width="2" />
 							</span>
 							<span>{m.privacy_local_ai()}</span>
 						</div>
 						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
 							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center">
-								<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
-								</svg>
+								<Icon name="eye-off" size="xs" stroke-width="2" />
 							</span>
 							<span>{m.privacy_no_tracking()}</span>
 						</div>
 						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
 							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center">
-								<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-								</svg>
+								<Icon name="code" size="xs" stroke-width="2" />
 							</span>
 							<span>{m.privacy_open_source()}</span>
 						</div>
@@ -575,12 +558,8 @@ const currentUser = $derived.by(() => {
 							}
 						}}
 					>
-						<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-							<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-						</svg>
-						<svg class="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
-							<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-						</svg>
+						<Icon name="github" size="sm" />
+						<Icon name="star" size="xs" class="text-yellow-400" filled />
 						{m.github_star_cta()}
 					</a>
 				</div>
@@ -603,9 +582,7 @@ const currentUser = $derived.by(() => {
 				<div class="p-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
 					<label class="relative flex items-center w-full h-10 pl-10 pr-4 bg-gray-100 dark:bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
 						<div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-							<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-							</svg>
+							<Icon name="plus" size="md" class="text-gray-400" />
 						</div>
 						<span class="text-gray-500">{m.import_chat()}</span>
 						<input
@@ -652,25 +629,20 @@ const currentUser = $derived.by(() => {
 					<!-- Chat header -->
 					<div class="h-16 px-4 flex items-center gap-3 bg-[var(--color-whatsapp-dark-green)] text-white shadow-md flex-shrink-0">
 						<!-- Sidebar toggle button -->
-						<button
-							class="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+						<IconButton
+							theme="dark"
+							size="md"
+							class="-ml-2"
 							onclick={toggleSidebar}
 							aria-label={m.sidebar_toggle()}
 							title={m.sidebar_toggle()}
 						>
 							{#if showSidebar}
-								<!-- Close icon (arrow left) -->
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-								</svg>
+								<Icon name="chevron-left" size="md" />
 							{:else}
-								<!-- Menu icon (hamburger lines) -->
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-								</svg>
+								<Icon name="menu" size="md" />
 							{/if}
-						</button>
-
+						</IconButton>
 						<!-- Avatar -->
 						<div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-semibold">
 							{appState.selectedChat.title.charAt(0).toUpperCase()}
@@ -696,18 +668,17 @@ const currentUser = $derived.by(() => {
 						<div class="flex items-center gap-2">
 							<!-- Perspective selector -->
 							<div class="relative">
-								<button
-									bind:this={perspectiveButtonRef}
-									class="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer {currentPerspective ? 'bg-white/20' : ''}"
+								<IconButton
+									bind:ref={perspectiveButtonRef}
+									theme="dark"
+									size="md"
+									active={!!currentPerspective}
 									onclick={() => showPerspectiveDropdown = !showPerspectiveDropdown}
 									title={m.perspective_view_as()}
 									aria-label={m.perspective_select()}
 								>
-									<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-									</svg>
-								</button>
-								
+									<Icon name="user" size="md" />
+								</IconButton>
 								{#if showPerspectiveDropdown && perspectiveButtonRef}
 									<!-- Backdrop to close dropdown -->
 									<button 
@@ -739,9 +710,9 @@ const currentUser = $derived.by(() => {
 										<!-- Search input -->
 										<div class="p-2 border-b border-gray-100 dark:border-gray-700">
 											<div class="relative">
-												<svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-												</svg>
+												<div class="absolute left-2.5 top-1/2 -translate-y-1/2">
+													<Icon name="search" size="sm" class="text-gray-400" />
+												</div>
 												<input
 													bind:this={perspectiveSearchInputRef}
 													type="text"
@@ -755,22 +726,22 @@ const currentUser = $derived.by(() => {
 										<!-- Options list -->
 										<div class="max-h-48 overflow-y-auto py-1">
 											{#if !perspectiveSearchQuery}
-												<button
-													class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2 {currentPerspective === null ? 'text-[var(--color-whatsapp-teal)] font-medium' : 'text-gray-700 dark:text-gray-300'}"
+												<ListItemButton
+													active={currentPerspective === null}
 													onclick={() => selectPerspective(null)}
 												>
 													<span class="w-5 text-center">{currentPerspective === null ? '✓' : ''}</span>
 													<span class="italic">{m.perspective_none()}</span>
-												</button>
+												</ListItemButton>
 											{/if}
 											{#each filteredParticipants as participant}
-												<button
-													class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2 {currentPerspective === participant ? 'text-[var(--color-whatsapp-teal)] font-medium' : 'text-gray-700 dark:text-gray-300'}"
+												<ListItemButton
+													active={currentPerspective === participant}
 													onclick={() => selectPerspective(participant)}
 												>
 													<span class="w-5 text-center">{currentPerspective === participant ? '✓' : ''}</span>
 													<span class="truncate">{participant}</span>
-												</button>
+												</ListItemButton>
 											{/each}
 											{#if filteredParticipants.length === 0 && perspectiveSearchQuery}
 												<div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 italic">
@@ -782,72 +753,49 @@ const currentUser = $derived.by(() => {
 								{/if}
 							</div>
 
-							<button
-								class="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer {showMediaGallery ? 'bg-white/20' : ''}"
+							<IconButton
+								theme="dark"
+								size="md"
+								active={showMediaGallery}
 								onclick={toggleMediaGallery}
 								title={m.media_gallery_title()}
 								aria-label={m.media_gallery_toggle()}
 							>
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
-									/>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M7 15l3-3 3 3 3-3 2 2"
-									/>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M9 9h.01"
-									/>
-								</svg>
-							</button>
-							<button
-									class="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer {showBookmarks ? 'bg-white/20' : ''}"
-									onclick={toggleBookmarks}
-									title={m.bookmarks_title()}
-									aria-label={m.bookmarks_toggle()}
-								>
-									<svg class="w-5 h-5" fill={showBookmarks ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-									</svg>
-								</button>
-								<button
-									class="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+								<Icon name="image" size="md" filled={showMediaGallery} />
+							</IconButton>
+							<IconButton
+								theme="dark"
+								size="md"
+								active={showBookmarks}
+								onclick={toggleBookmarks}
+								title={m.bookmarks_title()}
+								aria-label={m.bookmarks_toggle()}
+							>
+								<Icon name="bookmark" size="md" filled={showBookmarks} />
+							</IconButton>
+							<IconButton
+								theme="dark"
+								size="md"
 								onclick={toggleStats}
 								title={m.stats_view()}
 								aria-label={m.stats_view()}
 							>
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-								</svg>
-							</button>
+								<Icon name="chart-bar" size="md" />
+							</IconButton>
 							<LocaleSwitcher variant="header" />
-							<button
+							<IconButton
+								theme="dark"
+								size="md" rounded="full"
 								onclick={toggleDarkMode}
-								class="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
 								aria-label={m.toggle_dark_mode()}
 								title={isDarkMode ? m.theme_switch_to_light() : m.theme_switch_to_dark()}
 							>
 								{#if isDarkMode}
-									<!-- Sun icon -->
-									<svg class="w-5 h-5 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-									</svg>
+									<Icon name="sun" size="md" class="text-yellow-300" />
 								{:else}
-									<!-- Moon icon -->
-									<svg class="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-									</svg>
+									<Icon name="moon" size="md" class="text-white/80" />
 								{/if}
-							</button>
+							</IconButton>
 						</div>
 					</div>
 
@@ -883,30 +831,30 @@ const currentUser = $derived.by(() => {
 											{/if}
 										</span>
 										<!-- Navigation buttons -->
-										<button
-											type="button"
-											class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
+										<IconButton
+											theme="subtle"
+											size="sm"
+											rounded="md"
 											onclick={() => appState.prevSearchResult()}
 											disabled={appState.totalSearchMatches === 0}
+											class={appState.totalSearchMatches === 0 ? 'opacity-30 cursor-not-allowed' : ''}
 											title={m.search_previous()}
 											aria-label={m.search_previous()}
 										>
-											<svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-											</svg>
-										</button>
-										<button
-											type="button"
-											class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
+											<Icon name="chevron-up" size="sm" class="text-gray-600 dark:text-gray-400" />
+										</IconButton>
+										<IconButton
+											theme="subtle"
+											size="sm"
+											rounded="md"
 											onclick={() => appState.nextSearchResult()}
 											disabled={appState.totalSearchMatches === 0}
+											class={appState.totalSearchMatches === 0 ? 'opacity-30 cursor-not-allowed' : ''}
 											title={m.search_next()}
 											aria-label={m.search_next()}
 										>
-											<svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-											</svg>
-										</button>
+											<Icon name="chevron-down" size="sm" class="text-gray-600 dark:text-gray-400" />
+										</IconButton>
 									{/if}
 								</div>
 							{/if}
@@ -986,26 +934,21 @@ const currentUser = $derived.by(() => {
 						<!-- Header -->
 						<div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-[var(--color-whatsapp-dark-green)] text-white">
 							<div class="flex items-center gap-3">
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-								</svg>
+								<Icon name="users" size="md" />
 								<div>
 									<h2 class="font-semibold">{m.participants_title()}</h2>
 									<p class="text-xs text-white/70">{m.participants_members({ count: appState.selectedChat.participants.length })}</p>
 								</div>
 							</div>
-							<button
-								type="button"
-								class="p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+							<IconButton
+								theme="dark"
+								size="sm"
 								onclick={closeParticipantsModal}
 								aria-label={m.participants_close()}
 							>
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-								</svg>
-							</button>
+								<Icon name="close" size="md" />
+							</IconButton>
 						</div>
-						
 						<!-- Participants list -->
 						<div class="flex-1 overflow-y-auto">
 							{#each appState.selectedChat.participants as participant}
@@ -1058,32 +1001,26 @@ const currentUser = $derived.by(() => {
 			{:else}
 				<!-- No chat selected -->
 				<div class="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
-				<div class="h-16 px-4 flex items-center bg-[var(--color-whatsapp-dark-green)] flex-shrink-0">
-					<!-- Sidebar toggle button -->
-					<button
-						class="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer text-white"
-						onclick={toggleSidebar}
-						aria-label={m.sidebar_toggle()}
-						title={m.sidebar_toggle()}
-					>
-						{#if showSidebar}
-							<!-- Close icon (arrow left) -->
-							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-							</svg>
-						{:else}
-							<!-- Menu icon (hamburger lines) -->
-							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-							</svg>
-						{/if}
-					</button>
-				</div>
+					<div class="h-16 px-4 flex items-center bg-[var(--color-whatsapp-dark-green)] flex-shrink-0">
+						<!-- Sidebar toggle button -->
+						<IconButton
+							theme="dark"
+							size="md"
+							class="-ml-2"
+							onclick={toggleSidebar}
+							aria-label={m.sidebar_toggle()}
+							title={m.sidebar_toggle()}
+						>
+							{#if showSidebar}
+								<Icon name="chevron-left" size="md" />
+							{:else}
+								<Icon name="menu" size="md" />
+							{/if}
+						</IconButton>
+					</div>
 					<div class="flex-1 flex items-center justify-center">
 						<div class="text-center text-gray-500 dark:text-gray-400">
-							<svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-							</svg>
+							<Icon name="chat" size="2xl" class="mx-auto mb-4 opacity-50" />
 							<p>{m.chat_select()}</p>
 						</div>
 					</div>

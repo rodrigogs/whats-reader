@@ -17,6 +17,7 @@ import {
 	type VideoFrameCache,
 } from '$lib/helpers/video-thumbnails';
 import { getLocale } from '$lib/paraglide/runtime';
+import Icon from './Icon.svelte';
 
 interface Props {
 	item: GalleryItem;
@@ -269,13 +270,7 @@ onDestroy(() => {
 			<!-- Play icon overlay -->
 			<div class="absolute inset-0 flex items-center justify-center bg-black/20">
 				<div class="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-					<svg
-						class="w-6 h-6 text-gray-800 ml-0.5"
-						fill="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path d="M8 5v14l11-7z" />
-					</svg>
+					<Icon name="play" size="lg" class="text-gray-800 ml-0.5" />
 				</div>
 			</div>
 		{:else}
@@ -378,14 +373,10 @@ onDestroy(() => {
 	>
 		{#if selected}
 			<span class="w-5 h-5 rounded-full bg-[var(--color-whatsapp-teal)] flex items-center justify-center">
-				<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-				</svg>
+				<Icon name="check" size="xs" class="text-white" stroke-width="3" />
 			</span>
 		{:else}
-			<svg class="w-5 h-5 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-				<circle cx="12" cy="12" r="9" />
-			</svg>
+			<Icon name="circle" size="md" class="text-gray-300 dark:text-gray-600" />
 		{/if}
 	</button>
 
