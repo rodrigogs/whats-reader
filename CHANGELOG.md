@@ -1,3 +1,10 @@
+## [1.22.2](https://github.com/rodrigogs/whats-reader/compare/v1.22.1...v1.22.2) (2026-01-02)
+
+
+### Bug Fixes
+
+* add pull-requests permission for branch sync ([#42](https://github.com/rodrigogs/whats-reader/issues/42)) ([48fa840](https://github.com/rodrigogs/whats-reader/commit/48fa84033dd9cc10165d143ba01ac56f80dbc77e)), closes [#33](https://github.com/rodrigogs/whats-reader/issues/33)
+
 ## [1.22.1](https://github.com/rodrigogs/whats-reader/compare/v1.22.0...v1.22.1) (2026-01-02)
 
 
