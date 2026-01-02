@@ -1,3 +1,10 @@
+## [1.22.1](https://github.com/rodrigogs/whats-reader/compare/v1.22.0...v1.22.1) (2026-01-02)
+
+
+### Bug Fixes
+
+* remove duplicate sync step from release workflow ([#41](https://github.com/rodrigogs/whats-reader/issues/41)) ([d68c258](https://github.com/rodrigogs/whats-reader/commit/d68c258f116f59cb08281ba288905f2cc84390fc)), closes [#33](https://github.com/rodrigogs/whats-reader/issues/33)
+
 # [1.22.0](https://github.com/rodrigogs/whats-reader/compare/v1.21.23...v1.22.0) (2026-01-02)
 
 
