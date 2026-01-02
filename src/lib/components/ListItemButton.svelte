@@ -55,7 +55,7 @@ const colorClasses = $derived(
 <button
 bind:this={ref}
 type="button"
-class={[baseClasses, sizeClasses[size], colorClasses, className]}
+class={`${baseClasses} ${sizeClasses[size]} ${colorClasses} ${className || ''}`}
 {...rest}
 >
 {@render children?.()}

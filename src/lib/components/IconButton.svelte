@@ -70,14 +70,7 @@ const roundedClasses = {
 <button
 	bind:this={ref}
 	type="button"
-	class={[
-		baseClasses,
-		themeClass,
-		active && activeClasses[theme],
-		sizeClasses[size],
-		roundedClasses[rounded],
-		className,
-	]}
+	class={`${baseClasses} ${themeClass} ${active ? activeClasses[theme] : ''} ${sizeClasses[size]} ${roundedClasses[rounded]} ${className || ''}`}
 	{...rest}
 >
 	{@render children?.()}

@@ -38,7 +38,7 @@ const sizeClasses = {
 
 <button
 type="button"
-class={[baseClasses, variantClasses[variant], sizeClasses[size], className]}
+class={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className || ''}`}
 {...rest}
 >
 {@render children?.()}
