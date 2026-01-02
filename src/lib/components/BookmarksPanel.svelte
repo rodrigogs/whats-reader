@@ -162,7 +162,7 @@ function handleKeydown(e: KeyboardEvent) {
 				onclick={onClose}
 				aria-label={m.bookmarks_close()}
 			>
-			<Icon name="close" />
+				<Icon name="close" />
 			</IconButton>
 		</div>
 	</div>
@@ -274,7 +274,7 @@ function handleKeydown(e: KeyboardEvent) {
 													size="sm"
 													onclick={(e) => handleEditClick(e, bookmark)}
 												>
-											<Icon name="edit" size="xs" />
+													<Icon name="edit" size="xs" />
 													{m.bookmarks_edit_button()}
 												</Button>
 												<Button
@@ -282,7 +282,7 @@ function handleKeydown(e: KeyboardEvent) {
 													size="sm"
 													onclick={(e) => handleDeleteClick(e, bookmark)}
 												>
-											<Icon name="trash" size="xs" />
+													<Icon name="trash" size="xs" />
 													{m.bookmarks_delete_action()}
 												</Button>
 											</div>
@@ -316,7 +316,7 @@ function handleKeydown(e: KeyboardEvent) {
 				class="flex-1 justify-center"
 				onclick={() => importInput.click()}
 			>
-			<Icon name="upload" size="sm" />
+				<Icon name="upload" size="sm" />
 				{m.bookmarks_import_button()}
 			</Button>
 			<Button
@@ -326,7 +326,7 @@ function handleKeydown(e: KeyboardEvent) {
 				onclick={handleExport}
 				disabled={bookmarksState.count === 0}
 			>
-			<Icon name="download" size="sm" />
+				<Icon name="download" size="sm" />
 				{m.bookmarks_export_button()}
 			</Button>
 		</div>

@@ -133,7 +133,7 @@ const maxHourCount = $derived(stats ? Math.max(...stats.messagesByHour) : 0);
 		<div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
 			<h2 id="stats-title" class="text-xl font-bold text-gray-800 dark:text-white">{m.stats_title()}</h2>
 			<IconButton size="lg" onclick={onClose} aria-label={m.stats_close()}>
-			<Icon name="close" size="lg" />
+				<Icon name="close" size="lg" />
 			</IconButton>
 		</div>
 
