@@ -7,13 +7,13 @@
  */
 
 import { browser } from '$app/environment';
-import Icon from './Icon.svelte';
 import * as m from '$lib/paraglide/messages';
 import {
 	currentVersion,
 	getReleasesPageUrl,
 	getUpdateState,
 } from '$lib/update-checker.svelte';
+import Icon from './Icon.svelte';
 
 // Detect if running in Electron
 const isElectron =

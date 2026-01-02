@@ -1,6 +1,5 @@
 <script lang="ts">
 import { browser } from '$app/environment';
-import Icon from './Icon.svelte';
 import * as m from '$lib/paraglide/messages';
 import {
 	getLocale,
@@ -8,6 +7,7 @@ import {
 	locales,
 	setLocale,
 } from '$lib/paraglide/runtime';
+import Icon from './Icon.svelte';
 import ListItemButton from './ListItemButton.svelte';
 
 const LOCALE_STORAGE_KEY = 'locale';
