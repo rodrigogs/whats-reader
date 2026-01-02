@@ -18,8 +18,8 @@ This document tracks opportunities to extract reusable components from `+page.sv
 Extract the `<details>` element pattern into a reusable component:
 ```svelte
 <Collapsible title={m.export_instructions_title()} icon="chevron-right">
-  <FeatureItem badge="1">{m.export_step_1()}</FeatureItem>
-  <FeatureItem badge="2">{m.export_step_2()}</FeatureItem>
+  <FeatureItem badge={1}>{m.export_step_1()}</FeatureItem>
+  <FeatureItem badge={2}>{m.export_step_2()}</FeatureItem>
 </Collapsible>
 ```
 
@@ -38,9 +38,11 @@ Extract the `<details>` element pattern into a reusable component:
 
 Extract the repeated list item pattern:
 ```svelte
-<FeatureItem icon="shield" badge="1">
-  {m.privacy_offline()}
-</FeatureItem>
+<!-- Numbered variant -->
+<FeatureItem badge={1}>{m.export_step_1()}</FeatureItem>
+
+<!-- Icon variant -->
+<FeatureItem icon="shield" variant="icon">{m.privacy_offline()}</FeatureItem>
 ```
 
 **Props:**
@@ -96,9 +98,9 @@ Extract the custom dropdown with search:
   <DropdownHeader>{m.perspective_view_as()}</DropdownHeader>
   <DropdownSearch bind:value={searchQuery} placeholder={...} />
   <DropdownList>
-    <DropdownItem active={true} onclick={...}>
+    <ListItemButton active={true} onclick={...}>
       <Icon name="check" /> {m.perspective_none()}
-    </DropdownItem>
+    </ListItemButton>
   </DropdownList>
 </Dropdown>
 ```
@@ -107,7 +109,7 @@ Extract the custom dropdown with search:
 - Floating positioning (using existing `floating` action)
 - Search/filter functionality
 - Active state indication
-- Keyboard navigation
+- ESC key to close
 
 **Benefits:**
 - Could be reused for other dropdowns (future: sort, filter options)

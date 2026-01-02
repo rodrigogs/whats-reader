@@ -53,14 +53,14 @@ $effect(() => {
 	<!-- Backdrop -->
 	<button
 		type="button"
-		class="fixed inset-0 bg-black/50 z-50 cursor-default"
+		class="fixed inset-0 bg-black/50 z-60 cursor-default"
 		onclick={onClose}
 		aria-label={closeAriaLabel}
 	></button>
 
 	<!-- Modal -->
 	<div
-		class="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[480px] md:max-h-[80vh] bg-white dark:bg-gray-800 rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden {className}"
+		class="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[480px] md:max-h-[80vh] bg-white dark:bg-gray-800 rounded-xl shadow-2xl z-70 flex flex-col overflow-hidden {className}"
 		role="dialog"
 		aria-modal="true"
 	>
