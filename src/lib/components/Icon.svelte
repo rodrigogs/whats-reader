@@ -1,6 +1,9 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'svelte/elements';
 
+/**
+ * Supported icon names for the Icon component
+ */
 type IconName =
 	// Navigation
 	| 'menu'
