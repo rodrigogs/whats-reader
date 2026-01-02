@@ -452,7 +452,7 @@ const actualStrokeWidth = $derived.by(() => {
 	stroke-width={actualStrokeWidth}
 	stroke-linecap="round"
 	stroke-linejoin="round"
-	class={[sizeClasses[size], className].filter(Boolean).join(' ')}
+	class={`${sizeClasses[size]} ${className || ''}`}
 	{...rest}
 >
 	{#if name === 'photo' && filled}
