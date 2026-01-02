@@ -1,3 +1,12 @@
+## [1.21.22](https://github.com/rodrigogs/whats-reader/compare/v1.21.21...v1.21.22) (2026-01-02)
+
+## [1.21.21](https://github.com/rodrigogs/whats-reader/compare/v1.21.20...v1.21.21) (2025-12-30)
+
+
+### Bug Fixes
+
+* **ci:** create PR for dev sync (branch is protected) ([b5a999a](https://github.com/rodrigogs/whats-reader/commit/b5a999a0b0a07dc88eb0fe83629b16b1368dea5a))
+
 ## [1.21.20](https://github.com/rodrigogs/whats-reader/compare/v1.21.19...v1.21.20) (2025-12-30)
 
 
