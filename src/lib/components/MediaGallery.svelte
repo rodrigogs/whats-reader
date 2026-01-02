@@ -628,6 +628,7 @@ onDestroy(() => {
 								class="max-h-[70vh] w-full"
 								aria-label={lightboxItem.name}
 							>
+								<track kind="captions" />
 							</video>
 						{:else if lightboxItem.type === 'audio'}
 							<audio

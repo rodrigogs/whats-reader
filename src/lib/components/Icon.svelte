@@ -75,12 +75,17 @@ interface Props extends Omit<HTMLAttributes<SVGElement>, 'size'> {
 	 * For icons that have both filled and outline variants (like bookmark)
 	 */
 	filled?: boolean;
+	/**
+	 * Custom stroke width (overrides icon definition default)
+	 */
+	'stroke-width'?: number | string;
 }
 
 let {
 	name,
 	size = 'md',
 	filled = false,
+	'stroke-width': strokeWidthProp,
 	class: className,
 	...rest
 }: Props = $props();
@@ -438,9 +443,15 @@ const actualStroke = $derived.by(() => {
 });
 
 const actualStrokeWidth = $derived.by(() => {
+	// If stroke-width prop is explicitly provided, use it
+	if (strokeWidthProp !== undefined) {
+		return String(strokeWidthProp);
+	}
+	// Special case for bookmark outline
 	if (name === 'bookmark' && !filled) {
 		return '2';
 	}
+	// Use icon definition default
 	return iconDef?.strokeWidth;
 });
 </script>
