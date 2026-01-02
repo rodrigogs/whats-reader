@@ -1,3 +1,10 @@
+# [1.22.0](https://github.com/rodrigogs/whats-reader/compare/v1.21.23...v1.22.0) (2026-01-02)
+
+
+### Features
+
+* elegant branch sync with peter-evans/create-pull-request ([#40](https://github.com/rodrigogs/whats-reader/issues/40)) ([a910f69](https://github.com/rodrigogs/whats-reader/commit/a910f69d6ed7af9f786d48f101d4e2f200ce8c73)), closes [#33](https://github.com/rodrigogs/whats-reader/issues/33)
+
 ## [1.21.23](https://github.com/rodrigogs/whats-reader/compare/v1.21.22...v1.21.23) (2026-01-02)
 
 
