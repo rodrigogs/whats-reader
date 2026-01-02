@@ -84,10 +84,11 @@ Extract modal pattern (backdrop + positioned dialog):
 
 ---
 
-### 4. ⏳ Dropdown Menu
+### 4. ✅ Dropdown Menu
 **Priority:** Medium
 **Current Usage:** Perspective selector
 **Complexity:** High
+**Status:** ✅ Completed
 
 Extract the custom dropdown with search:
 ```svelte
@@ -208,7 +209,7 @@ Extract the settings button group:
 1. **Collapsible** ✅ Completed - Reduced 40+ lines in +page.svelte
 2. **FeatureItem** ✅ Completed - Replaced 10 duplicate list items
 3. **Modal** ✅ Completed - Extracted modal with header/content sub-components, added ESC key handling
-4. **Dropdown** - Refactor existing complex code
+4. **Dropdown** ✅ Completed - Extracted dropdown with header/search/list sub-components, ~70 lines reduced
 5. **EmptyState** - Uses components from 1-2
 6. **HeaderBar** - Low complexity, high code reduction
 7. **Panel** - Complex but high value

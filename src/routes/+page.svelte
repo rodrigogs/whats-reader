@@ -8,6 +8,10 @@ import {
 	ChatStats,
 	ChatView,
 	Collapsible,
+	Dropdown,
+	DropdownHeader,
+	DropdownList,
+	DropdownSearch,
 	FeatureItem,
 	FileDropZone,
 	SearchBar,
@@ -636,78 +640,46 @@ const currentUser = $derived.by(() => {
 								>
 									<Icon name="user" size="md" />
 								</IconButton>
-								{#if showPerspectiveDropdown && perspectiveButtonRef}
-									<!-- Backdrop to close dropdown -->
-									<button 
-										type="button"
-										class="fixed inset-0 z-40 cursor-default" 
-										onclick={() => { showPerspectiveDropdown = false; perspectiveSearchQuery = ''; }}
-										aria-label={m.sidebar_close()}
-									></button>
+								
+								<Dropdown
+									anchor={perspectiveButtonRef}
+									open={showPerspectiveDropdown}
+									onClose={() => { showPerspectiveDropdown = false; perspectiveSearchQuery = ''; }}
+								>
+									<DropdownHeader title={m.perspective_view_as()} />
 									
-									<!-- Dropdown menu -->
-									<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-									<div
-										role="menu"
-										tabindex="-1"
-										class="fixed w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
-										use:floating={{
-											reference: perspectiveButtonRef,
-											placement: 'bottom-end',
-											fallbackPlacements: ['bottom-start', 'top-end', 'top-start', 'left-start', 'right-start'],
-											offsetDistance: 8,
-											enableSizeConstraint: true
-										}}
-										onclick={(e) => e.stopPropagation()}
-									>
-										<div class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
-											{m.perspective_view_as()}
-										</div>
-										
-										<!-- Search input -->
-										<div class="p-2 border-b border-gray-100 dark:border-gray-700">
-											<div class="relative">
-												<div class="absolute left-2.5 top-1/2 -translate-y-1/2">
-													<Icon name="search" size="sm" class="text-gray-400" />
-												</div>
-												<input
-													bind:this={perspectiveSearchInputRef}
-													type="text"
-													bind:value={perspectiveSearchQuery}
-													placeholder={m.perspective_search_placeholder()}
-													class="w-full pl-8 pr-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded-md focus:ring-2 focus:ring-[var(--color-whatsapp-teal)] focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-												/>
+									<DropdownSearch
+										bind:value={perspectiveSearchQuery}
+										bind:ref={perspectiveSearchInputRef}
+										placeholder={m.perspective_search_placeholder()}
+									/>
+									
+									<DropdownList>
+										{#if !perspectiveSearchQuery}
+											<ListItemButton
+												active={currentPerspective === null}
+												onclick={() => selectPerspective(null)}
+											>
+												<span class="w-5 text-center">{currentPerspective === null ? '✓' : ''}</span>
+												<span class="italic">{m.perspective_none()}</span>
+											</ListItemButton>
+										{/if}
+										{#each filteredParticipants as participant}
+											<ListItemButton
+												active={currentPerspective === participant}
+												onclick={() => selectPerspective(participant)}
+											>
+												<span class="w-5 text-center">{currentPerspective === participant ? '✓' : ''}</span>
+												<span class="truncate">{participant}</span>
+											</ListItemButton>
+										{/each}
+										{#if filteredParticipants.length === 0 && perspectiveSearchQuery}
+											<div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 italic">
+												{m.perspective_no_match({ query: perspectiveSearchQuery })}
 											</div>
-										</div>
-										
-										<!-- Options list -->
-										<div class="max-h-48 overflow-y-auto py-1">
-											{#if !perspectiveSearchQuery}
-												<ListItemButton
-													active={currentPerspective === null}
-													onclick={() => selectPerspective(null)}
-												>
-													<span class="w-5 text-center">{currentPerspective === null ? '✓' : ''}</span>
-													<span class="italic">{m.perspective_none()}</span>
-												</ListItemButton>
-											{/if}
-											{#each filteredParticipants as participant}
-												<ListItemButton
-													active={currentPerspective === participant}
-													onclick={() => selectPerspective(participant)}
-												>
-													<span class="w-5 text-center">{currentPerspective === participant ? '✓' : ''}</span>
-													<span class="truncate">{participant}</span>
-												</ListItemButton>
-											{/each}
-											{#if filteredParticipants.length === 0 && perspectiveSearchQuery}
-												<div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 italic">
-													{m.perspective_no_match({ query: perspectiveSearchQuery })}
-												</div>
-											{/if}
-										</div>
-									</div>
-								{/if}
+										{/if}
+									</DropdownList>
+								</Dropdown>
 							</div>
 
 							<IconButton
