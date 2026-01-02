@@ -16,6 +16,7 @@ on:
 permissions:
   contents: write
   actions: write
+  pull-requests: write
 
 jobs:
   # Pre-build SvelteKit app once and share across all platforms
