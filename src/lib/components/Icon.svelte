@@ -75,10 +75,6 @@ interface Props extends Omit<HTMLAttributes<SVGElement>, 'size'> {
 	 * For icons that have both filled and outline variants (like bookmark)
 	 */
 	filled?: boolean;
-	/**
-	 * Custom stroke width (defaults to 2 for most icons)
-	 */
-	'stroke-width'?: number | string;
 }
 
 let {
@@ -456,7 +452,7 @@ const actualStrokeWidth = $derived.by(() => {
 	stroke-width={actualStrokeWidth}
 	stroke-linecap="round"
 	stroke-linejoin="round"
-	class={[sizeClasses[size], className]}
+	class={`${sizeClasses[size]} ${className || ''}`}
 	{...rest}
 >
 	{#if name === 'photo' && filled}
