@@ -20,6 +20,9 @@ import IconButton from '$lib/components/IconButton.svelte';
 import ListItemButton from '$lib/components/ListItemButton.svelte';
 import LocaleSwitcher from '$lib/components/LocaleSwitcher.svelte';
 import MediaGallery from '$lib/components/MediaGallery.svelte';
+import Modal from '$lib/components/Modal.svelte';
+import ModalContent from '$lib/components/ModalContent.svelte';
+import ModalHeader from '$lib/components/ModalHeader.svelte';
 import * as m from '$lib/paraglide/messages';
 import { parseZipFile, readFileAsArrayBuffer } from '$lib/parser';
 import { appState, type ChatData } from '$lib/state.svelte';
@@ -874,37 +877,16 @@ const currentUser = $derived.by(() => {
 				{/if}
 
 				<!-- Participants modal -->
-				{#if showParticipants && appState.selectedChat && participantStats}
-					<!-- Backdrop -->
-					<button
-						type="button"
-						class="fixed inset-0 bg-black/50 z-50 cursor-default"
-						onclick={closeParticipantsModal}
-						aria-label={m.participants_close()}
-					></button>
-					
-					<!-- Modal -->
-					<div class="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[480px] md:max-h-[80vh] bg-white dark:bg-gray-800 rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden">
-						<!-- Header -->
-						<div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-[var(--color-whatsapp-dark-green)] text-white">
-							<div class="flex items-center gap-3">
-								<Icon name="users" size="md" />
-								<div>
-									<h2 class="font-semibold">{m.participants_title()}</h2>
-									<p class="text-xs text-white/70">{m.participants_members({ count: appState.selectedChat.participants.length })}</p>
-								</div>
-							</div>
-							<IconButton
-								theme="dark"
-								size="sm"
-								onclick={closeParticipantsModal}
-								aria-label={m.participants_close()}
-							>
-								<Icon name="close" size="md" />
-							</IconButton>
-						</div>
-						<!-- Participants list -->
-						<div class="flex-1 overflow-y-auto">
+				<Modal open={showParticipants && !!appState.selectedChat && !!participantStats} onClose={closeParticipantsModal}>
+					<ModalHeader
+						icon="users"
+						title={m.participants_title()}
+						subtitle={appState.selectedChat ? m.participants_members({ count: appState.selectedChat.participants.length }) : ''}
+						onClose={closeParticipantsModal}
+						closeLabel={m.participants_close()}
+					/>
+					<ModalContent>
+						{#if appState.selectedChat && participantStats}
 							{#each appState.selectedChat.participants as participant}
 								{@const messageCount = participantStats.get(participant) || 0}
 								{@const isPhoneNumber = /\+?\d[\d\s\-()]{8,}/.test(participant)}
@@ -949,9 +931,9 @@ const currentUser = $derived.by(() => {
 									{/if}
 								</div>
 							{/each}
-						</div>
-					</div>
-				{/if}
+						{/if}
+					</ModalContent>
+				</Modal>
 			{:else}
 				<!-- No chat selected -->
 				<div class="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">

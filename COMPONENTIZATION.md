@@ -55,10 +55,11 @@ Extract the repeated list item pattern:
 
 ---
 
-### 3. ⏳ Modal
+### 3. ✅ Modal
 **Priority:** Medium
 **Current Usage:** Participants modal, could be used for stats
 **Complexity:** Medium
+**Status:** ✅ Completed
 
 Extract modal pattern (backdrop + positioned dialog):
 ```svelte
@@ -206,7 +207,7 @@ Extract the settings button group:
 
 1. **Collapsible** ✅ Completed - Reduced 40+ lines in +page.svelte
 2. **FeatureItem** ✅ Completed - Replaced 10 duplicate list items
-3. **Modal** - Medium complexity, used immediately
+3. **Modal** ✅ Completed - Extracted modal with header/content sub-components, added ESC key handling
 4. **Dropdown** - Refactor existing complex code
 5. **EmptyState** - Uses components from 1-2
 6. **HeaderBar** - Low complexity, high code reduction
