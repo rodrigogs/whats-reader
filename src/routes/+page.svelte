@@ -7,6 +7,12 @@ import {
 	ChatList,
 	ChatStats,
 	ChatView,
+	Collapsible,
+	Dropdown,
+	DropdownHeader,
+	DropdownList,
+	DropdownSearch,
+	FeatureItem,
 	FileDropZone,
 	SearchBar,
 	VersionBadge,
@@ -18,6 +24,9 @@ import IconButton from '$lib/components/IconButton.svelte';
 import ListItemButton from '$lib/components/ListItemButton.svelte';
 import LocaleSwitcher from '$lib/components/LocaleSwitcher.svelte';
 import MediaGallery from '$lib/components/MediaGallery.svelte';
+import Modal from '$lib/components/Modal.svelte';
+import ModalContent from '$lib/components/ModalContent.svelte';
+import ModalHeader from '$lib/components/ModalHeader.svelte';
 import * as m from '$lib/paraglide/messages';
 import { parseZipFile, readFileAsArrayBuffer } from '$lib/parser';
 import { appState, type ChatData } from '$lib/state.svelte';
@@ -474,74 +483,26 @@ const currentUser = $derived.by(() => {
 					{/if}
 
 				<!-- Instructions - Collapsible -->
-				<details class="mt-6 w-full group">
-					<summary class="flex items-center justify-center gap-2 cursor-pointer text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors select-none">
-						<Icon name="chevron-right" size="sm" class="transition-transform group-open:rotate-90" />
-						{m.export_instructions_title()}
-					</summary>
-					<div class="mt-3 grid grid-cols-1 gap-2 text-xs text-gray-600 dark:text-gray-400">
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center font-bold">1</span>
-							<span>{m.export_step_1()}</span>
-						</div>
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center font-bold">2</span>
-							<span>{m.export_step_2()}</span>
-						</div>
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center font-bold">3</span>
-							<span>{m.export_step_3()}</span>
-						</div>
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center font-bold">4</span>
-							<span>{m.export_step_4()}</span>
-						</div>
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center font-bold">5</span>
-							<span>{m.export_step_5()}</span>
-						</div>
+				<Collapsible title={m.export_instructions_title()} class="mt-6 w-full">
+					<div class="grid grid-cols-1 gap-2">
+						<FeatureItem badge={1}>{m.export_step_1()}</FeatureItem>
+						<FeatureItem badge={2}>{m.export_step_2()}</FeatureItem>
+						<FeatureItem badge={3}>{m.export_step_3()}</FeatureItem>
+						<FeatureItem badge={4}>{m.export_step_4()}</FeatureItem>
+						<FeatureItem badge={5}>{m.export_step_5()}</FeatureItem>
 					</div>
-				</details>
+				</Collapsible>
 
 				<!-- Privacy & Security - Collapsible -->
-				<details class="mt-4 w-full group">
-					<summary class="flex items-center justify-center gap-2 cursor-pointer text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors select-none">
-						<Icon name="chevron-right" size="sm" class="transition-transform group-open:rotate-90" />
-						{m.privacy_title()}
-					</summary>
-					<div class="mt-3 grid grid-cols-1 gap-2 text-xs text-gray-600 dark:text-gray-400">
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center">
-								<Icon name="wifi-off" size="xs" stroke-width="2" />
-							</span>
-							<span>{m.privacy_offline()}</span>
-						</div>
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center">
-								<Icon name="shield" size="xs" stroke-width="2" />
-							</span>
-							<span>{m.privacy_local_processing()}</span>
-						</div>
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center">
-								<Icon name="code" size="xs" stroke-width="2" />
-							</span>
-							<span>{m.privacy_local_ai()}</span>
-						</div>
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center">
-								<Icon name="eye-off" size="xs" stroke-width="2" />
-							</span>
-							<span>{m.privacy_no_tracking()}</span>
-						</div>
-						<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-							<span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center">
-								<Icon name="code" size="xs" stroke-width="2" />
-							</span>
-							<span>{m.privacy_open_source()}</span>
-						</div>
+				<Collapsible title={m.privacy_title()} class="mt-4 w-full">
+					<div class="grid grid-cols-1 gap-2">
+						<FeatureItem icon="wifi-off" variant="icon">{m.privacy_offline()}</FeatureItem>
+						<FeatureItem icon="shield" variant="icon">{m.privacy_local_processing()}</FeatureItem>
+						<FeatureItem icon="code" variant="icon">{m.privacy_local_ai()}</FeatureItem>
+						<FeatureItem icon="eye-off" variant="icon">{m.privacy_no_tracking()}</FeatureItem>
+						<FeatureItem icon="code" variant="icon">{m.privacy_open_source()}</FeatureItem>
 					</div>
-				</details>
+				</Collapsible>
 
 				<!-- GitHub Star -->
 				<div class="mt-4 flex flex-col items-center gap-1.5">
@@ -679,78 +640,46 @@ const currentUser = $derived.by(() => {
 								>
 									<Icon name="user" size="md" />
 								</IconButton>
-								{#if showPerspectiveDropdown && perspectiveButtonRef}
-									<!-- Backdrop to close dropdown -->
-									<button 
-										type="button"
-										class="fixed inset-0 z-40 cursor-default" 
-										onclick={() => { showPerspectiveDropdown = false; perspectiveSearchQuery = ''; }}
-										aria-label={m.sidebar_close()}
-									></button>
+								
+								<Dropdown
+									anchor={perspectiveButtonRef}
+									open={showPerspectiveDropdown}
+									onClose={() => { showPerspectiveDropdown = false; perspectiveSearchQuery = ''; }}
+								>
+									<DropdownHeader title={m.perspective_view_as()} />
 									
-									<!-- Dropdown menu -->
-									<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-									<div
-										role="menu"
-										tabindex="-1"
-										class="fixed w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
-										use:floating={{
-											reference: perspectiveButtonRef,
-											placement: 'bottom-end',
-											fallbackPlacements: ['bottom-start', 'top-end', 'top-start', 'left-start', 'right-start'],
-											offsetDistance: 8,
-											enableSizeConstraint: true
-										}}
-										onclick={(e) => e.stopPropagation()}
-									>
-										<div class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
-											{m.perspective_view_as()}
-										</div>
-										
-										<!-- Search input -->
-										<div class="p-2 border-b border-gray-100 dark:border-gray-700">
-											<div class="relative">
-												<div class="absolute left-2.5 top-1/2 -translate-y-1/2">
-													<Icon name="search" size="sm" class="text-gray-400" />
-												</div>
-												<input
-													bind:this={perspectiveSearchInputRef}
-													type="text"
-													bind:value={perspectiveSearchQuery}
-													placeholder={m.perspective_search_placeholder()}
-													class="w-full pl-8 pr-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded-md focus:ring-2 focus:ring-[var(--color-whatsapp-teal)] focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-												/>
+									<DropdownSearch
+										bind:value={perspectiveSearchQuery}
+										bind:ref={perspectiveSearchInputRef}
+										placeholder={m.perspective_search_placeholder()}
+									/>
+									
+									<DropdownList>
+										{#if !perspectiveSearchQuery}
+											<ListItemButton
+												active={currentPerspective === null}
+												onclick={() => selectPerspective(null)}
+											>
+												<span class="w-5 text-center">{currentPerspective === null ? '✓' : ''}</span>
+												<span class="italic">{m.perspective_none()}</span>
+											</ListItemButton>
+										{/if}
+										{#each filteredParticipants as participant}
+											<ListItemButton
+												active={currentPerspective === participant}
+												onclick={() => selectPerspective(participant)}
+											>
+												<span class="w-5 text-center">{currentPerspective === participant ? '✓' : ''}</span>
+												<span class="truncate">{participant}</span>
+											</ListItemButton>
+										{/each}
+										{#if filteredParticipants.length === 0 && perspectiveSearchQuery}
+											<div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 italic">
+												{m.perspective_no_match({ query: perspectiveSearchQuery })}
 											</div>
-										</div>
-										
-										<!-- Options list -->
-										<div class="max-h-48 overflow-y-auto py-1">
-											{#if !perspectiveSearchQuery}
-												<ListItemButton
-													active={currentPerspective === null}
-													onclick={() => selectPerspective(null)}
-												>
-													<span class="w-5 text-center">{currentPerspective === null ? '✓' : ''}</span>
-													<span class="italic">{m.perspective_none()}</span>
-												</ListItemButton>
-											{/if}
-											{#each filteredParticipants as participant}
-												<ListItemButton
-													active={currentPerspective === participant}
-													onclick={() => selectPerspective(participant)}
-												>
-													<span class="w-5 text-center">{currentPerspective === participant ? '✓' : ''}</span>
-													<span class="truncate">{participant}</span>
-												</ListItemButton>
-											{/each}
-											{#if filteredParticipants.length === 0 && perspectiveSearchQuery}
-												<div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 italic">
-													{m.perspective_no_match({ query: perspectiveSearchQuery })}
-												</div>
-											{/if}
-										</div>
-									</div>
-								{/if}
+										{/if}
+									</DropdownList>
+								</Dropdown>
 							</div>
 
 							<IconButton
@@ -920,37 +849,16 @@ const currentUser = $derived.by(() => {
 				{/if}
 
 				<!-- Participants modal -->
-				{#if showParticipants && appState.selectedChat && participantStats}
-					<!-- Backdrop -->
-					<button
-						type="button"
-						class="fixed inset-0 bg-black/50 z-50 cursor-default"
-						onclick={closeParticipantsModal}
-						aria-label={m.participants_close()}
-					></button>
-					
-					<!-- Modal -->
-					<div class="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[480px] md:max-h-[80vh] bg-white dark:bg-gray-800 rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden">
-						<!-- Header -->
-						<div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-[var(--color-whatsapp-dark-green)] text-white">
-							<div class="flex items-center gap-3">
-								<Icon name="users" size="md" />
-								<div>
-									<h2 class="font-semibold">{m.participants_title()}</h2>
-									<p class="text-xs text-white/70">{m.participants_members({ count: appState.selectedChat.participants.length })}</p>
-								</div>
-							</div>
-							<IconButton
-								theme="dark"
-								size="sm"
-								onclick={closeParticipantsModal}
-								aria-label={m.participants_close()}
-							>
-								<Icon name="close" size="md" />
-							</IconButton>
-						</div>
-						<!-- Participants list -->
-						<div class="flex-1 overflow-y-auto">
+				<Modal open={showParticipants && !!appState.selectedChat && !!participantStats} onClose={closeParticipantsModal}>
+					<ModalHeader
+						icon="users"
+						title={m.participants_title()}
+						subtitle={appState.selectedChat ? m.participants_members({ count: appState.selectedChat.participants.length }) : ''}
+						onClose={closeParticipantsModal}
+						closeLabel={m.participants_close()}
+					/>
+					<ModalContent>
+						{#if appState.selectedChat && participantStats}
 							{#each appState.selectedChat.participants as participant}
 								{@const messageCount = participantStats.get(participant) || 0}
 								{@const isPhoneNumber = /\+?\d[\d\s\-()]{8,}/.test(participant)}
@@ -995,9 +903,9 @@ const currentUser = $derived.by(() => {
 									{/if}
 								</div>
 							{/each}
-						</div>
-					</div>
-				{/if}
+						{/if}
+					</ModalContent>
+				</Modal>
 			{:else}
 				<!-- No chat selected -->
 				<div class="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">

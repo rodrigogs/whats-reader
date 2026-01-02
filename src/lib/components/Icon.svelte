@@ -4,7 +4,7 @@ import type { HTMLAttributes } from 'svelte/elements';
 /**
  * Supported icon names for the Icon component
  */
-type IconName =
+export type IconName =
 	// Navigation
 	| 'menu'
 	| 'close'
