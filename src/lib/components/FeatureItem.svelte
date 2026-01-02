@@ -38,7 +38,7 @@ let {
 
 // Resolve the effective variant to avoid empty badges when icon is missing
 const effectiveVariant = $derived(
-	variant === 'icon' && !icon && badge !== undefined ? 'numbered' : variant
+	variant === 'icon' && !icon && badge !== undefined ? 'numbered' : variant,
 );
 </script>
 
