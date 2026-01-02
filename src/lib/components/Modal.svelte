@@ -16,12 +16,23 @@ interface Props {
 	 */
 	class?: string;
 	/**
+	 * Accessible label for the close backdrop button
+	 * @default 'Close modal'
+	 */
+	closeAriaLabel?: string;
+	/**
 	 * Modal content
 	 */
 	children: Snippet;
 }
 
-let { open, onClose, class: className = '', children }: Props = $props();
+let {
+	open,
+	onClose,
+	class: className = '',
+	closeAriaLabel = 'Close modal',
+	children,
+}: Props = $props();
 
 // Handle ESC key to close modal
 $effect(() => {
@@ -44,7 +55,7 @@ $effect(() => {
 		type="button"
 		class="fixed inset-0 bg-black/50 z-50 cursor-default"
 		onclick={onClose}
-		aria-label="Close modal"
+		aria-label={closeAriaLabel}
 	></button>
 
 	<!-- Modal -->

@@ -35,20 +35,27 @@ let {
 	class: className = '',
 	children,
 }: Props = $props();
+
+// Resolve the effective variant to avoid empty badges when icon is missing
+const effectiveVariant = $derived(
+	variant === 'icon' && !icon && badge !== undefined ? 'numbered' : variant
+);
 </script>
 
 <div
 	class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg {className}"
 >
-	<span
-		class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center {variant === 'numbered' ? 'font-bold' : ''}"
-	>
-		{#if variant === 'numbered'}
-			{badge}
-		{:else if icon}
-			<Icon name={icon} size="xs" stroke-width="2" />
-		{/if}
-	</span>
+	{#if (effectiveVariant === 'numbered' && badge !== undefined) || (effectiveVariant === 'icon' && icon)}
+		<span
+			class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center {effectiveVariant === 'numbered' ? 'font-bold' : ''}"
+		>
+			{#if effectiveVariant === 'numbered' && badge !== undefined}
+				{badge}
+			{:else if effectiveVariant === 'icon' && icon}
+				<Icon name={icon} size="xs" stroke-width="2" />
+			{/if}
+		</span>
+	{/if}
 	<span class="text-xs text-gray-600 dark:text-gray-400">
 		{@render children()}
 	</span>

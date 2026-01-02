@@ -42,6 +42,11 @@ interface Props {
 	 */
 	class?: string;
 	/**
+	 * Accessible label for the close backdrop button
+	 * @default 'Close dropdown'
+	 */
+	closeAriaLabel?: string;
+	/**
 	 * Dropdown content
 	 */
 	children: Snippet;
@@ -62,6 +67,7 @@ let {
 	offsetDistance = 8,
 	width = 'w-64',
 	class: className = '',
+	closeAriaLabel = 'Close dropdown',
 	children,
 }: Props = $props();
 
@@ -86,7 +92,7 @@ $effect(() => {
 		type="button"
 		class="fixed inset-0 z-40 cursor-default"
 		onclick={onClose}
-		aria-label="Close dropdown"
+		aria-label={closeAriaLabel}
 	></button>
 
 	<!-- Dropdown menu -->
