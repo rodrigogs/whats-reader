@@ -7,6 +7,8 @@ import * as m from '$lib/paraglide/messages';
 import { getLocale } from '$lib/paraglide/runtime';
 import { loadMediaFile } from '$lib/parser';
 import { appState } from '$lib/state.svelte';
+import Icon from './Icon.svelte';
+import IconButton from './IconButton.svelte';
 import MediaThumbnail from './MediaThumbnail.svelte';
 
 interface Props {
@@ -349,17 +351,7 @@ onDestroy(() => {
 	<div class="p-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
 		<div class="flex items-center justify-between h-10 gap-3">
 			<div class="min-w-0 flex items-center gap-2">
-				<svg
-					class="w-5 h-5 flex-shrink-0 text-[var(--color-whatsapp-teal)]"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="1.5"
-					viewBox="0 0 24 24"
-				>
-					<path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
-					<path stroke-linecap="round" stroke-linejoin="round" d="M7 15l3-3 3 3 3-3 2 2" />
-					<path stroke-linecap="round" stroke-linejoin="round" d="M9 9h.01" />
-				</svg>
+				<Icon name="image" size="md" class="flex-shrink-0 text-[var(--color-whatsapp-teal)]" />
 				<h2 class="min-w-0 text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
 					{m.media_gallery_title()}
 				</h2>
@@ -372,17 +364,15 @@ onDestroy(() => {
 			<div class="flex items-center gap-1.5 flex-shrink-0">
 				<!-- Go to Date button -->
 				{#if items.length > 0}
-					<button
-						type="button"
-						class="h-9 w-9 inline-flex items-center justify-center rounded-lg text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-whatsapp-teal)]/50"
+					<IconButton
+						theme="light"
+						size="lg"
 						onclick={openDatePicker}
 						aria-label={m.media_gallery_go_to_date()}
 						title={m.media_gallery_go_to_date()}
 					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-						</svg>
-					</button>
+						<Icon name="calendar" size="md" />
+					</IconButton>
 				{/if}
 				{#if selectedCount > 0}
 					<button
@@ -394,39 +384,32 @@ onDestroy(() => {
 						aria-label={m.media_gallery_download_selected()}
 						title={isDownloading ? m.media_gallery_downloading({ progress: downloadProgress }) : m.media_gallery_download_selected()}
 					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
-						</svg>
+						<Icon name="download" size="md" />
 						{#if isDownloading}
 							<span class="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full bg-black/35 text-[10px] text-white/90 tabular-nums">
 								{downloadProgress}%
 							</span>
 						{/if}
 					</button>
-					<button
-						type="button"
-						class="h-9 w-9 inline-flex items-center justify-center rounded-lg text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-whatsapp-teal)]/50"
+					<IconButton
+						theme="light"
+						size="lg"
 						onclick={() => galleryState.clearSelection()}
 						aria-label={m.media_gallery_clear_selection()}
 						title={m.media_gallery_clear_selection()}
 					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<rect x="4" y="4" width="16" height="16" rx="2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6" />
-						</svg>
-					</button>
+						<Icon name="minus" size="md" />
+					</IconButton>
 				{/if}
-				<button
-					type="button"
-					class="h-9 w-9 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-whatsapp-teal)]/50"
+				<IconButton
+					theme="light"
+					size="lg"
 					onclick={onClose}
 					aria-label={m.media_gallery_close()}
 					title={m.media_gallery_close()}
 				>
-					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-					</svg>
-				</button>
+					<Icon name="close" size="md" />
+				</IconButton>
 			</div>
 		</div>
 		{#if downloadError}
@@ -439,9 +422,7 @@ onDestroy(() => {
 	<div class="flex-1 overflow-y-auto p-3" bind:this={scrollContainerRef}>
 		{#if items.length === 0}
 			<div class="flex flex-col items-center justify-center h-full px-4 py-8 text-center">
-				<svg class="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" />
-				</svg>
+				<Icon name="image" size="2xl" class="text-gray-300 dark:text-gray-600 mb-3" />
 				<p class="text-gray-500 dark:text-gray-400 text-sm">{m.media_gallery_empty()}</p>
 			</div>
 		{:else}
@@ -486,45 +467,41 @@ onDestroy(() => {
 				<!-- Modal header -->
 				<div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
 					<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">{m.media_gallery_go_to_date()}</h3>
-					<button
-						type="button"
-						class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+					<IconButton
+						theme="light"
+						size="sm"
 						onclick={() => (showDatePicker = false)}
 						aria-label={m.close()}
 					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-						</svg>
-					</button>
+						<Icon name="close" size="md" />
+					</IconButton>
 				</div>
 
 				<!-- Month navigation -->
 				<div class="flex items-center justify-between px-4 py-3">
-					<button
-						type="button"
-						class="p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed {canGoPrevMonth ? 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700' : 'text-gray-300 dark:text-gray-600'}"
+					<IconButton
+						theme="light"
+						size="sm"
 						onclick={prevMonth}
 						disabled={!canGoPrevMonth}
+						class={!canGoPrevMonth ? 'opacity-30' : ''}
 						aria-label={m.calendar_previous_month()}
 					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-						</svg>
-					</button>
+						<Icon name="chevron-left" size="md" />
+					</IconButton>
 					<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
 						{datePickerMonth.toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' })}
 					</span>
-					<button
-						type="button"
-						class="p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed {canGoNextMonth ? 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700' : 'text-gray-300 dark:text-gray-600'}"
+					<IconButton
+						theme="light"
+						size="sm"
 						onclick={nextMonth}
 						disabled={!canGoNextMonth}
+						class={!canGoNextMonth ? 'opacity-30' : ''}
 						aria-label={m.calendar_next_month()}
 					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-						</svg>
-					</button>
+						<Icon name="chevron-right" size="md" />
+					</IconButton>
 				</div>
 
 				<!-- Calendar grid -->
@@ -616,25 +593,21 @@ onDestroy(() => {
 								aria-label={m.media_gallery_go_to_message()}
 								title={m.media_gallery_go_to_message()}
 							>
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-								</svg>
+								<Icon name="arrow-circle-right" size="md" />
 							</button>
 						{:else}
 							<span class="text-xs text-gray-500 dark:text-gray-400 px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700">
 								{m.media_gallery_unlinked()}
 							</span>
 						{/if}
-						<button
-							type="button"
-							class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+						<IconButton
+							theme="light"
+							size="sm"
 							onclick={closeLightbox}
 							aria-label={m.close()}
 						>
-							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-							</svg>
-						</button>
+							<Icon name="close" size="md" />
+						</IconButton>
 					</div>
 				</div>
 

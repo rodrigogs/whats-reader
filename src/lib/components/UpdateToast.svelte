@@ -20,6 +20,9 @@ import {
 	ignoreVersion,
 	setNeverAsk,
 } from '$lib/update-checker.svelte';
+import Button from './Button.svelte';
+import Icon from './Icon.svelte';
+import IconButton from './IconButton.svelte';
 
 interface Props {
 	latestVersion: string;
@@ -70,22 +73,19 @@ function handleClose() {
 		<div class="flex items-center justify-between px-4 py-3 bg-[var(--color-whatsapp-teal)] text-white">
 			<div class="flex items-center gap-2">
 				<!-- Update icon -->
-				<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-				</svg>
+				<Icon name="spinner" />
 				<span class="font-semibold text-sm">{m.update_available()}</span>
 			</div>
 			<!-- Close button -->
-			<button
-				type="button"
-				class="p-1 rounded-full hover:bg-white/20 transition-colors cursor-pointer"
+			<IconButton
+				theme="dark"
+				size="sm"
+				rounded="full"
 				onclick={handleClose}
 				aria-label={m.close()}
 			>
-				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-				</svg>
-			</button>
+				<Icon name="close" size="sm" />
+			</IconButton>
 		</div>
 
 		<!-- Content -->
@@ -101,33 +101,36 @@ function handleClose() {
 		<!-- Actions -->
 		<div class="px-4 pb-3 flex flex-wrap gap-2">
 			<!-- Update button (primary) -->
-			<button
-				type="button"
-				class="flex-1 min-w-[80px] px-3 py-1.5 bg-[var(--color-whatsapp-teal)] hover:bg-[var(--color-whatsapp-dark-green)] text-white text-sm font-medium rounded-md transition-colors cursor-pointer"
+			<Button
+				variant="primary"
+				size="sm"
+				class="flex-1 min-w-[80px]"
 				onclick={handleUpdate}
 			>
 				{m.update_update_button()}
-			</button>
+			</Button>
 
 			<!-- Ignore button (secondary) -->
-			<button
-				type="button"
-				class="flex-1 min-w-[80px] px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md transition-colors cursor-pointer"
+			<Button
+				variant="secondary"
+				size="sm"
+				class="flex-1 min-w-[80px]"
 				onclick={handleIgnore}
 				title={m.update_ignore_tooltip()}
 			>
 				{m.update_ignore_button()}
-			</button>
+			</Button>
 
 			<!-- Never button (tertiary) -->
-			<button
-				type="button"
-				class="w-full px-3 py-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 text-xs transition-colors cursor-pointer"
+			<Button
+				variant="ghost"
+				size="sm"
+				class="w-full"
 				onclick={handleNever}
 				title={m.update_never_tooltip()}
 			>
 				{m.update_never_button()}
-			</button>
+			</Button>
 		</div>
 	</div>
 </div>

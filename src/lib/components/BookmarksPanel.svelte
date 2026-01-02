@@ -3,6 +3,9 @@ import { type Bookmark, bookmarksState } from '$lib/bookmarks.svelte';
 import * as m from '$lib/paraglide/messages';
 import { getLocale } from '$lib/paraglide/runtime';
 import BookmarkModal from './BookmarkModal.svelte';
+import Button from './Button.svelte';
+import Icon from './Icon.svelte';
+import IconButton from './IconButton.svelte';
 
 interface Props {
 	currentChatId?: string;
@@ -147,24 +150,20 @@ function handleKeydown(e: KeyboardEvent) {
 	<div class="p-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
 		<div class="flex items-center justify-between h-10">
 			<div class="flex items-center gap-2">
-				<svg class="w-5 h-5 text-[var(--color-whatsapp-teal)]" fill="currentColor" viewBox="0 0 24 24">
-					<path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
-				</svg>
+			<Icon name="bookmark" filled class="text-[var(--color-whatsapp-teal)]" />
 				<h2 class="font-semibold text-gray-900 dark:text-gray-100">{m.bookmarks_header_title()}</h2>
 				<span class="text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
 					{displayedBookmarks.length}
 				</span>
 			</div>
-			<button
-				type="button"
-				class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+			<IconButton
+				theme="light"
+				size="sm"
 				onclick={onClose}
 				aria-label={m.bookmarks_close()}
 			>
-				<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-				</svg>
-			</button>
+			<Icon name="close" />
+			</IconButton>
 		</div>
 	</div>
 
@@ -204,9 +203,7 @@ function handleKeydown(e: KeyboardEvent) {
 	<div class="flex-1 overflow-y-auto">
 		{#if displayedBookmarks.length === 0}
 			<div class="flex flex-col items-center justify-center h-full px-4 py-8 text-center">
-				<svg class="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-				</svg>
+			<Icon name="bookmark-outline" size="2xl" class="text-gray-300 dark:text-gray-600 mb-3" />
 				<p class="text-gray-500 dark:text-gray-400 text-sm">
 					{filterMode === 'current' ? m.bookmarks_empty_current_chat() : m.bookmarks_empty()}
 				</p>
@@ -237,9 +234,7 @@ function handleKeydown(e: KeyboardEvent) {
 							>
 								<div class="flex items-start gap-3">
 									<div class="flex-shrink-0 mt-0.5">
-										<svg class="w-4 h-4 text-[var(--color-whatsapp-teal)]" fill="currentColor" viewBox="0 0 24 24">
-											<path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
-										</svg>
+									<Icon name="bookmark" size="sm" class="text-[var(--color-whatsapp-teal)]" filled />
 									</div>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2 mb-0.5">
@@ -259,45 +254,37 @@ function handleKeydown(e: KeyboardEvent) {
 										{#if isExpanded}
 											{@const isIndexed = indexedChatTitles.has(bookmark.chatId)}
 											<div class="flex items-center gap-2 mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
-												<button
-													type="button"
-													class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[var(--color-whatsapp-teal)] rounded-lg transition-all cursor-pointer {isIndexed ? 'hover:brightness-110 hover:shadow-md' : 'opacity-50 cursor-not-allowed'}"
+												<Button
+													variant="primary"
+													size="sm"
 													onclick={(e) => handleNavigateClick(e, bookmark)}
 													disabled={!isIndexed}
 													title={isIndexed ? undefined : m.bookmarks_indexing()}
+													class={!isIndexed ? 'opacity-50 cursor-not-allowed' : ''}
 												>
 													{#if !isIndexed}
-														<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-															<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-															<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-														</svg>
+												<Icon name="loading" size="xs" class="animate-spin" />
 													{:else}
-														<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-															<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-														</svg>
+												<Icon name="arrow-circle-right" size="xs" />
 													{/if}
 													{isIndexed ? m.bookmarks_goto_button() : m.bookmarks_indexing()}
-												</button>
-												<button
-													type="button"
-													class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors cursor-pointer"
+												</Button>
+												<Button
+													variant="ghost"
+													size="sm"
 													onclick={(e) => handleEditClick(e, bookmark)}
 												>
-													<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-													</svg>
-														{m.bookmarks_edit_button()}
-												</button>
-												<button
-													type="button"
-													class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
+											<Icon name="edit" size="xs" />
+													{m.bookmarks_edit_button()}
+												</Button>
+												<Button
+													variant="danger"
+													size="sm"
 													onclick={(e) => handleDeleteClick(e, bookmark)}
 												>
-													<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-													</svg>
-														{m.bookmarks_delete_action()}
-												</button>
+											<Icon name="trash" size="xs" />
+													{m.bookmarks_delete_action()}
+												</Button>
 											</div>
 										{/if}
 									</div>
@@ -323,29 +310,25 @@ function handleKeydown(e: KeyboardEvent) {
 			</div>
 		{/if}
 		<div class="flex gap-2">
-			<button
-				type="button"
-				class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+			<Button
+				variant="secondary"
+				size="sm"
+				class="flex-1 justify-center"
 				onclick={() => importInput.click()}
 			>
-				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-				</svg>
+			<Icon name="upload" size="sm" />
 				{m.bookmarks_import_button()}
-			</button>
-			<button
-				type="button"
-				class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
-				class:opacity-50={bookmarksState.count === 0}
-				class:pointer-events-none={bookmarksState.count === 0}
+			</Button>
+			<Button
+				variant="secondary"
+				size="sm"
+				class="flex-1 justify-center {bookmarksState.count === 0 ? 'opacity-50 pointer-events-none' : ''}"
 				onclick={handleExport}
 				disabled={bookmarksState.count === 0}
 			>
-				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-				</svg>
+			<Icon name="download" size="sm" />
 				{m.bookmarks_export_button()}
-			</button>
+			</Button>
 		</div>
 		<input
 			bind:this={importInput}
