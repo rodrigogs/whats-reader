@@ -1,3 +1,20 @@
+# [1.24.0](https://github.com/rodrigogs/whats-reader/compare/v1.23.0...v1.24.0) (2026-01-04)
+
+
+### Bug Fixes
+
+* add JSDoc comment to IconName type for better IDE support ([2693e00](https://github.com/rodrigogs/whats-reader/commit/2693e007796fb17ee074f793435d2102ca504229))
+* add pull-requests permission for branch sync ([f2be78d](https://github.com/rodrigogs/whats-reader/commit/f2be78d7b185f8e79001e34ebc38849151560965))
+* remove duplicate sync step (handled in build.yml) ([e0499de](https://github.com/rodrigogs/whats-reader/commit/e0499de1c146c96dc279fe6a152de4821b7428d0))
+* trigger manual release for testing ([92658a6](https://github.com/rodrigogs/whats-reader/commit/92658a617d5f3ed1c29767a1b9485ec1c5fc7046))
+* use GitHub API to sync dev with main after release ([a7bb91f](https://github.com/rodrigogs/whats-reader/commit/a7bb91ffc2c5543148ecb48781907789db6b674f))
+
+
+### Features
+
+* extract reusable UI components ([cad1fe9](https://github.com/rodrigogs/whats-reader/commit/cad1fe906f8362fe3726492031cb42687ee1ed76))
+* use peter-evans/create-pull-request for elegant branch sync ([f302d5f](https://github.com/rodrigogs/whats-reader/commit/f302d5f32491f8f7f3aca526d4529722e42cbe6a))
+
 # [1.23.0](https://github.com/rodrigogs/whats-reader/compare/v1.22.2...v1.23.0) (2026-01-02)
 
 
