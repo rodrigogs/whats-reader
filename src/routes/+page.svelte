@@ -458,8 +458,8 @@ const currentUser = $derived.by(() => {
 					<div class="max-w-lg w-full flex flex-col items-center py-8">
 					<!-- Logo and title -->
 					<div class="text-center mb-6">
-						<div class="w-16 h-16 mx-auto mb-3 rounded-full bg-[var(--color-whatsapp-green)] flex items-center justify-center shadow-lg">
-							<Icon name="whatsapp" size="2xl" class="text-white" />
+						<div class="w-32 h-32 mx-auto mb-4">
+							<img src="/favicon.svg" alt="WhatsApp Backup Reader" class="w-full h-full" />
 						</div>
 						<h1 class="text-2xl font-bold text-gray-800 dark:text-white mb-1">
 							{m.app_title()}

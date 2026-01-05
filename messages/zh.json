@@ -230,5 +230,16 @@
   "stats_hour_6am": "早上6点",
   "stats_hour_12pm": "中午12点",
   "stats_hour_6pm": "下午6点",
-  "stats_hour_11pm": "晚上11点"
+  "stats_hour_11pm": "晚上11点",
+  "media_gallery_options": "选项",
+  "media_gallery_filter_by_participant": "按参与者筛选",
+  "media_gallery_filter_by_type": "按类型筛选",
+  "media_gallery_type_images": "图片",
+  "media_gallery_type_videos": "视频",
+  "media_gallery_type_audio": "音频",
+  "media_gallery_type_documents": "文件",
+  "media_gallery_type_other": "其他",
+  "media_gallery_clear_filter": "清除过滤器",
+  "media_gallery_participant_search_placeholder": "按名称或编号搜索……",
+  "media_gallery_participant_no_match": "没有参与者匹配\"{query}\""
 }

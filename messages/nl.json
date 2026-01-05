@@ -230,5 +230,16 @@
   "stats_hour_6am": "6 uur 's ochtends",
   "stats_hour_12pm": "12 uur 's middags",
   "stats_hour_6pm": "18:00 uur",
-  "stats_hour_11pm": "23:00 uur"
+  "stats_hour_11pm": "23:00 uur",
+  "media_gallery_options": "Opties",
+  "media_gallery_filter_by_participant": "Filteren op deelnemer",
+  "media_gallery_filter_by_type": "Filteren op type",
+  "media_gallery_type_images": "Afbeeldingen",
+  "media_gallery_type_videos": "Video's",
+  "media_gallery_type_audio": "Audio",
+  "media_gallery_type_documents": "Documenten",
+  "media_gallery_type_other": "Ander",
+  "media_gallery_clear_filter": "Filter wissen",
+  "media_gallery_participant_search_placeholder": "Zoeken op naam of nummer...",
+  "media_gallery_participant_no_match": "Geen deelnemer komt overeen met \"{query}\""
 }
