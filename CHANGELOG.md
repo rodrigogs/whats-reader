@@ -1,3 +1,10 @@
+## [1.26.1](https://github.com/rodrigogs/whats-reader/compare/v1.26.0...v1.26.1) (2026-01-05)
+
+
+### Bug Fixes
+
+* header no longer shrinks when side panels expand ([1fa3fc9](https://github.com/rodrigogs/whats-reader/commit/1fa3fc93fbc3e5c3f65d79b55a8799deb6290af7))
+
 # [1.26.0](https://github.com/rodrigogs/whats-reader/compare/v1.25.1...v1.26.0) (2026-01-05)
 
 
