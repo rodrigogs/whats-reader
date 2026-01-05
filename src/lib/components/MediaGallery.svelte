@@ -445,10 +445,7 @@ onDestroy(() => {
 						aria-label={m.media_gallery_options()}
 						title={m.media_gallery_options()}
 					>
-						<Icon name="dots-vertical" size="md" />
-						{#if hasActiveFilter}
-							<span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[var(--color-whatsapp-teal)]"></span>
-						{/if}
+						<Icon name="dots-vertical" size="md" class={hasActiveFilter ? 'text-[var(--color-whatsapp-teal)]' : ''} />
 					</IconButton>
 				{/if}
 				{#if selectedCount > 0}
