@@ -90,6 +90,10 @@ const filteredMediaParticipants = $derived.by(() => {
 	return mediaParticipants.filter((p) => p.toLowerCase().includes(query));
 });
 
+// Performance optimization: Use Sets for O(1) lookups instead of O(n) includes
+const filterParticipantsSet = $derived(new Set(filterParticipants));
+const filterTypesSet = $derived(new Set(filterTypes));
+
 // Handle scroll-to-date
 $effect(() => {
 	const dateKey = scrollToDateKey;
@@ -404,23 +408,6 @@ function toggleType(type: MediaTypeFilter) {
 	galleryState.toggleTypeFilter(type);
 }
 
-function getTypeLabel(type: MediaTypeFilter): string {
-	switch (type) {
-		case 'image':
-			return m.media_gallery_type_images();
-		case 'video':
-			return m.media_gallery_type_videos();
-		case 'audio':
-			return m.media_gallery_type_audio();
-		case 'document':
-			return m.media_gallery_type_documents();
-		case 'other':
-			return m.media_gallery_type_other();
-		default:
-			return m.media_gallery_all_types();
-	}
-}
-
 onDestroy(() => {
 	cleanupThumbnailUrls();
 });
@@ -710,9 +697,9 @@ onDestroy(() => {
 					{#each filteredMediaParticipants as participant (participant)}
 						<ListItemButton
 							onclick={() => toggleParticipant(participant)}
-							active={filterParticipants.includes(participant)}
+							active={filterParticipantsSet.has(participant)}
 						>
-							<span class="w-5 text-center">{filterParticipants.includes(participant) ? '✓' : ''}</span>
+							<span class="w-5 text-center">{filterParticipantsSet.has(participant) ? '✓' : ''}</span>
 							<span class="truncate">{participant}</span>
 						</ListItemButton>
 					{/each}
@@ -750,37 +737,37 @@ onDestroy(() => {
 				<div class="py-2">
 					<ListItemButton
 						onclick={() => toggleType('image')}
-						active={filterTypes.includes('image')}
+						active={filterTypesSet.has('image')}
 					>
-						<span class="w-5 text-center">{filterTypes.includes('image') ? '✓' : ''}</span>
+						<span class="w-5 text-center">{filterTypesSet.has('image') ? '✓' : ''}</span>
 						<span>{m.media_gallery_type_images()}</span>
 					</ListItemButton>
 					<ListItemButton
 						onclick={() => toggleType('video')}
-						active={filterTypes.includes('video')}
+						active={filterTypesSet.has('video')}
 					>
-						<span class="w-5 text-center">{filterTypes.includes('video') ? '✓' : ''}</span>
+						<span class="w-5 text-center">{filterTypesSet.has('video') ? '✓' : ''}</span>
 						<span>{m.media_gallery_type_videos()}</span>
 					</ListItemButton>
 					<ListItemButton
 						onclick={() => toggleType('audio')}
-						active={filterTypes.includes('audio')}
+						active={filterTypesSet.has('audio')}
 					>
-						<span class="w-5 text-center">{filterTypes.includes('audio') ? '✓' : ''}</span>
+						<span class="w-5 text-center">{filterTypesSet.has('audio') ? '✓' : ''}</span>
 						<span>{m.media_gallery_type_audio()}</span>
 					</ListItemButton>
 					<ListItemButton
 						onclick={() => toggleType('document')}
-						active={filterTypes.includes('document')}
+						active={filterTypesSet.has('document')}
 					>
-						<span class="w-5 text-center">{filterTypes.includes('document') ? '✓' : ''}</span>
+						<span class="w-5 text-center">{filterTypesSet.has('document') ? '✓' : ''}</span>
 						<span>{m.media_gallery_type_documents()}</span>
 					</ListItemButton>
 					<ListItemButton
 						onclick={() => toggleType('other')}
-						active={filterTypes.includes('other')}
+						active={filterTypesSet.has('other')}
 					>
-						<span class="w-5 text-center">{filterTypes.includes('other') ? '✓' : ''}</span>
+						<span class="w-5 text-center">{filterTypesSet.has('other') ? '✓' : ''}</span>
 						<span>{m.media_gallery_type_other()}</span>
 					</ListItemButton>
 				</div>
