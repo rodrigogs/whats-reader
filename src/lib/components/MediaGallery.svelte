@@ -76,13 +76,16 @@ let showTypeFilter = $state(false);
 // Scroll container ref
 let scrollContainerRef = $state<HTMLElement | null>(null);
 
-// Auto-focus participant search input when modal opens
+// Auto-focus participant search input when modal opens and reset query when closing
 $effect(() => {
 	if (showParticipantFilter && participantSearchInputRef) {
 		(async () => {
 			await tick();
 			participantSearchInputRef?.focus();
 		})();
+	} else if (!showParticipantFilter) {
+		// Reset search query when modal closes for clean state on reopen
+		participantSearchQuery = '';
 	}
 });
 
