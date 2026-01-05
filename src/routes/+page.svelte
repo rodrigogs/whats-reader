@@ -534,14 +534,255 @@ const currentUser = $derived.by(() => {
 	</div>
 	{:else}
 		<!-- Main app layout -->
-		<div class="flex-1 flex overflow-hidden">
-			<!-- Sidebar -->
-			<div
-				class="sidebar-panel w-80 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col {showSidebar ? 'sidebar-open' : 'sidebar-closed'}"
-				class:electron-mac={isElectronMac}
-			>
-				<!-- Sidebar header - empty green bar to match main header -->
-				<div class="h-16 bg-[var(--color-whatsapp-dark-green)] flex-shrink-0"></div>
+		<div class="flex-1 flex flex-col overflow-hidden">
+			<!-- Top header bar - always full width -->
+			{#if appState.selectedChat}
+				{#snippet perspectiveSelectorContent()}
+					<DropdownHeader title={m.perspective_view_as()} />
+					
+					<DropdownSearch
+						bind:value={perspectiveSearchQuery}
+						bind:ref={perspectiveSearchInputRef}
+						placeholder={m.perspective_search_placeholder()}
+					/>
+					
+					<DropdownList>
+						{#if !perspectiveSearchQuery}
+							<ListItemButton
+								active={currentPerspective === null}
+								onclick={() => selectPerspective(null)}
+							>
+								<span class="w-5 text-center">{currentPerspective === null ? '✓' : ''}</span>
+								<span class="italic">{m.perspective_none()}</span>
+							</ListItemButton>
+						{/if}
+						{#each filteredParticipants as participant}
+							<ListItemButton
+								active={currentPerspective === participant}
+								onclick={() => selectPerspective(participant)}
+							>
+								<span class="w-5 text-center">{currentPerspective === participant ? '✓' : ''}</span>
+								<span class="truncate">{participant}</span>
+							</ListItemButton>
+						{/each}
+						{#if filteredParticipants.length === 0 && perspectiveSearchQuery}
+							<div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 italic">
+								{m.perspective_no_match({ query: perspectiveSearchQuery })}
+							</div>
+						{/if}
+					</DropdownList>
+				{/snippet}
+				
+				<!-- Chat header -->
+				<div class="h-16 px-4 flex items-center gap-3 bg-[var(--color-whatsapp-dark-green)] text-white shadow-md flex-shrink-0">
+					<!-- Sidebar toggle button -->
+					<IconButton
+						theme="dark"
+						size="md"
+						class="-ml-2"
+						onclick={toggleSidebar}
+						aria-label={m.sidebar_toggle()}
+						title={m.sidebar_toggle()}
+					>
+						{#if showSidebar}
+							<Icon name="chevron-left" size="md" />
+						{:else}
+							<Icon name="menu" size="md" />
+						{/if}
+					</IconButton>
+					<!-- Avatar -->
+					<div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-semibold">
+						{appState.selectedChat.title.charAt(0).toUpperCase()}
+					</div>
+
+					<!-- Chat info -->
+					<div class="flex-1 min-w-0">
+						<h2 class="font-semibold truncate">{appState.selectedChat.title}</h2>
+						<button
+							type="button"
+							class="text-xs text-white/70 hover:text-white truncate block max-w-full text-left cursor-pointer transition-colors"
+							onclick={openParticipantsModal}
+						title={m.participants_view_all()}
+						>
+							{appState.selectedChat.participants.slice(0, 5).join(', ')}
+							{#if appState.selectedChat.participants.length > 5}
+								{m.perspective_more_participants({ count: appState.selectedChat.participants.length - 5 })}
+							{/if}
+						</button>
+					</div>
+
+					<!-- Actions -->
+					<div class="flex items-center gap-2">
+						<!-- Small screens: Options menu -->
+						<div class="md:hidden relative">
+							<IconButton
+								bind:ref={chatOptionsButtonRef}
+								theme="dark"
+								size="md"
+								onclick={() => showChatOptionsDropdown = !showChatOptionsDropdown}
+								title={m.chat_options()}
+								aria-label={m.chat_options()}
+							>
+								<Icon name="dots-vertical" size="md" />
+							</IconButton>
+							
+							<Dropdown
+								anchor={chatOptionsButtonRef}
+								open={showChatOptionsDropdown}
+								onClose={() => {
+									showChatOptionsDropdown = false;
+									showPerspectiveDropdown = false;
+									perspectiveSearchQuery = '';
+								}}
+								width="w-56"
+								placement="bottom-end"
+							>
+								{#if showPerspectiveDropdown}
+									<!-- Perspective selector view -->
+									{@render perspectiveSelectorContent()}
+								{:else}
+									<!-- Main options menu -->
+									<DropdownList>
+										<ListItemButton
+											active={!!currentPerspective}
+											onclick={() => showPerspectiveDropdown = true}
+										>
+											<Icon name="user" size="sm" />
+											<span>{m.perspective_view_as()}</span>
+										</ListItemButton>
+										<ListItemButton
+											active={showMediaGallery}
+											onclick={() => {
+												showChatOptionsDropdown = false;
+												toggleMediaGallery();
+											}}
+										>
+											<Icon name="image" size="sm" />
+											<span>{m.media_gallery_title()}</span>
+										</ListItemButton>
+										<ListItemButton
+											active={showBookmarks}
+											onclick={() => {
+												showChatOptionsDropdown = false;
+												toggleBookmarks();
+											}}
+										>
+											<Icon name="bookmark" size="sm" />
+											<span>{m.bookmarks_title()}</span>
+										</ListItemButton>
+										<ListItemButton
+											onclick={() => {
+												showChatOptionsDropdown = false;
+												toggleStats();
+											}}
+										>
+											<Icon name="chart-bar" size="sm" />
+											<span>{m.stats_view()}</span>
+										</ListItemButton>
+									</DropdownList>
+								{/if}
+							</Dropdown>
+						</div>
+
+						<!-- Large screens: Individual buttons -->
+						<div class="hidden md:flex items-center gap-2">
+							<!-- Perspective selector -->
+							<div class="relative">
+								<IconButton
+									bind:ref={perspectiveButtonRef}
+									theme="dark"
+									size="md"
+									active={!!currentPerspective}
+									onclick={() => showPerspectiveDropdown = !showPerspectiveDropdown}
+									title={m.perspective_view_as()}
+									aria-label={m.perspective_select()}
+								>
+									<Icon name="user" size="md" />
+								</IconButton>
+								
+								<Dropdown
+									anchor={perspectiveButtonRef}
+									open={showPerspectiveDropdown}
+									onClose={() => { showPerspectiveDropdown = false; perspectiveSearchQuery = ''; }}
+								>
+									{@render perspectiveSelectorContent()}
+								</Dropdown>
+							</div>
+
+							<IconButton
+								theme="dark"
+								size="md"
+								active={showMediaGallery}
+								onclick={toggleMediaGallery}
+								title={m.media_gallery_title()}
+								aria-label={m.media_gallery_toggle()}
+							>
+								<Icon name="image" size="md" filled={showMediaGallery} />
+							</IconButton>
+							<IconButton
+								theme="dark"
+								size="md"
+								active={showBookmarks}
+								onclick={toggleBookmarks}
+								title={m.bookmarks_title()}
+								aria-label={m.bookmarks_toggle()}
+							>
+								<Icon name="bookmark" size="md" filled={showBookmarks} />
+							</IconButton>
+							<IconButton
+								theme="dark"
+								size="md"
+								onclick={toggleStats}
+								title={m.stats_view()}
+								aria-label={m.stats_view()}
+							>
+								<Icon name="chart-bar" size="md" />
+							</IconButton>
+							<LocaleSwitcher variant="header" />
+							<IconButton
+								theme="dark"
+								size="md" rounded="full"
+								onclick={toggleDarkMode}
+								aria-label={m.toggle_dark_mode()}
+								title={isDarkMode ? m.theme_switch_to_light() : m.theme_switch_to_dark()}
+							>
+								{#if isDarkMode}
+									<Icon name="sun" size="md" class="text-yellow-300" />
+								{:else}
+									<Icon name="moon" size="md" class="text-white/80" />
+								{/if}
+							</IconButton>
+						</div>
+					</div>
+				</div>
+			{:else}
+				<!-- No chat selected - simplified header -->
+				<div class="h-16 px-4 flex items-center bg-[var(--color-whatsapp-dark-green)] flex-shrink-0">
+					<!-- Sidebar toggle button -->
+					<IconButton
+						theme="dark"
+						size="md"
+						class="-ml-2"
+						onclick={toggleSidebar}
+						aria-label={m.sidebar_toggle()}
+						title={m.sidebar_toggle()}
+					>
+						{#if showSidebar}
+							<Icon name="chevron-left" size="md" />
+						{:else}
+							<Icon name="menu" size="md" />
+						{/if}
+					</IconButton>
+				</div>
+			{/if}
+
+			<!-- Content area below header -->
+			<div class="flex-1 flex overflow-hidden">
+				<!-- Sidebar -->
+				<div
+					class="sidebar-panel w-80 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col {showSidebar ? 'sidebar-open' : 'sidebar-closed'}"
+					class:electron-mac={isElectronMac}
+				>
 				
 				<!-- Chats title bar - matches search bar styling exactly -->
 				<div class="p-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
@@ -590,228 +831,7 @@ const currentUser = $derived.by(() => {
 
 			<!-- Main content -->
 			{#if appState.selectedChat}
-				{#snippet perspectiveSelectorContent()}
-					<DropdownHeader title={m.perspective_view_as()} />
-					
-					<DropdownSearch
-						bind:value={perspectiveSearchQuery}
-						bind:ref={perspectiveSearchInputRef}
-						placeholder={m.perspective_search_placeholder()}
-					/>
-					
-					<DropdownList>
-						{#if !perspectiveSearchQuery}
-							<ListItemButton
-								active={currentPerspective === null}
-								onclick={() => selectPerspective(null)}
-							>
-								<span class="w-5 text-center">{currentPerspective === null ? '✓' : ''}</span>
-								<span class="italic">{m.perspective_none()}</span>
-							</ListItemButton>
-						{/if}
-						{#each filteredParticipants as participant}
-							<ListItemButton
-								active={currentPerspective === participant}
-								onclick={() => selectPerspective(participant)}
-							>
-								<span class="w-5 text-center">{currentPerspective === participant ? '✓' : ''}</span>
-								<span class="truncate">{participant}</span>
-							</ListItemButton>
-						{/each}
-						{#if filteredParticipants.length === 0 && perspectiveSearchQuery}
-							<div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 italic">
-								{m.perspective_no_match({ query: perspectiveSearchQuery })}
-							</div>
-						{/if}
-					</DropdownList>
-				{/snippet}
-				
 				<div class="flex-1 flex flex-col overflow-hidden">
-					<!-- Chat header -->
-					<div class="h-16 px-4 flex items-center gap-3 bg-[var(--color-whatsapp-dark-green)] text-white shadow-md flex-shrink-0">
-						<!-- Sidebar toggle button -->
-						<IconButton
-							theme="dark"
-							size="md"
-							class="-ml-2"
-							onclick={toggleSidebar}
-							aria-label={m.sidebar_toggle()}
-							title={m.sidebar_toggle()}
-						>
-							{#if showSidebar}
-								<Icon name="chevron-left" size="md" />
-							{:else}
-								<Icon name="menu" size="md" />
-							{/if}
-						</IconButton>
-						<!-- Avatar -->
-						<div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-semibold">
-							{appState.selectedChat.title.charAt(0).toUpperCase()}
-						</div>
-
-						<!-- Chat info -->
-						<div class="flex-1 min-w-0">
-							<h2 class="font-semibold truncate">{appState.selectedChat.title}</h2>
-							<button
-								type="button"
-								class="text-xs text-white/70 hover:text-white truncate block max-w-full text-left cursor-pointer transition-colors"
-								onclick={openParticipantsModal}
-							title={m.participants_view_all()}
-							>
-								{appState.selectedChat.participants.slice(0, 5).join(', ')}
-								{#if appState.selectedChat.participants.length > 5}
-									{m.perspective_more_participants({ count: appState.selectedChat.participants.length - 5 })}
-								{/if}
-							</button>
-						</div>
-
-						<!-- Actions -->
-						<div class="flex items-center gap-2">
-							<!-- Small screens: Options menu -->
-							<div class="md:hidden relative">
-								<IconButton
-									bind:ref={chatOptionsButtonRef}
-									theme="dark"
-									size="md"
-									onclick={() => showChatOptionsDropdown = !showChatOptionsDropdown}
-									title={m.chat_options()}
-									aria-label={m.chat_options()}
-								>
-									<Icon name="dots-vertical" size="md" />
-								</IconButton>
-								
-								<Dropdown
-									anchor={chatOptionsButtonRef}
-									open={showChatOptionsDropdown}
-									onClose={() => {
-										showChatOptionsDropdown = false;
-										showPerspectiveDropdown = false;
-										perspectiveSearchQuery = '';
-									}}
-									width="w-56"
-									placement="bottom-end"
-								>
-									{#if showPerspectiveDropdown}
-										<!-- Perspective selector view -->
-										{@render perspectiveSelectorContent()}
-									{:else}
-										<!-- Main options menu -->
-										<DropdownList>
-											<ListItemButton
-												active={!!currentPerspective}
-												onclick={() => showPerspectiveDropdown = true}
-											>
-												<Icon name="user" size="sm" />
-												<span>{m.perspective_view_as()}</span>
-											</ListItemButton>
-											<ListItemButton
-												active={showMediaGallery}
-												onclick={() => {
-													showChatOptionsDropdown = false;
-													toggleMediaGallery();
-												}}
-											>
-												<Icon name="image" size="sm" />
-												<span>{m.media_gallery_title()}</span>
-											</ListItemButton>
-											<ListItemButton
-												active={showBookmarks}
-												onclick={() => {
-													showChatOptionsDropdown = false;
-													toggleBookmarks();
-												}}
-											>
-												<Icon name="bookmark" size="sm" />
-												<span>{m.bookmarks_title()}</span>
-											</ListItemButton>
-											<ListItemButton
-												onclick={() => {
-													showChatOptionsDropdown = false;
-													toggleStats();
-												}}
-											>
-												<Icon name="chart-bar" size="sm" />
-												<span>{m.stats_view()}</span>
-											</ListItemButton>
-										</DropdownList>
-									{/if}
-								</Dropdown>
-							</div>
-
-							<!-- Large screens: Individual buttons -->
-							<div class="hidden md:flex items-center gap-2">
-								<!-- Perspective selector -->
-								<div class="relative">
-									<IconButton
-										bind:ref={perspectiveButtonRef}
-										theme="dark"
-										size="md"
-										active={!!currentPerspective}
-										onclick={() => showPerspectiveDropdown = !showPerspectiveDropdown}
-										title={m.perspective_view_as()}
-										aria-label={m.perspective_select()}
-									>
-										<Icon name="user" size="md" />
-									</IconButton>
-									
-									<Dropdown
-										anchor={perspectiveButtonRef}
-										open={showPerspectiveDropdown}
-										onClose={() => { showPerspectiveDropdown = false; perspectiveSearchQuery = ''; }}
-									>
-										{@render perspectiveSelectorContent()}
-									</Dropdown>
-								</div>
-
-								<IconButton
-									theme="dark"
-									size="md"
-									active={showMediaGallery}
-									onclick={toggleMediaGallery}
-									title={m.media_gallery_title()}
-									aria-label={m.media_gallery_toggle()}
-								>
-									<Icon name="image" size="md" filled={showMediaGallery} />
-								</IconButton>
-								<IconButton
-									theme="dark"
-									size="md"
-									active={showBookmarks}
-									onclick={toggleBookmarks}
-									title={m.bookmarks_title()}
-									aria-label={m.bookmarks_toggle()}
-								>
-									<Icon name="bookmark" size="md" filled={showBookmarks} />
-								</IconButton>
-								<IconButton
-									theme="dark"
-									size="md"
-									onclick={toggleStats}
-									title={m.stats_view()}
-									aria-label={m.stats_view()}
-								>
-									<Icon name="chart-bar" size="md" />
-								</IconButton>
-							</div>
-
-							<!-- Always visible: Locale and Theme -->
-							<LocaleSwitcher variant="header" />
-							<IconButton
-								theme="dark"
-								size="md" rounded="full"
-								onclick={toggleDarkMode}
-								aria-label={m.toggle_dark_mode()}
-								title={isDarkMode ? m.theme_switch_to_light() : m.theme_switch_to_dark()}
-							>
-								{#if isDarkMode}
-									<Icon name="sun" size="md" class="text-yellow-300" />
-								{:else}
-									<Icon name="moon" size="md" class="text-white/80" />
-								{/if}
-							</IconButton>
-						</div>
-					</div>
-
 					<!-- Search bar -->
 					<div class="p-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
 						<div class="flex items-center gap-2">
@@ -895,8 +915,6 @@ const currentUser = $derived.by(() => {
 					class="gallery-panel w-96 flex-shrink-0 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col {showMediaGallery ? 'gallery-open' : 'gallery-closed'}"
 					class:electron-mac={isElectronMac}
 				>
-					<!-- Header spacer - matches sidebar header -->
-					<div class="h-16 bg-[var(--color-whatsapp-dark-green)] flex-shrink-0"></div>
 					<div class="flex-1 overflow-hidden">
 						<MediaGallery
 							onNavigateToMessage={handleNavigateToMediaMessage}
@@ -910,9 +928,6 @@ const currentUser = $derived.by(() => {
 					class="bookmarks-panel w-80 flex-shrink-0 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col {showBookmarks ? 'bookmarks-open' : 'bookmarks-closed'}"
 					class:electron-mac={isElectronMac}
 				>
-					<!-- Bookmarks header - matches sidebar header -->
-					<div class="h-16 bg-[var(--color-whatsapp-dark-green)] flex-shrink-0"></div>
-					
 					<!-- Bookmarks content -->
 					<div class="flex-1 overflow-hidden">
 						<BookmarksPanel
@@ -992,34 +1007,16 @@ const currentUser = $derived.by(() => {
 				</Modal>
 			{:else}
 				<!-- No chat selected -->
-				<div class="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
-					<div class="h-16 px-4 flex items-center bg-[var(--color-whatsapp-dark-green)] flex-shrink-0">
-						<!-- Sidebar toggle button -->
-						<IconButton
-							theme="dark"
-							size="md"
-							class="-ml-2"
-							onclick={toggleSidebar}
-							aria-label={m.sidebar_toggle()}
-							title={m.sidebar_toggle()}
-						>
-							{#if showSidebar}
-								<Icon name="chevron-left" size="md" />
-							{:else}
-								<Icon name="menu" size="md" />
-							{/if}
-						</IconButton>
-					</div>
-					<div class="flex-1 flex items-center justify-center">
-						<div class="text-center text-gray-500 dark:text-gray-400">
-							<Icon name="chat" size="2xl" class="mx-auto mb-4 opacity-50" />
-							<p>{m.chat_select()}</p>
-						</div>
+				<div class="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+					<div class="text-center text-gray-500 dark:text-gray-400">
+						<Icon name="chat" size="2xl" class="mx-auto mb-4 opacity-50" />
+						<p>{m.chat_select()}</p>
 					</div>
 				</div>
 			{/if}
 		</div>
-	{/if}
+	</div>
+{/if}
 </div>
 
 <!-- Auto-update toast notification (Electron only) -->
