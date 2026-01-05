@@ -1,3 +1,10 @@
+# [1.29.0](https://github.com/rodrigogs/whats-reader/compare/v1.28.0...v1.29.0) (2026-01-05)
+
+
+### Features
+
+* improve bookmark button positioning and UI responsiveness ([68327cb](https://github.com/rodrigogs/whats-reader/commit/68327cb6d0119ce28ea1d66828a66f272199bc85))
+
 # [1.28.0](https://github.com/rodrigogs/whats-reader/compare/v1.27.0...v1.28.0) (2026-01-05)
 
 
