@@ -631,7 +631,7 @@ const currentUser = $derived.by(() => {
 						<!-- Actions -->
 						<div class="flex items-center gap-2">
 							<!-- Small screens: Options menu -->
-							<div class="md:hidden">
+							<div class="md:hidden relative">
 								<IconButton
 									bind:ref={chatOptionsButtonRef}
 									theme="dark"
@@ -646,51 +646,90 @@ const currentUser = $derived.by(() => {
 								<Dropdown
 									anchor={chatOptionsButtonRef}
 									open={showChatOptionsDropdown}
-									onClose={() => showChatOptionsDropdown = false}
+									onClose={() => {
+										showChatOptionsDropdown = false;
+										showPerspectiveDropdown = false;
+										perspectiveSearchQuery = '';
+									}}
 									width="w-56"
 									placement="bottom-end"
 								>
-									<DropdownList>
-										<ListItemButton
-											active={!!currentPerspective}
-											onclick={() => {
-												showChatOptionsDropdown = false;
-												showPerspectiveDropdown = true;
-											}}
-										>
-											<Icon name="user" size="sm" />
-											<span>{m.perspective_view_as()}</span>
-										</ListItemButton>
-										<ListItemButton
-											active={showMediaGallery}
-											onclick={() => {
-												showChatOptionsDropdown = false;
-												toggleMediaGallery();
-											}}
-										>
-											<Icon name="image" size="sm" />
-											<span>{m.media_gallery_title()}</span>
-										</ListItemButton>
-										<ListItemButton
-											active={showBookmarks}
-											onclick={() => {
-												showChatOptionsDropdown = false;
-												toggleBookmarks();
-											}}
-										>
-											<Icon name="bookmark" size="sm" />
-											<span>{m.bookmarks_title()}</span>
-										</ListItemButton>
-										<ListItemButton
-											onclick={() => {
-												showChatOptionsDropdown = false;
-												toggleStats();
-											}}
-										>
-											<Icon name="chart-bar" size="sm" />
-											<span>{m.stats_view()}</span>
-										</ListItemButton>
-									</DropdownList>
+									{#if showPerspectiveDropdown}
+										<!-- Perspective selector view -->
+										<DropdownHeader title={m.perspective_view_as()} />
+										
+										<DropdownSearch
+											bind:value={perspectiveSearchQuery}
+											bind:ref={perspectiveSearchInputRef}
+											placeholder={m.perspective_search_placeholder()}
+										/>
+										
+										<DropdownList>
+											{#if !perspectiveSearchQuery}
+												<ListItemButton
+													active={currentPerspective === null}
+													onclick={() => selectPerspective(null)}
+												>
+													<span class="w-5 text-center">{currentPerspective === null ? '✓' : ''}</span>
+													<span class="italic">{m.perspective_none()}</span>
+												</ListItemButton>
+											{/if}
+											{#each filteredParticipants as participant}
+												<ListItemButton
+													active={currentPerspective === participant}
+													onclick={() => selectPerspective(participant)}
+												>
+													<span class="w-5 text-center">{currentPerspective === participant ? '✓' : ''}</span>
+													<span class="truncate">{participant}</span>
+												</ListItemButton>
+											{/each}
+											{#if filteredParticipants.length === 0 && perspectiveSearchQuery}
+												<div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 italic">
+													{m.perspective_no_match({ query: perspectiveSearchQuery })}
+												</div>
+											{/if}
+										</DropdownList>
+									{:else}
+										<!-- Main options menu -->
+										<DropdownList>
+											<ListItemButton
+												active={!!currentPerspective}
+												onclick={() => showPerspectiveDropdown = true}
+											>
+												<Icon name="user" size="sm" />
+												<span>{m.perspective_view_as()}</span>
+											</ListItemButton>
+											<ListItemButton
+												active={showMediaGallery}
+												onclick={() => {
+													showChatOptionsDropdown = false;
+													toggleMediaGallery();
+												}}
+											>
+												<Icon name="image" size="sm" />
+												<span>{m.media_gallery_title()}</span>
+											</ListItemButton>
+											<ListItemButton
+												active={showBookmarks}
+												onclick={() => {
+													showChatOptionsDropdown = false;
+													toggleBookmarks();
+												}}
+											>
+												<Icon name="bookmark" size="sm" />
+												<span>{m.bookmarks_title()}</span>
+											</ListItemButton>
+											<ListItemButton
+												onclick={() => {
+													showChatOptionsDropdown = false;
+													toggleStats();
+												}}
+											>
+												<Icon name="chart-bar" size="sm" />
+												<span>{m.stats_view()}</span>
+											</ListItemButton>
+										</DropdownList>
+									{/if}
 								</Dropdown>
 							</div>
 
