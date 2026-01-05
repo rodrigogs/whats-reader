@@ -2,6 +2,7 @@
 import { tick } from 'svelte';
 import { browser } from '$app/environment';
 import { floating } from '$lib/actions/floating';
+import favicon from '$lib/assets/favicon.svg';
 import { getAutoUpdaterState, initAutoUpdater } from '$lib/auto-updater.svelte';
 import {
 	ChatList,
@@ -459,7 +460,7 @@ const currentUser = $derived.by(() => {
 					<!-- Logo and title -->
 					<div class="text-center mb-6">
 						<div class="w-32 h-32 mx-auto mb-4">
-							<img src="/favicon.svg" alt="WhatsApp Backup Reader" class="w-full h-full" />
+							<img src={favicon} alt="WhatsApp Backup Reader" class="w-full h-full" />
 						</div>
 						<h1 class="text-2xl font-bold text-gray-800 dark:text-white mb-1">
 							{m.app_title()}
