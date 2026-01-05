@@ -1,3 +1,15 @@
+# [1.25.0](https://github.com/rodrigogs/whats-reader/compare/v1.24.0...v1.25.0) (2026-01-05)
+
+
+### Bug Fixes
+
+* update package-lock.json to resolve picomatch dependency conflict ([98af4c9](https://github.com/rodrigogs/whats-reader/commit/98af4c9c8c8432f1f841a8f76217f7d3b85f885c))
+
+
+### Features
+
+* add multiselect filters for media gallery ([#49](https://github.com/rodrigogs/whats-reader/issues/49)) ([3cd58e3](https://github.com/rodrigogs/whats-reader/commit/3cd58e36b406f67309b737bfab0eac6afd297a25))
+
 # [1.24.0](https://github.com/rodrigogs/whats-reader/compare/v1.23.0...v1.24.0) (2026-01-04)
 
 
