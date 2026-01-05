@@ -192,19 +192,23 @@ function createGalleryState() {
 	}
 
 	function toggleParticipantFilter(participant: string): void {
-		if (filterParticipants.includes(participant)) {
-			filterParticipants = filterParticipants.filter((p) => p !== participant);
+		const set = new Set(filterParticipants);
+		if (set.has(participant)) {
+			set.delete(participant);
 		} else {
-			filterParticipants = [...filterParticipants, participant];
+			set.add(participant);
 		}
+		filterParticipants = Array.from(set);
 	}
 
 	function toggleTypeFilter(type: MediaTypeFilter): void {
-		if (filterTypes.includes(type)) {
-			filterTypes = filterTypes.filter((t) => t !== type);
+		const set = new Set(filterTypes);
+		if (set.has(type)) {
+			set.delete(type);
 		} else {
-			filterTypes = [...filterTypes, type];
+			set.add(type);
 		}
+		filterTypes = Array.from(set);
 	}
 
 	function clearFilters(): void {
