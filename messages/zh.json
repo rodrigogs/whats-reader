@@ -244,5 +244,5 @@
   "media_gallery_filter_active": "过滤器已激活",
   "media_gallery_clear_filter": "清除过滤器",
   "media_gallery_participant_search_placeholder": "按名称或编号搜索……",
-  "media_gallery_participant_no_match": "没有参与者匹配“ {query}"
+  "media_gallery_participant_no_match": "没有参与者匹配\"{query}\""
 }
