@@ -21,6 +21,11 @@ export interface ChatMessage {
 		| 'contact'
 		| 'location';
 	rawLine: string;
+	// Quoted/replied message info
+	quotedMessage?: {
+		sender: string;
+		content: string;
+	};
 }
 
 export interface ParsedChat {

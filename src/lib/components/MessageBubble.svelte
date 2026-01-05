@@ -174,27 +174,87 @@ $effect(() => {
 
 // Highlight search terms in text (safe from XSS)
 function highlightText(text: string, query: string): string {
-	if (!query.trim()) return escapeHtml(text);
+	if (!query.trim()) return linkifyText(text);
 
-	// Search on original text, then escape parts between matches
-	const regex = new RegExp(escapeRegex(query), 'gi');
-	let lastIndex = 0;
-	let result = '';
+	// First, detect URLs and mark their positions
+	const urlRegex = /(https?:\/\/[^\s]+)/g;
+	const urls: { start: number; end: number; url: string }[] = [];
 	let match;
-	while ((match = regex.exec(text)) !== null) {
-		// Prevent infinite loop if regex matches empty string
+	while ((match = urlRegex.exec(text)) !== null) {
+		urls.push({
+			start: match.index,
+			end: match.index + match[0].length,
+			url: match[0],
+		});
+	}
+
+	// Search for query matches
+	const searchRegex = new RegExp(escapeRegex(query), 'gi');
+	const searchMatches: { start: number; end: number; text: string }[] = [];
+	while ((match = searchRegex.exec(text)) !== null) {
 		if (match[0].length === 0) {
-			regex.lastIndex++;
+			searchRegex.lastIndex++;
 			continue;
 		}
-		// Add text before the match, escaped
-		result += escapeHtml(text.slice(lastIndex, match.index));
-		// Add the matched text, escaped and wrapped in <mark>
-		result += `<mark class="bg-yellow-300 dark:bg-yellow-600 rounded px-0.5">${escapeHtml(match[0])}</mark>`;
-		lastIndex = match.index + match[0].length;
+		searchMatches.push({
+			start: match.index,
+			end: match.index + match[0].length,
+			text: match[0],
+		});
 	}
-	// Add the rest of the text, escaped
-	result += escapeHtml(text.slice(lastIndex));
+
+	// Build result by processing text in order
+	let result = '';
+	let lastIndex = 0;
+
+	// Combine and sort all markers
+	const markers: Array<
+		| { type: 'url'; pos: number; data: { start: number; end: number; url: string } }
+		| { type: 'search'; pos: number; data: { start: number; end: number; text: string } }
+	> = [];
+
+	urls.forEach((url) => {
+		markers.push({ type: 'url', pos: url.start, data: url });
+	});
+
+	searchMatches.forEach((search) => {
+		markers.push({ type: 'search', pos: search.start, data: search });
+	});
+
+	markers.sort((a, b) => a.pos - b.pos);
+
+	markers.forEach((marker) => {
+		if (marker.type === 'url') {
+			// Add text before URL
+			if (marker.data.start > lastIndex) {
+				result += escapeHtml(text.slice(lastIndex, marker.data.start));
+			}
+			// Add URL as link
+			const url = marker.data.url;
+			result += `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="text-[#00897B] dark:text-[#4FC3F7] underline break-all hover:text-[#00695C] dark:hover:text-[#29B6F6]">${escapeHtml(url)}</a>`;
+			lastIndex = marker.data.end;
+		} else if (marker.type === 'search') {
+			// Skip if inside a URL
+			const insideUrl = urls.some(
+				(url) => marker.data.start >= url.start && marker.data.end <= url.end,
+			);
+			if (insideUrl) return;
+
+			// Add text before match
+			if (marker.data.start > lastIndex) {
+				result += escapeHtml(text.slice(lastIndex, marker.data.start));
+			}
+			// Add highlighted match
+			result += `<mark class="bg-yellow-300 dark:bg-yellow-600 rounded px-0.5">${escapeHtml(marker.data.text)}</mark>`;
+			lastIndex = marker.data.end;
+		}
+	});
+
+	// Add remaining text
+	if (lastIndex < text.length) {
+		result += escapeHtml(text.slice(lastIndex));
+	}
+
 	return result;
 }
 
@@ -209,6 +269,27 @@ function escapeHtml(text: string): string {
 
 function escapeRegex(str: string): string {
 	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Convert URLs in text to clickable links
+function linkifyText(text: string): string {
+	const urlRegex = /(https?:\/\/[^\s]+)/g;
+	let lastIndex = 0;
+	let result = '';
+	let match;
+	
+	while ((match = urlRegex.exec(text)) !== null) {
+		// Add text before the URL, escaped
+		result += escapeHtml(text.slice(lastIndex, match.index));
+		// Add the URL as a clickable link, escaped
+		const url = match[0];
+		result += `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="text-[#00897B] dark:text-[#4FC3F7] underline break-all hover:text-[#00695C] dark:hover:text-[#29B6F6]">${escapeHtml(url)}</a>`;
+		lastIndex = match.index + url.length;
+	}
+	
+	// Add the rest of the text, escaped
+	result += escapeHtml(text.slice(lastIndex));
+	return result;
 }
 
 async function loadMedia() {
@@ -497,7 +578,7 @@ async function transcribeVoiceMessage() {
 					{#if searchQuery && isSearchMatch}
 						{@html highlightText(message.content, searchQuery)}
 					{:else}
-						{message.content}
+						{@html linkifyText(message.content)}
 					{/if}
 				</p>
 			{/if}
