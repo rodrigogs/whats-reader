@@ -738,21 +738,23 @@ const currentUser = $derived.by(() => {
 							>
 								<Icon name="chart-bar" size="md" />
 							</IconButton>
-							<LocaleSwitcher variant="header" />
-							<IconButton
-								theme="dark"
-								size="md" rounded="full"
-								onclick={toggleDarkMode}
-								aria-label={m.toggle_dark_mode()}
-								title={isDarkMode ? m.theme_switch_to_light() : m.theme_switch_to_dark()}
-							>
-								{#if isDarkMode}
-									<Icon name="sun" size="md" class="text-yellow-300" />
-								{:else}
-									<Icon name="moon" size="md" class="text-white/80" />
-								{/if}
-							</IconButton>
 						</div>
+
+						<!-- Theme toggle and language selector (always visible) -->
+						<LocaleSwitcher variant="header" />
+						<IconButton
+							theme="dark"
+							size="md" rounded="full"
+							onclick={toggleDarkMode}
+							aria-label={m.toggle_dark_mode()}
+							title={isDarkMode ? m.theme_switch_to_light() : m.theme_switch_to_dark()}
+						>
+							{#if isDarkMode}
+								<Icon name="sun" size="md" class="text-yellow-300" />
+							{:else}
+								<Icon name="moon" size="md" class="text-white/80" />
+							{/if}
+						</IconButton>
 					</div>
 				</div>
 			{:else}

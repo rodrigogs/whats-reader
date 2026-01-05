@@ -88,9 +88,7 @@ $effect(() => {
 });
 
 const bubbleClass = $derived(
-	isOwn
-		? 'bg-[var(--color-message-out)] ml-auto'
-		: 'bg-[var(--color-message-in)] mr-auto',
+	isOwn ? 'bg-[var(--color-message-out)]' : 'bg-[var(--color-message-in)]',
 );
 
 // Use wider bubble for audio messages to fit the audio player
@@ -209,8 +207,16 @@ function highlightText(text: string, query: string): string {
 
 	// Combine and sort all markers
 	const markers: Array<
-		| { type: 'url'; pos: number; data: { start: number; end: number; url: string } }
-		| { type: 'search'; pos: number; data: { start: number; end: number; text: string } }
+		| {
+				type: 'url';
+				pos: number;
+				data: { start: number; end: number; url: string };
+		  }
+		| {
+				type: 'search';
+				pos: number;
+				data: { start: number; end: number; text: string };
+		  }
 	> = [];
 
 	urls.forEach((url) => {
@@ -277,7 +283,7 @@ function linkifyText(text: string): string {
 	let lastIndex = 0;
 	let result = '';
 	let match;
-	
+
 	while ((match = urlRegex.exec(text)) !== null) {
 		// Add text before the URL, escaped
 		result += escapeHtml(text.slice(lastIndex, match.index));
@@ -286,7 +292,7 @@ function linkifyText(text: string): string {
 		result += `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="text-[#00897B] dark:text-[#4FC3F7] underline break-all hover:text-[#00695C] dark:hover:text-[#29B6F6]">${escapeHtml(url)}</a>`;
 		lastIndex = match.index + url.length;
 	}
-	
+
 	// Add the rest of the text, escaped
 	result += escapeHtml(text.slice(lastIndex));
 	return result;
@@ -326,6 +332,22 @@ async function transcribeVoiceMessage() {
 }
 </script>
 
+{#snippet bookmarkButton(isBookmarked: boolean, className: string)}
+	<button
+		type="button"
+		class="bookmark-btn p-1 rounded cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 {className}"
+		class:bookmarked={isBookmarked}
+		onclick={handleBookmarkClick}
+		title={isBookmarked ? 'Edit bookmark' : 'Add bookmark'}
+	>
+		{#if isBookmarked}
+		<Icon name="bookmark" size="sm" class="text-[var(--color-whatsapp-teal)]" filled />
+		{:else}
+		<Icon name="bookmark-outline" size="sm" class="text-gray-400 dark:text-gray-500" />
+		{/if}
+	</button>
+{/snippet}
+
 {#if message.isSystemMessage}
 	<!-- System message -->
 	{@const isBookmarked = bookmarkedMessageIds.has(message.id)}
@@ -340,19 +362,7 @@ async function transcribeVoiceMessage() {
 			</div>
 			<!-- Bookmark button for system messages -->
 			<div class="flex items-center ml-1 self-center">
-				<button
-					type="button"
-					class="bookmark-btn p-1 rounded cursor-pointer hover:bg-black/10 dark:hover:bg-white/10"
-					class:bookmarked={isBookmarked}
-					onclick={handleBookmarkClick}
-					title={isBookmarked ? 'Edit bookmark' : 'Add bookmark'}
-				>
-					{#if isBookmarked}
-					<Icon name="bookmark" size="sm" class="text-[var(--color-whatsapp-teal)]" filled />
-					{:else}
-					<Icon name="bookmark-outline" size="sm" class="text-gray-400 dark:text-gray-500" />
-					{/if}
-				</button>
+				{@render bookmarkButton(isBookmarked, '')}
 			</div>
 		</div>
 	</div>
@@ -363,21 +373,7 @@ async function transcribeVoiceMessage() {
 		<div class="message-container flex {isOwn ? 'justify-end' : 'justify-start'} mb-1 group">
 		<!-- Bookmark button (left side for own messages) -->
 		{#if isOwn}
-			<div class="flex items-center mr-1 self-center">
-				<button
-					type="button"
-					class="bookmark-btn p-1 rounded cursor-pointer hover:bg-black/10 dark:hover:bg-white/10"
-					class:bookmarked={isBookmarked}
-					onclick={handleBookmarkClick}
-					title={isBookmarked ? 'Edit bookmark' : 'Add bookmark'}
-				>
-					{#if isBookmarked}
-					<Icon name="bookmark" size="sm" class="text-[var(--color-whatsapp-teal)]" filled />
-					{:else}
-					<Icon name="bookmark-outline" size="sm" class="text-gray-400 dark:text-gray-500" />
-					{/if}
-				</button>
-			</div>
+			{@render bookmarkButton(isBookmarked, 'mr-1 self-center')}
 		{/if}
 
 		<div
@@ -593,21 +589,7 @@ async function transcribeVoiceMessage() {
 
 		<!-- Bookmark button (right side for other's messages) -->
 		{#if !isOwn}
-			<div class="flex items-center ml-1 self-center">
-				<button
-					type="button"
-					class="bookmark-btn p-1 rounded cursor-pointer hover:bg-black/10 dark:hover:bg-white/10"
-					class:bookmarked={isBookmarked}
-					onclick={handleBookmarkClick}
-					title={isBookmarked ? 'Edit bookmark' : 'Add bookmark'}
-				>
-					{#if isBookmarked}
-					<Icon name="bookmark" size="sm" class="text-[var(--color-whatsapp-teal)]" filled />
-				{:else}
-					<Icon name="bookmark-outline" size="sm" class="text-gray-400 dark:text-gray-500" />
-				{/if}
-				</button>
-			</div>
+			{@render bookmarkButton(isBookmarked, 'ml-1 self-center')}
 		{/if}
 		</div>
 	</div>
