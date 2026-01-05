@@ -76,9 +76,13 @@ function createGalleryState() {
 	let lastChatTitle = $state<string | null>(null);
 	let scrollToDateKey = $state<DateKey | null>(null);
 
-	// Filter state
-	let filterParticipants = $state<string[]>([]);
-	let filterTypes = $state<MediaTypeFilter[]>([]);
+	// Filter state (stored as Sets internally for O(1) operations)
+	let filterParticipantsSet = $state<Set<string>>(new Set());
+	let filterTypesSet = $state<Set<MediaTypeFilter>>(new Set());
+
+	// Expose filters as arrays for external consumption
+	const filterParticipants = $derived(Array.from(filterParticipantsSet));
+	const filterTypes = $derived(Array.from(filterTypesSet));
 
 	/** All items (unfiltered) */
 	const allItems = $derived.by(() => {
@@ -105,17 +109,17 @@ function createGalleryState() {
 		let result = allItems;
 
 		// Filter by participants
-		if (filterParticipants.length > 0) {
+		if (filterParticipantsSet.size > 0) {
 			result = result.filter((item) =>
 				item.messageSender
-					? filterParticipants.includes(item.messageSender)
+					? filterParticipantsSet.has(item.messageSender)
 					: false,
 			);
 		}
 
 		// Filter by types
-		if (filterTypes.length > 0) {
-			result = result.filter((item) => filterTypes.includes(item.type));
+		if (filterTypesSet.size > 0) {
+			result = result.filter((item) => filterTypesSet.has(item.type));
 		}
 
 		return result;
@@ -123,7 +127,7 @@ function createGalleryState() {
 
 	/** Whether any filter is active */
 	const hasActiveFilter = $derived(
-		filterParticipants.length > 0 || filterTypes.length > 0,
+		filterParticipantsSet.size > 0 || filterTypesSet.size > 0,
 	);
 
 	/** Items grouped by date (YYYY-MM-DD), sorted newest first */
@@ -187,33 +191,31 @@ function createGalleryState() {
 		lightboxMediaPath = null;
 		lastChatTitle = currentTitle;
 		// Reset filters when changing chats
-		filterParticipants = [];
-		filterTypes = [];
+		filterParticipantsSet = new Set();
+		filterTypesSet = new Set();
 	}
 
 	function toggleParticipantFilter(participant: string): void {
-		const set = new Set(filterParticipants);
-		if (set.has(participant)) {
-			set.delete(participant);
+		if (filterParticipantsSet.has(participant)) {
+			filterParticipantsSet.delete(participant);
 		} else {
-			set.add(participant);
+			filterParticipantsSet.add(participant);
 		}
-		filterParticipants = Array.from(set);
+		filterParticipantsSet = new Set(filterParticipantsSet);
 	}
 
 	function toggleTypeFilter(type: MediaTypeFilter): void {
-		const set = new Set(filterTypes);
-		if (set.has(type)) {
-			set.delete(type);
+		if (filterTypesSet.has(type)) {
+			filterTypesSet.delete(type);
 		} else {
-			set.add(type);
+			filterTypesSet.add(type);
 		}
-		filterTypes = Array.from(set);
+		filterTypesSet = new Set(filterTypesSet);
 	}
 
 	function clearFilters(): void {
-		filterParticipants = [];
-		filterTypes = [];
+		filterParticipantsSet = new Set();
+		filterTypesSet = new Set();
 	}
 
 	function isSelected(path: string): boolean {
