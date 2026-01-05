@@ -1,3 +1,10 @@
+# [1.27.0](https://github.com/rodrigogs/whats-reader/compare/v1.26.1...v1.27.0) (2026-01-05)
+
+
+### Features
+
+* improve social media preview images with app logo ([f0c4c26](https://github.com/rodrigogs/whats-reader/commit/f0c4c268d18c7728ddcde4e8ab72b2f030464e7c))
+
 ## [1.26.1](https://github.com/rodrigogs/whats-reader/compare/v1.26.0...v1.26.1) (2026-01-05)
 
 
