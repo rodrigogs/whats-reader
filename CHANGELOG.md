@@ -1,3 +1,10 @@
+# [1.28.0](https://github.com/rodrigogs/whats-reader/compare/v1.27.0...v1.28.0) (2026-01-05)
+
+
+### Features
+
+* add clickable links with WhatsApp-style colors in chat bubbles ([94ec4a3](https://github.com/rodrigogs/whats-reader/commit/94ec4a3f3f6c5170bb13bb1a3c2f840c9e9cbc45)), closes [#00897](https://github.com/rodrigogs/whats-reader/issues/00897) [#4FC3F7](https://github.com/rodrigogs/whats-reader/issues/4FC3F7)
+
 # [1.27.0](https://github.com/rodrigogs/whats-reader/compare/v1.26.1...v1.27.0) (2026-01-05)
 
 
