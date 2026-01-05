@@ -244,5 +244,5 @@
   "media_gallery_filter_active": "Filtro attivo",
   "media_gallery_clear_filter": "Cancella filtro",
   "media_gallery_participant_search_placeholder": "Cerca per nome o numero...",
-  "media_gallery_participant_no_match": "Nessun partecipante corrisponde a \" {query} \""
+  "media_gallery_participant_no_match": "Nessun partecipante corrisponde a \"{query}\""
 }

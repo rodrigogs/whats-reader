@@ -244,5 +244,5 @@
   "media_gallery_filter_active": "Фильтр активен",
   "media_gallery_clear_filter": "Очистить фильтр",
   "media_gallery_participant_search_placeholder": "Поиск по имени или номеру...",
-  "media_gallery_participant_no_match": "Ни один участник не соответствует \" {query} \""
+  "media_gallery_participant_no_match": "Ни один участник не соответствует \"{query}\""
 }

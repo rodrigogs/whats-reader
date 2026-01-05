@@ -244,5 +244,5 @@
   "media_gallery_filter_active": "フィルターが有効",
   "media_gallery_clear_filter": "フィルターをクリア",
   "media_gallery_participant_search_placeholder": "名前または番号で検索...",
-  "media_gallery_participant_no_match": "「 {query} 」に一致する参加者はいません"
+  "media_gallery_participant_no_match": "「{query}」に一致する参加者はいません"
 }

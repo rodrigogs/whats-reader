@@ -244,5 +244,5 @@
   "media_gallery_filter_active": "Actief filter",
   "media_gallery_clear_filter": "Filter wissen",
   "media_gallery_participant_search_placeholder": "Zoeken op naam of nummer...",
-  "media_gallery_participant_no_match": "Geen deelnemer komt overeen met \" {query} \""
+  "media_gallery_participant_no_match": "Geen deelnemer komt overeen met \"{query}\""
 }
