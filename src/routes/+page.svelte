@@ -665,43 +665,6 @@ const currentUser = $derived.by(() => {
 							</button>
 						</div>
 
-						<!-- Perspective selector snippet for reuse -->
-						{#snippet perspectiveSelectorContent()}
-							<DropdownHeader title={m.perspective_view_as()} />
-							
-							<DropdownSearch
-								bind:value={perspectiveSearchQuery}
-								bind:ref={perspectiveSearchInputRef}
-								placeholder={m.perspective_search_placeholder()}
-							/>
-							
-							<DropdownList>
-								{#if !perspectiveSearchQuery}
-									<ListItemButton
-										active={currentPerspective === null}
-										onclick={() => selectPerspective(null)}
-									>
-										<span class="w-5 text-center">{currentPerspective === null ? '✓' : ''}</span>
-										<span class="italic">{m.perspective_none()}</span>
-									</ListItemButton>
-								{/if}
-								{#each filteredParticipants as participant}
-									<ListItemButton
-										active={currentPerspective === participant}
-										onclick={() => selectPerspective(participant)}
-									>
-										<span class="w-5 text-center">{currentPerspective === participant ? '✓' : ''}</span>
-										<span class="truncate">{participant}</span>
-									</ListItemButton>
-								{/each}
-								{#if filteredParticipants.length === 0 && perspectiveSearchQuery}
-									<div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 italic">
-										{m.perspective_no_match({ query: perspectiveSearchQuery })}
-									</div>
-								{/if}
-							</DropdownList>
-						{/snippet}
-
 						<!-- Actions -->
 						<div class="flex items-center gap-2">
 							<!-- Small screens: Options menu -->
