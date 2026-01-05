@@ -101,6 +101,8 @@ function closeParticipantsModal() {
 }
 let showPerspectiveDropdown = $state(false);
 let perspectiveSearchQuery = $state('');
+let showChatOptionsDropdown = $state(false);
+let chatOptionsButtonRef = $state<HTMLButtonElement | null>(null);
 
 // Loading chats state - shows placeholder items while importing
 interface LoadingChat {
@@ -628,90 +630,159 @@ const currentUser = $derived.by(() => {
 
 						<!-- Actions -->
 						<div class="flex items-center gap-2">
-							<!-- Perspective selector -->
-							<div class="relative">
+							<!-- Small screens: Options menu -->
+							<div class="md:hidden">
 								<IconButton
-									bind:ref={perspectiveButtonRef}
+									bind:ref={chatOptionsButtonRef}
 									theme="dark"
 									size="md"
-									active={!!currentPerspective}
-									onclick={() => showPerspectiveDropdown = !showPerspectiveDropdown}
-									title={m.perspective_view_as()}
-									aria-label={m.perspective_select()}
+									onclick={() => showChatOptionsDropdown = !showChatOptionsDropdown}
+									title={m.chat_options()}
+									aria-label={m.chat_options()}
 								>
-									<Icon name="user" size="md" />
+									<Icon name="dots-vertical" size="md" />
 								</IconButton>
 								
 								<Dropdown
-									anchor={perspectiveButtonRef}
-									open={showPerspectiveDropdown}
-									onClose={() => { showPerspectiveDropdown = false; perspectiveSearchQuery = ''; }}
+									anchor={chatOptionsButtonRef}
+									open={showChatOptionsDropdown}
+									onClose={() => showChatOptionsDropdown = false}
+									width="w-56"
+									placement="bottom-end"
 								>
-									<DropdownHeader title={m.perspective_view_as()} />
-									
-									<DropdownSearch
-										bind:value={perspectiveSearchQuery}
-										bind:ref={perspectiveSearchInputRef}
-										placeholder={m.perspective_search_placeholder()}
-									/>
-									
 									<DropdownList>
-										{#if !perspectiveSearchQuery}
-											<ListItemButton
-												active={currentPerspective === null}
-												onclick={() => selectPerspective(null)}
-											>
-												<span class="w-5 text-center">{currentPerspective === null ? '✓' : ''}</span>
-												<span class="italic">{m.perspective_none()}</span>
-											</ListItemButton>
-										{/if}
-										{#each filteredParticipants as participant}
-											<ListItemButton
-												active={currentPerspective === participant}
-												onclick={() => selectPerspective(participant)}
-											>
-												<span class="w-5 text-center">{currentPerspective === participant ? '✓' : ''}</span>
-												<span class="truncate">{participant}</span>
-											</ListItemButton>
-										{/each}
-										{#if filteredParticipants.length === 0 && perspectiveSearchQuery}
-											<div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 italic">
-												{m.perspective_no_match({ query: perspectiveSearchQuery })}
-											</div>
-										{/if}
+										<ListItemButton
+											active={!!currentPerspective}
+											onclick={() => {
+												showChatOptionsDropdown = false;
+												showPerspectiveDropdown = true;
+											}}
+										>
+											<Icon name="user" size="sm" />
+											<span>{m.perspective_view_as()}</span>
+										</ListItemButton>
+										<ListItemButton
+											active={showMediaGallery}
+											onclick={() => {
+												showChatOptionsDropdown = false;
+												toggleMediaGallery();
+											}}
+										>
+											<Icon name="image" size="sm" />
+											<span>{m.media_gallery_title()}</span>
+										</ListItemButton>
+										<ListItemButton
+											active={showBookmarks}
+											onclick={() => {
+												showChatOptionsDropdown = false;
+												toggleBookmarks();
+											}}
+										>
+											<Icon name="bookmark" size="sm" />
+											<span>{m.bookmarks_title()}</span>
+										</ListItemButton>
+										<ListItemButton
+											onclick={() => {
+												showChatOptionsDropdown = false;
+												toggleStats();
+											}}
+										>
+											<Icon name="chart-bar" size="sm" />
+											<span>{m.stats_view()}</span>
+										</ListItemButton>
 									</DropdownList>
 								</Dropdown>
 							</div>
 
-							<IconButton
-								theme="dark"
-								size="md"
-								active={showMediaGallery}
-								onclick={toggleMediaGallery}
-								title={m.media_gallery_title()}
-								aria-label={m.media_gallery_toggle()}
-							>
-								<Icon name="image" size="md" filled={showMediaGallery} />
-							</IconButton>
-							<IconButton
-								theme="dark"
-								size="md"
-								active={showBookmarks}
-								onclick={toggleBookmarks}
-								title={m.bookmarks_title()}
-								aria-label={m.bookmarks_toggle()}
-							>
-								<Icon name="bookmark" size="md" filled={showBookmarks} />
-							</IconButton>
-							<IconButton
-								theme="dark"
-								size="md"
-								onclick={toggleStats}
-								title={m.stats_view()}
-								aria-label={m.stats_view()}
-							>
-								<Icon name="chart-bar" size="md" />
-							</IconButton>
+							<!-- Large screens: Individual buttons -->
+							<div class="hidden md:flex items-center gap-2">
+								<!-- Perspective selector -->
+								<div class="relative">
+									<IconButton
+										bind:ref={perspectiveButtonRef}
+										theme="dark"
+										size="md"
+										active={!!currentPerspective}
+										onclick={() => showPerspectiveDropdown = !showPerspectiveDropdown}
+										title={m.perspective_view_as()}
+										aria-label={m.perspective_select()}
+									>
+										<Icon name="user" size="md" />
+									</IconButton>
+									
+									<Dropdown
+										anchor={perspectiveButtonRef}
+										open={showPerspectiveDropdown}
+										onClose={() => { showPerspectiveDropdown = false; perspectiveSearchQuery = ''; }}
+									>
+										<DropdownHeader title={m.perspective_view_as()} />
+										
+										<DropdownSearch
+											bind:value={perspectiveSearchQuery}
+											bind:ref={perspectiveSearchInputRef}
+											placeholder={m.perspective_search_placeholder()}
+										/>
+										
+										<DropdownList>
+											{#if !perspectiveSearchQuery}
+												<ListItemButton
+													active={currentPerspective === null}
+													onclick={() => selectPerspective(null)}
+												>
+													<span class="w-5 text-center">{currentPerspective === null ? '✓' : ''}</span>
+													<span class="italic">{m.perspective_none()}</span>
+												</ListItemButton>
+											{/if}
+											{#each filteredParticipants as participant}
+												<ListItemButton
+													active={currentPerspective === participant}
+													onclick={() => selectPerspective(participant)}
+												>
+													<span class="w-5 text-center">{currentPerspective === participant ? '✓' : ''}</span>
+													<span class="truncate">{participant}</span>
+												</ListItemButton>
+											{/each}
+											{#if filteredParticipants.length === 0 && perspectiveSearchQuery}
+												<div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 italic">
+													{m.perspective_no_match({ query: perspectiveSearchQuery })}
+												</div>
+											{/if}
+										</DropdownList>
+									</Dropdown>
+								</div>
+
+								<IconButton
+									theme="dark"
+									size="md"
+									active={showMediaGallery}
+									onclick={toggleMediaGallery}
+									title={m.media_gallery_title()}
+									aria-label={m.media_gallery_toggle()}
+								>
+									<Icon name="image" size="md" filled={showMediaGallery} />
+								</IconButton>
+								<IconButton
+									theme="dark"
+									size="md"
+									active={showBookmarks}
+									onclick={toggleBookmarks}
+									title={m.bookmarks_title()}
+									aria-label={m.bookmarks_toggle()}
+								>
+									<Icon name="bookmark" size="md" filled={showBookmarks} />
+								</IconButton>
+								<IconButton
+									theme="dark"
+									size="md"
+									onclick={toggleStats}
+									title={m.stats_view()}
+									aria-label={m.stats_view()}
+								>
+									<Icon name="chart-bar" size="md" />
+								</IconButton>
+							</div>
+
+							<!-- Always visible: Locale and Theme -->
 							<LocaleSwitcher variant="header" />
 							<IconButton
 								theme="dark"
