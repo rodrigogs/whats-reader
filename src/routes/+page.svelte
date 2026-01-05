@@ -589,6 +589,42 @@ const currentUser = $derived.by(() => {
 
 			<!-- Main content -->
 			{#if appState.selectedChat}
+				{#snippet perspectiveSelectorContent()}
+					<DropdownHeader title={m.perspective_view_as()} />
+					
+					<DropdownSearch
+						bind:value={perspectiveSearchQuery}
+						bind:ref={perspectiveSearchInputRef}
+						placeholder={m.perspective_search_placeholder()}
+					/>
+					
+					<DropdownList>
+						{#if !perspectiveSearchQuery}
+							<ListItemButton
+								active={currentPerspective === null}
+								onclick={() => selectPerspective(null)}
+							>
+								<span class="w-5 text-center">{currentPerspective === null ? '✓' : ''}</span>
+								<span class="italic">{m.perspective_none()}</span>
+							</ListItemButton>
+						{/if}
+						{#each filteredParticipants as participant}
+							<ListItemButton
+								active={currentPerspective === participant}
+								onclick={() => selectPerspective(participant)}
+							>
+								<span class="w-5 text-center">{currentPerspective === participant ? '✓' : ''}</span>
+								<span class="truncate">{participant}</span>
+							</ListItemButton>
+						{/each}
+						{#if filteredParticipants.length === 0 && perspectiveSearchQuery}
+							<div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 italic">
+								{m.perspective_no_match({ query: perspectiveSearchQuery })}
+							</div>
+						{/if}
+					</DropdownList>
+				{/snippet}
+				
 				<div class="flex-1 flex flex-col overflow-hidden">
 					<!-- Chat header -->
 					<div class="h-16 px-4 flex items-center gap-3 bg-[var(--color-whatsapp-dark-green)] text-white shadow-md flex-shrink-0">
@@ -656,39 +692,7 @@ const currentUser = $derived.by(() => {
 								>
 									{#if showPerspectiveDropdown}
 										<!-- Perspective selector view -->
-										<DropdownHeader title={m.perspective_view_as()} />
-										
-										<DropdownSearch
-											bind:value={perspectiveSearchQuery}
-											bind:ref={perspectiveSearchInputRef}
-											placeholder={m.perspective_search_placeholder()}
-										/>
-										
-										<DropdownList>
-											{#if !perspectiveSearchQuery}
-												<ListItemButton
-													active={currentPerspective === null}
-													onclick={() => selectPerspective(null)}
-												>
-													<span class="w-5 text-center">{currentPerspective === null ? '✓' : ''}</span>
-													<span class="italic">{m.perspective_none()}</span>
-												</ListItemButton>
-											{/if}
-											{#each filteredParticipants as participant}
-												<ListItemButton
-													active={currentPerspective === participant}
-													onclick={() => selectPerspective(participant)}
-												>
-													<span class="w-5 text-center">{currentPerspective === participant ? '✓' : ''}</span>
-													<span class="truncate">{participant}</span>
-												</ListItemButton>
-											{/each}
-											{#if filteredParticipants.length === 0 && perspectiveSearchQuery}
-												<div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 italic">
-													{m.perspective_no_match({ query: perspectiveSearchQuery })}
-												</div>
-											{/if}
-										</DropdownList>
+										{@render perspectiveSelectorContent()}
 									{:else}
 										<!-- Main options menu -->
 										<DropdownList>
@@ -754,39 +758,7 @@ const currentUser = $derived.by(() => {
 										open={showPerspectiveDropdown}
 										onClose={() => { showPerspectiveDropdown = false; perspectiveSearchQuery = ''; }}
 									>
-										<DropdownHeader title={m.perspective_view_as()} />
-										
-										<DropdownSearch
-											bind:value={perspectiveSearchQuery}
-											bind:ref={perspectiveSearchInputRef}
-											placeholder={m.perspective_search_placeholder()}
-										/>
-										
-										<DropdownList>
-											{#if !perspectiveSearchQuery}
-												<ListItemButton
-													active={currentPerspective === null}
-													onclick={() => selectPerspective(null)}
-												>
-													<span class="w-5 text-center">{currentPerspective === null ? '✓' : ''}</span>
-													<span class="italic">{m.perspective_none()}</span>
-												</ListItemButton>
-											{/if}
-											{#each filteredParticipants as participant}
-												<ListItemButton
-													active={currentPerspective === participant}
-													onclick={() => selectPerspective(participant)}
-												>
-													<span class="w-5 text-center">{currentPerspective === participant ? '✓' : ''}</span>
-													<span class="truncate">{participant}</span>
-												</ListItemButton>
-											{/each}
-											{#if filteredParticipants.length === 0 && perspectiveSearchQuery}
-												<div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 italic">
-													{m.perspective_no_match({ query: perspectiveSearchQuery })}
-												</div>
-											{/if}
-										</DropdownList>
+										{@render perspectiveSelectorContent()}
 									</Dropdown>
 								</div>
 
