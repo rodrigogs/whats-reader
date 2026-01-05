@@ -1,3 +1,10 @@
+# [1.26.0](https://github.com/rodrigogs/whats-reader/compare/v1.25.1...v1.26.0) (2026-01-05)
+
+
+### Features
+
+* Add responsive chat header options menu for small screens ([#55](https://github.com/rodrigogs/whats-reader/issues/55)) ([4932bd2](https://github.com/rodrigogs/whats-reader/commit/4932bd21ee0bfd552308e43b41e027e8f20ec6c5)), closes [#56](https://github.com/rodrigogs/whats-reader/issues/56)
+
 ## [1.25.1](https://github.com/rodrigogs/whats-reader/compare/v1.25.0...v1.25.1) (2026-01-05)
 
 
