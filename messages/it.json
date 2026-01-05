@@ -230,5 +230,19 @@
   "stats_hour_6am": "6 del mattino",
   "stats_hour_12pm": "12:00",
   "stats_hour_6pm": "18:00",
-  "stats_hour_11pm": "23:00"
+  "stats_hour_11pm": "23:00",
+  "media_gallery_options": "Opzioni",
+  "media_gallery_filter_by_participant": "Filtra per partecipante",
+  "media_gallery_filter_by_type": "Filtra per tipo",
+  "media_gallery_all_participants": "Tutti i partecipanti",
+  "media_gallery_all_types": "Tutti i tipi",
+  "media_gallery_type_images": "Immagini",
+  "media_gallery_type_videos": "Video",
+  "media_gallery_type_audio": "Audio",
+  "media_gallery_type_documents": "Documenti",
+  "media_gallery_type_other": "Altro",
+  "media_gallery_filter_active": "Filtro attivo",
+  "media_gallery_clear_filter": "Cancella filtro",
+  "media_gallery_participant_search_placeholder": "Cerca per nome o numero...",
+  "media_gallery_participant_no_match": "Nessun partecipante corrisponde a \" {query} \""
 }

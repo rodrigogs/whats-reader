@@ -62,17 +62,70 @@ function toDateKey(timestamp?: string): DateKey | null {
 	return `${year}-${month}-${day}`;
 }
 
+/** Valid media type filter values */
+export type MediaTypeFilter =
+	| 'all'
+	| 'image'
+	| 'video'
+	| 'audio'
+	| 'document'
+	| 'other';
+
 function createGalleryState() {
 	let selectedMediaPaths = $state<Set<string>>(new Set());
 	let lightboxMediaPath = $state<string | null>(null);
 	let lastChatTitle = $state<string | null>(null);
 	let scrollToDateKey = $state<DateKey | null>(null);
 
-	const items = $derived.by(() => {
+	// Filter state
+	let filterParticipants = $state<string[]>([]);
+	let filterTypes = $state<MediaTypeFilter[]>([]);
+
+	/** All items (unfiltered) */
+	const allItems = $derived.by(() => {
 		const chat = appState.selectedChat;
 		if (!chat) return [] as GalleryItem[];
 		return chat.mediaFiles.map(toGalleryItem);
 	});
+
+	/** Unique participants who sent media */
+	const mediaParticipants = $derived.by(() => {
+		const participants = new Set<string>();
+		for (const item of allItems) {
+			if (item.messageSender) {
+				participants.add(item.messageSender);
+			}
+		}
+		return [...participants].sort((a, b) =>
+			a.localeCompare(b, undefined, { sensitivity: 'base' }),
+		);
+	});
+
+	/** Filtered items based on participant and type filters */
+	const items = $derived.by(() => {
+		let result = allItems;
+
+		// Filter by participants
+		if (filterParticipants.length > 0) {
+			result = result.filter((item) =>
+				item.messageSender
+					? filterParticipants.includes(item.messageSender)
+					: false,
+			);
+		}
+
+		// Filter by types
+		if (filterTypes.length > 0) {
+			result = result.filter((item) => filterTypes.includes(item.type));
+		}
+
+		return result;
+	});
+
+	/** Whether any filter is active */
+	const hasActiveFilter = $derived(
+		filterParticipants.length > 0 || filterTypes.length > 0,
+	);
 
 	/** Items grouped by date (YYYY-MM-DD), sorted newest first */
 	const itemsByDate = $derived.by(() => {
@@ -134,6 +187,30 @@ function createGalleryState() {
 		selectedMediaPaths = new Set();
 		lightboxMediaPath = null;
 		lastChatTitle = currentTitle;
+		// Reset filters when changing chats
+		filterParticipants = [];
+		filterTypes = [];
+	}
+
+	function toggleParticipantFilter(participant: string): void {
+		if (filterParticipants.includes(participant)) {
+			filterParticipants = filterParticipants.filter((p) => p !== participant);
+		} else {
+			filterParticipants = [...filterParticipants, participant];
+		}
+	}
+
+	function toggleTypeFilter(type: MediaTypeFilter): void {
+		if (filterTypes.includes(type)) {
+			filterTypes = filterTypes.filter((t) => t !== type);
+		} else {
+			filterTypes = [...filterTypes, type];
+		}
+	}
+
+	function clearFilters(): void {
+		filterParticipants = [];
+		filterTypes = [];
 	}
 
 	function isSelected(path: string): boolean {
@@ -206,6 +283,9 @@ function createGalleryState() {
 		get items() {
 			return items;
 		},
+		get allItems() {
+			return allItems;
+		},
 		get itemsByDate() {
 			return itemsByDate;
 		},
@@ -230,6 +310,18 @@ function createGalleryState() {
 		get scrollToDateKey() {
 			return scrollToDateKey;
 		},
+		get filterParticipants() {
+			return filterParticipants;
+		},
+		get filterTypes() {
+			return filterTypes;
+		},
+		get hasActiveFilter() {
+			return hasActiveFilter;
+		},
+		get mediaParticipants() {
+			return mediaParticipants;
+		},
 
 		syncToChatTitle,
 		isSelected,
@@ -242,6 +334,9 @@ function createGalleryState() {
 		clearScrollToDate,
 		getItemCountForDate,
 		getMediaTypesForDate,
+		toggleParticipantFilter,
+		toggleTypeFilter,
+		clearFilters,
 	};
 }
 

@@ -230,5 +230,19 @@
   "stats_hour_6am": "6 a. m.",
   "stats_hour_12pm": "12 p. m.",
   "stats_hour_6pm": "6 p. m.",
-  "stats_hour_11pm": "23:00"
+  "stats_hour_11pm": "23:00",
+  "media_gallery_options": "Opciones",
+  "media_gallery_filter_by_participant": "Filtrar por participante",
+  "media_gallery_filter_by_type": "Filtrar por tipo",
+  "media_gallery_all_participants": "Todos los participantes",
+  "media_gallery_all_types": "Todos los tipos",
+  "media_gallery_type_images": "Imágenes",
+  "media_gallery_type_videos": "Vídeos",
+  "media_gallery_type_audio": "Audio",
+  "media_gallery_type_documents": "Documentos",
+  "media_gallery_type_other": "Otro",
+  "media_gallery_filter_active": "Filtro activo",
+  "media_gallery_clear_filter": "Limpiar filtro",
+  "media_gallery_participant_search_placeholder": "Buscar por nombre o número...",
+  "media_gallery_participant_no_match": "Ningún participante coincide con \" {query} \""
 }
