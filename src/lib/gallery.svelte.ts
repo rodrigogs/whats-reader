@@ -64,7 +64,6 @@ function toDateKey(timestamp?: string): DateKey | null {
 
 /** Valid media type filter values */
 export type MediaTypeFilter =
-	| 'all'
 	| 'image'
 	| 'video'
 	| 'audio'
