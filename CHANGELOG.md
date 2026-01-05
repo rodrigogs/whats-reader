@@ -1,3 +1,10 @@
+## [1.25.1](https://github.com/rodrigogs/whats-reader/compare/v1.25.0...v1.25.1) (2026-01-05)
+
+
+### Bug Fixes
+
+* logo not displaying on GitHub Pages due to absolute path ([bd47e97](https://github.com/rodrigogs/whats-reader/commit/bd47e97eab50bb27d3b8e1356ca7f09b6eac15f3))
+
 # [1.25.0](https://github.com/rodrigogs/whats-reader/compare/v1.24.0...v1.25.0) (2026-01-05)
 
 
