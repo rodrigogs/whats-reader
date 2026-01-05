@@ -79,7 +79,10 @@ let scrollContainerRef = $state<HTMLElement | null>(null);
 // Auto-focus participant search input when modal opens
 $effect(() => {
 	if (showParticipantFilter && participantSearchInputRef) {
-		setTimeout(() => participantSearchInputRef?.focus(), 50);
+		(async () => {
+			await tick();
+			participantSearchInputRef?.focus();
+		})();
 	}
 });
 
@@ -671,9 +674,14 @@ onDestroy(() => {
 				onclick={() => (showParticipantFilter = false)}
 				aria-label={m.close()}
 			></button>
-			<div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 w-full max-w-sm overflow-hidden">
+			<div
+				class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 w-full max-w-sm overflow-hidden"
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="participant-filter-title"
+			>
 				<div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-					<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">{m.media_gallery_filter_by_participant()}</h3>
+					<h3 id="participant-filter-title" class="text-sm font-semibold text-gray-900 dark:text-gray-100">{m.media_gallery_filter_by_participant()}</h3>
 					<IconButton
 						theme="light"
 						size="sm"
@@ -719,9 +727,14 @@ onDestroy(() => {
 				onclick={() => (showTypeFilter = false)}
 				aria-label={m.close()}
 			></button>
-			<div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 w-full max-w-sm overflow-hidden">
+			<div
+				class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 w-full max-w-sm overflow-hidden"
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="media-type-filter-title"
+			>
 				<div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-					<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">{m.media_gallery_filter_by_type()}</h3>
+					<h3 id="media-type-filter-title" class="text-sm font-semibold text-gray-900 dark:text-gray-100">{m.media_gallery_filter_by_type()}</h3>
 					<IconButton
 						theme="light"
 						size="sm"
