@@ -657,7 +657,7 @@ onDestroy(() => {
 			</ListItemButton>
 			{#if hasActiveFilter}
 				<div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-				<ListItemButton onclick={() => galleryState.clearFilters()} danger>
+				<ListItemButton onclick={() => { galleryState.clearFilters(); showOptionsDropdown = false; }} danger>
 					<Icon name="close" size="sm" />
 					<span>{m.media_gallery_clear_filter()}</span>
 				</ListItemButton>
