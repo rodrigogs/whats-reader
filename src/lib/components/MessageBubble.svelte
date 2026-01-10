@@ -87,6 +87,32 @@ $effect(() => {
 	return () => observer.disconnect();
 });
 
+// Auto-load media when highlighted on mobile (e.g., navigating from gallery)
+$effect(() => {
+	// Only auto-load on mobile devices when message is highlighted
+	if (
+		typeof window === 'undefined' ||
+		!window.matchMedia('(max-width: 767px)').matches
+	)
+		return;
+
+	if (
+		!isHighlighted ||
+		!containerRef ||
+		!message.mediaFile ||
+		mediaUrl ||
+		mediaLoading
+	)
+		return;
+
+	// Small delay to ensure highlight animation is visible first
+	const timeoutId = setTimeout(() => {
+		loadMedia();
+	}, 100);
+
+	return () => clearTimeout(timeoutId);
+});
+
 const bubbleClass = $derived(
 	isOwn ? 'bg-[var(--color-message-out)]' : 'bg-[var(--color-message-in)]',
 );
