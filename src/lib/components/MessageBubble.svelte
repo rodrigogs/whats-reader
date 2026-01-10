@@ -1,6 +1,10 @@
 <script lang="ts">
 import type { Bookmark } from '$lib/bookmarks.svelte';
 import { bookmarksState } from '$lib/bookmarks.svelte';
+import {
+	isMobileViewport,
+	MOBILE_MEDIA_LOAD_DELAY,
+} from '$lib/helpers/responsive';
 import * as m from '$lib/paraglide/messages';
 import { getLocale } from '$lib/paraglide/runtime';
 import type { ChatMessage } from '$lib/parser';
@@ -90,11 +94,7 @@ $effect(() => {
 // Auto-load media when highlighted on mobile (e.g., navigating from gallery)
 $effect(() => {
 	// Only auto-load on mobile devices when message is highlighted
-	if (
-		typeof window === 'undefined' ||
-		!window.matchMedia('(max-width: 767px)').matches
-	)
-		return;
+	if (!isMobileViewport()) return;
 
 	if (
 		!isHighlighted ||
@@ -108,7 +108,7 @@ $effect(() => {
 	// Small delay to ensure highlight animation is visible first
 	const timeoutId = setTimeout(() => {
 		loadMedia();
-	}, 100);
+	}, MOBILE_MEDIA_LOAD_DELAY);
 
 	return () => clearTimeout(timeoutId);
 });

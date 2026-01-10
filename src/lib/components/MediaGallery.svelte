@@ -8,6 +8,7 @@ import {
 	type MediaTypeFilter,
 } from '$lib/gallery.svelte';
 import { cleanupThumbnailUrls } from '$lib/gallery-thumbnails';
+import { isMobileViewport } from '$lib/helpers/responsive';
 import * as m from '$lib/paraglide/messages';
 import { getLocale } from '$lib/paraglide/runtime';
 import { loadMediaFile } from '$lib/parser';
@@ -826,9 +827,9 @@ onDestroy(() => {
 									closeLightbox();
 									if (messageId) {
 										onNavigateToMessage(messageId);
-										// On mobile devices (max-width: 767px), close the gallery after navigating
+										// On mobile devices, close the gallery after navigating
 										// This ensures the message is visible and not hidden behind the gallery overlay
-										if (browser && window.matchMedia('(max-width: 767px)').matches) {
+										if (browser && isMobileViewport()) {
 											onClose();
 										}
 									}
