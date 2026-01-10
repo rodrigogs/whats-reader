@@ -140,10 +140,18 @@ let languageByChat = $state<Map<string, string>>(new Map());
 // Store auto-load media preference per chat (chatTitle -> enabled)
 let autoLoadMediaByChat = $state<Map<string, boolean>>(new Map());
 
+// Temporary auto-load flag for mobile navigation from gallery
+let tempAutoLoadForNavigation = $state(false);
+
 // Get auto-load media setting for the current chat
 const autoLoadMediaForCurrentChat = $derived.by(() => {
 	if (!appState.selectedChat) return false;
-	return autoLoadMediaByChat.get(appState.selectedChat.title) || false;
+	// Enable auto-load temporarily for mobile navigation, or use the per-chat setting
+	return (
+		tempAutoLoadForNavigation ||
+		autoLoadMediaByChat.get(appState.selectedChat.title) ||
+		false
+	);
 });
 
 async function handleFilesSelected(files: FileList) {
@@ -347,6 +355,15 @@ function toggleMediaGallery() {
 }
 
 async function handleNavigateToMediaMessage(messageId: string) {
+	// On mobile devices, enable temporary auto-load to ensure media is visible
+	if (browser && window.matchMedia('(max-width: 767px)').matches) {
+		tempAutoLoadForNavigation = true;
+		// Clear the flag after a short delay to allow the message to load
+		setTimeout(() => {
+			tempAutoLoadForNavigation = false;
+		}, 2000);
+	}
+
 	// Clear any previous scroll target
 	scrollToMessageId = null;
 
