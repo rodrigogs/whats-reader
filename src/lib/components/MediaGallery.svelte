@@ -1,6 +1,7 @@
 <script lang="ts">
 import JSZip from 'jszip';
 import { onDestroy, tick } from 'svelte';
+import { browser } from '$app/environment';
 import {
 	type DateKey,
 	galleryState,
@@ -825,6 +826,10 @@ onDestroy(() => {
 									closeLightbox();
 									if (messageId) {
 										onNavigateToMessage(messageId);
+										// On mobile devices, close the gallery after navigating
+										if (browser && window.innerWidth < 768) {
+											onClose();
+										}
 									}
 								}}
 								aria-label={m.media_gallery_go_to_message()}
