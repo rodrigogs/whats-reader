@@ -826,8 +826,9 @@ onDestroy(() => {
 									closeLightbox();
 									if (messageId) {
 										onNavigateToMessage(messageId);
-										// On mobile devices, close the gallery after navigating
-										if (browser && window.innerWidth < 768) {
+										// On mobile devices (max-width: 767px), close the gallery after navigating
+										// This ensures the message is visible and not hidden behind the gallery overlay
+										if (browser && window.matchMedia('(max-width: 767px)').matches) {
 											onClose();
 										}
 									}
