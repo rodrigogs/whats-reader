@@ -364,7 +364,7 @@ async function transcribeVoiceMessage() {
 		class="bookmark-btn p-1 rounded cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 {className}"
 		class:bookmarked={isBookmarked}
 		onclick={handleBookmarkClick}
-		title={isBookmarked ? 'Edit bookmark' : 'Add bookmark'}
+		title={isBookmarked ? m.bookmarks_edit() : m.bookmarks_add()}
 	>
 		{#if isBookmarked}
 		<Icon name="bookmark" size="sm" class="text-[var(--color-whatsapp-teal)]" filled />
