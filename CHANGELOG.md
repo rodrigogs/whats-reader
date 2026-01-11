@@ -1,3 +1,10 @@
+## [1.29.1](https://github.com/rodrigogs/whats-reader/compare/v1.29.0...v1.29.1) (2026-01-11)
+
+
+### Bug Fixes
+
+* close media gallery and auto-load media on mobile navigation + consolidate platform detection + i18n ([#62](https://github.com/rodrigogs/whats-reader/issues/62)) ([ca8bcf5](https://github.com/rodrigogs/whats-reader/commit/ca8bcf522629298178541dac4bd6882a1cdf6c03))
+
 # [1.29.0](https://github.com/rodrigogs/whats-reader/compare/v1.28.0...v1.29.0) (2026-01-05)
 
 
