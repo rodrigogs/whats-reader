@@ -4,10 +4,10 @@
  */
 
 import { browser } from '$app/environment';
+import { isElectronApp } from '$lib/helpers/responsive';
 
 // Detect if running in Electron
-const isElectron =
-	browser && typeof window !== 'undefined' && 'electronAPI' in window;
+const isElectron = isElectronApp();
 
 // Storage keys for user preferences
 const STORAGE_KEY_NEVER_ASK = 'auto_update_never_ask';

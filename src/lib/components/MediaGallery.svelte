@@ -1,12 +1,14 @@
 <script lang="ts">
 import JSZip from 'jszip';
 import { onDestroy, tick } from 'svelte';
+import { browser } from '$app/environment';
 import {
 	type DateKey,
 	galleryState,
 	type MediaTypeFilter,
 } from '$lib/gallery.svelte';
 import { cleanupThumbnailUrls } from '$lib/gallery-thumbnails';
+import { isMobileViewport } from '$lib/helpers/responsive';
 import * as m from '$lib/paraglide/messages';
 import { getLocale } from '$lib/paraglide/runtime';
 import { loadMediaFile } from '$lib/parser';
@@ -825,6 +827,11 @@ onDestroy(() => {
 									closeLightbox();
 									if (messageId) {
 										onNavigateToMessage(messageId);
+										// On mobile devices, close the gallery after navigating
+										// This ensures the message is visible and not hidden behind the gallery overlay
+										if (browser && isMobileViewport()) {
+											onClose();
+										}
 									}
 								}}
 								aria-label={m.media_gallery_go_to_message()}

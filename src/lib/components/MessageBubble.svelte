@@ -1,6 +1,10 @@
 <script lang="ts">
 import type { Bookmark } from '$lib/bookmarks.svelte';
 import { bookmarksState } from '$lib/bookmarks.svelte';
+import {
+	isMobileViewport,
+	MOBILE_MEDIA_LOAD_DELAY,
+} from '$lib/helpers/responsive';
 import * as m from '$lib/paraglide/messages';
 import { getLocale } from '$lib/paraglide/runtime';
 import type { ChatMessage } from '$lib/parser';
@@ -85,6 +89,28 @@ $effect(() => {
 	observer.observe(containerRef);
 
 	return () => observer.disconnect();
+});
+
+// Auto-load media when highlighted on mobile (e.g., navigating from gallery)
+$effect(() => {
+	// Only auto-load on mobile devices when message is highlighted
+	if (!isMobileViewport()) return;
+
+	if (
+		!isHighlighted ||
+		!containerRef ||
+		!message.mediaFile ||
+		mediaUrl ||
+		mediaLoading
+	)
+		return;
+
+	// Small delay to ensure highlight animation is visible first
+	const timeoutId = setTimeout(() => {
+		loadMedia();
+	}, MOBILE_MEDIA_LOAD_DELAY);
+
+	return () => clearTimeout(timeoutId);
 });
 
 const bubbleClass = $derived(
@@ -338,7 +364,7 @@ async function transcribeVoiceMessage() {
 		class="bookmark-btn p-1 rounded cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 {className}"
 		class:bookmarked={isBookmarked}
 		onclick={handleBookmarkClick}
-		title={isBookmarked ? 'Edit bookmark' : 'Add bookmark'}
+		title={isBookmarked ? m.bookmarks_edit() : m.bookmarks_add()}
 	>
 		{#if isBookmarked}
 		<Icon name="bookmark" size="sm" class="text-[var(--color-whatsapp-teal)]" filled />
