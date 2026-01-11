@@ -28,3 +28,32 @@ export function isMobileViewport(): boolean {
  * Small enough to feel instant but long enough to show the highlight effect
  */
 export const MOBILE_MEDIA_LOAD_DELAY = 100;
+
+/**
+ * Checks if the app is running in Electron environment
+ * Safe to use in both server and browser contexts
+ *
+ * @returns true if running in Electron, false otherwise
+ */
+export function isElectronApp(): boolean {
+	if (typeof window === 'undefined') {
+		return false;
+	}
+	return 'electronAPI' in window;
+}
+
+/**
+ * Checks if the app is running in Electron on macOS
+ * macOS Electron apps need special handling for the custom titlebar
+ *
+ * @returns true if running in Electron on macOS, false otherwise
+ */
+export function isElectronMac(): boolean {
+	if (!isElectronApp()) {
+		return false;
+	}
+	const electronAPI = (
+		window as Window & { electronAPI?: { platform?: string } }
+	).electronAPI;
+	return electronAPI?.platform === 'darwin';
+}

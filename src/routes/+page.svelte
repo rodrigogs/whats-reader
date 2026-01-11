@@ -28,21 +28,21 @@ import MediaGallery from '$lib/components/MediaGallery.svelte';
 import Modal from '$lib/components/Modal.svelte';
 import ModalContent from '$lib/components/ModalContent.svelte';
 import ModalHeader from '$lib/components/ModalHeader.svelte';
+import {
+	isElectronMac as checkIsElectronMac,
+	isElectronApp,
+	isMobileViewport,
+} from '$lib/helpers/responsive';
 import * as m from '$lib/paraglide/messages';
 import { parseZipFile, readFileAsArrayBuffer } from '$lib/parser';
 import { appState, type ChatData } from '$lib/state.svelte';
 import { setTranscriptionLanguage } from '$lib/transcription.svelte';
 
 // Detect if running in Electron
-const isElectron =
-	browser && typeof window !== 'undefined' && 'electronAPI' in window;
+const isElectron = isElectronApp();
 
 // Detect if running in Electron on macOS (only macOS needs custom titlebar)
-const isElectronMac =
-	isElectron &&
-	typeof window !== 'undefined' &&
-	(window as Window & { electronAPI?: { platform?: string } }).electronAPI
-		?.platform === 'darwin';
+const isElectronMac = checkIsElectronMac();
 
 // Dark mode state - check if dark class is on html element
 let isDarkMode = $state(
@@ -273,7 +273,7 @@ async function handleFilesSelected(files: FileList) {
 				});
 
 				// On mobile, collapse sidebar after loading chats
-				if (browser && window.innerWidth < 768) {
+				if (browser && isMobileViewport()) {
 					showSidebar = false;
 				}
 			} catch (error) {
@@ -297,7 +297,7 @@ function handleSelectChat(index: number) {
 		setTranscriptionLanguage(lang);
 	}
 	// On mobile, collapse sidebar after selecting a chat
-	if (browser && window.innerWidth < 768) {
+	if (browser && isMobileViewport()) {
 		showSidebar = false;
 	}
 }
