@@ -6,7 +6,7 @@
  * Clicking opens the releases page on GitHub.
  */
 
-import { browser } from '$app/environment';
+import { isElectronApp } from '$lib/helpers/responsive';
 import * as m from '$lib/paraglide/messages';
 import {
 	currentVersion,
@@ -16,8 +16,7 @@ import {
 import Icon from './Icon.svelte';
 
 // Detect if running in Electron
-const isElectron =
-	browser && typeof window !== 'undefined' && 'electronAPI' in window;
+const isElectron = isElectronApp();
 
 const updateState = getUpdateState();
 const releasesUrl = getReleasesPageUrl();

@@ -14,6 +14,7 @@ import {
 	installUpdate,
 	setNeverAsk,
 } from '$lib/auto-updater.svelte';
+import { isElectronApp } from '$lib/helpers/responsive';
 import * as m from '$lib/paraglide/messages';
 import Button from './Button.svelte';
 import Icon from './Icon.svelte';
@@ -27,8 +28,7 @@ let { onClose }: Props = $props();
 
 const state = getAutoUpdaterState();
 
-const isElectron =
-	browser && typeof window !== 'undefined' && 'electronAPI' in window;
+const isElectron = isElectronApp();
 
 async function handleUpdate() {
 	await downloadUpdate();

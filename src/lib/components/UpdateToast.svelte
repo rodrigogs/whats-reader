@@ -12,6 +12,7 @@
  */
 
 import { browser } from '$app/environment';
+import { isElectronApp } from '$lib/helpers/responsive';
 import * as m from '$lib/paraglide/messages';
 import {
 	currentVersion,
@@ -33,8 +34,7 @@ interface Props {
 let { latestVersion, releaseUrl, onClose }: Props = $props();
 
 // Detect if running in Electron
-const isElectron =
-	browser && typeof window !== 'undefined' && 'electronAPI' in window;
+const isElectron = isElectronApp();
 
 function handleUpdate() {
 	if (isElectron && window.electronAPI?.openExternal) {
