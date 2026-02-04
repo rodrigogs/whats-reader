@@ -56,8 +56,8 @@ function handleFileInput(e: Event) {
 }
 </script>
 
-<Modal onclose={onClose}>
-	<ModalHeader title={m.persistence_reselect_title()} onclose={onClose} />
+<Modal open={true} onClose={onClose}>
+	<ModalHeader title={m.persistence_reselect_title()} onClose={onClose} />
 	<ModalContent>
 		<div class="flex flex-col gap-4">
 			<!-- Description -->
@@ -71,13 +71,15 @@ function handleFileInput(e: Event) {
 					{m.persistence_reselect_expected_file({ fileName: '' })}
 				</div>
 				<div class="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
-					<Icon name="file" size={16} />
+					<Icon name="file" size="md" />
 					<span class="truncate">{chatMetadata.fileName}</span>
 				</div>
 			</div>
 
 			<!-- File drop zone -->
 			<div
+				role="button"
+				tabindex="0"
 				class="border-2 border-dashed rounded-lg p-8 text-center transition-colors {isDragging
 					? 'border-primary-500 bg-primary-50 dark:bg-primary-900/10'
 					: 'border-neutral-300 dark:border-neutral-600'}"
@@ -86,7 +88,7 @@ function handleFileInput(e: Event) {
 				ondragleave={handleDragLeave}
 			>
 				<div class="flex flex-col items-center gap-3">
-					<Icon name="upload" size={32} class="text-neutral-400" />
+					<Icon name="upload" size="2xl" class="text-neutral-400" />
 					<div>
 						<p class="text-sm font-medium text-neutral-700 dark:text-neutral-300">
 							Drop ZIP file here

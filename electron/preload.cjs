@@ -13,7 +13,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 	fileExists: (filePath) => ipcRenderer.invoke('fs:fileExists', filePath),
 
 	// Persistence file operations
-	readFileFromPath: (filePath) => ipcRenderer.invoke('file:readFromPath', filePath),
+	readFileFromPath: (filePath) =>
+		ipcRenderer.invoke('file:readFromPath', filePath),
 
 	// External links
 	openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),

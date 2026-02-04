@@ -41,11 +41,11 @@ function deselectAll() {
 
 async function handleRestore() {
 	if (selectedChatIds.size === 0) return;
-	
+
 	if (dontShowAgain) {
 		await setDontShowRestoreModal(true);
 	}
-	
+
 	onRestore(Array.from(selectedChatIds));
 }
 
@@ -53,7 +53,7 @@ async function handleStartFresh() {
 	if (dontShowAgain) {
 		await setDontShowRestoreModal(true);
 	}
-	
+
 	onStartFresh();
 }
 
@@ -63,7 +63,7 @@ function formatDate(dateStr: string): string {
 	const now = new Date();
 	const diffMs = now.getTime() - date.getTime();
 	const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-	
+
 	if (diffDays === 0) {
 		return m.time_today();
 	} else if (diffDays === 1) {
@@ -74,14 +74,14 @@ function formatDate(dateStr: string): string {
 		return date.toLocaleDateString(locale, {
 			year: 'numeric',
 			month: 'short',
-			day: 'numeric'
+			day: 'numeric',
 		});
 	}
 }
 </script>
 
-<Modal onclose={onClose}>
-	<ModalHeader title={m.persistence_restore_title()} onclose={onClose} />
+<Modal open={true} onClose={onClose}>
+	<ModalHeader title={m.persistence_restore_title()} onClose={onClose} />
 	<ModalContent>
 		<div class="flex flex-col gap-4">
 			<!-- Description -->
@@ -126,7 +126,7 @@ function formatDate(dateStr: string): string {
 									: 'border-neutral-300 dark:border-neutral-600'}"
 							>
 								{#if selectedChatIds.has(chat.id)}
-									<Icon name="check" size={12} class="text-white" />
+									<Icon name="check" size="xs" class="text-white" />
 								{/if}
 							</div>
 						</div>

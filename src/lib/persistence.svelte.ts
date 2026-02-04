@@ -17,8 +17,8 @@
  * The actual ZIP file content is NEVER stored in the browser.
  */
 
+import { del, get, keys, set } from 'idb-keyval';
 import { browser } from '$app/environment';
-import { get, set, del, keys } from 'idb-keyval';
 import type { Bookmark } from './bookmarks.svelte';
 import type { ChatData } from './state.svelte';
 
@@ -123,7 +123,7 @@ export async function savePersistedChat(
 			// We need to prompt the user to select the file again to get a handle we can store
 			// For now, mark as reselect-required since we can't get a handle from drag-drop
 			fileReference = { type: 'reselect-required' };
-		} catch (e) {
+		} catch (_e) {
 			fileReference = { type: 'reselect-required' };
 		}
 	} else {
@@ -242,7 +242,9 @@ export async function getPersistedChat(
 	if (!browser) return null;
 
 	try {
-		return (await get<PersistedChatMetadata>(`${PERSISTENCE_PREFIX}${id}`)) || null;
+		return (
+			(await get<PersistedChatMetadata>(`${PERSISTENCE_PREFIX}${id}`)) || null
+		);
 	} catch (e) {
 		console.error('Failed to get persisted chat:', e);
 		return null;
@@ -271,8 +273,7 @@ export function validateRestoredFile(
 
 	// Check first message timestamp
 	const firstMessageMatch =
-		parsed.messages[0]?.timestamp.toISOString() ===
-		saved.firstMessageTimestamp;
+		parsed.messages[0]?.timestamp.toISOString() === saved.firstMessageTimestamp;
 	if (firstMessageMatch) {
 		matchCount++;
 	} else {
@@ -345,7 +346,7 @@ export async function restoreChat(
 		// Electron path
 		if (fileReference.type === 'electron-path') {
 			const isElectron = window.electronAPI?.isElectron;
-			if (!isElectron) {
+			if (!isElectron || !window.electronAPI) {
 				return { success: false, needsReselect: true };
 			}
 
@@ -424,7 +425,7 @@ export async function getDontShowRestoreModal(): Promise<boolean> {
 	if (!browser) return false;
 	try {
 		return (await get<boolean>(DONT_SHOW_KEY)) || false;
-	} catch (e) {
+	} catch (_e) {
 		return false;
 	}
 }
