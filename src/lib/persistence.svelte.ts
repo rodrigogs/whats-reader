@@ -104,14 +104,26 @@ async function getStoredFileHandle(
 async function verifyHandlePermission(
 	handle: FileSystemFileHandle,
 	withWrite = false,
+	shouldRequest = false,
 ): Promise<PermissionState> {
 	try {
 		const opts: FileSystemHandlePermissionDescriptor = {};
 		if (withWrite) opts.mode = 'readwrite';
 
-		// Only check current permission - do NOT request
-		// requestPermission() requires a user gesture and would fail here
-		const permission = await handle.queryPermission(opts);
+		// First check current permission
+		let permission = await handle.queryPermission(opts);
+
+		// If permission is 'prompt' and we should request (have user gesture), request it
+		if (permission === 'prompt' && shouldRequest) {
+			try {
+				permission = await handle.requestPermission(opts);
+			} catch (e) {
+				// Request failed (no user gesture or user denied)
+				console.warn('Failed to request file permission:', e);
+				return 'denied';
+			}
+		}
+
 		return permission;
 	} catch (_e) {
 		return 'prompt';
@@ -487,8 +499,8 @@ export async function restoreChat(
 				};
 			}
 
-			// Check and request permission if needed
-			const permission = await verifyHandlePermission(handle, false);
+			// Check and request permission (we have user gesture from "Restore" click)
+			const permission = await verifyHandlePermission(handle, false, true);
 			if (permission !== 'granted') {
 				return {
 					success: false,
