@@ -48,6 +48,15 @@ body {
 	margin: 0;
 }
 
+/* All buttons should show pointer cursor on hover */
+button {
+	cursor: pointer;
+}
+
+button:disabled {
+	cursor: not-allowed;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
 	width: 12px;

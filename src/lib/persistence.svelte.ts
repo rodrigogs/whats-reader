@@ -71,6 +71,91 @@ export function isFileSystemAccessSupported(): boolean {
 }
 
 /**
+ * Store a FileSystemFileHandle in IndexedDB
+ */
+async function storeFileHandle(
+	handleId: string,
+	handle: FileSystemFileHandle,
+): Promise<void> {
+	await set(`${HANDLE_PREFIX}${handleId}`, handle);
+}
+
+/**
+ * Get a stored FileSystemFileHandle from IndexedDB
+ */
+async function getStoredFileHandle(
+	handleId: string,
+): Promise<FileSystemFileHandle | null> {
+	try {
+		const handle = await get<FileSystemFileHandle>(
+			`${HANDLE_PREFIX}${handleId}`,
+		);
+		return handle || null;
+	} catch (_e) {
+		return null;
+	}
+}
+
+/**
+ * Verify and request permission for a FileSystemFileHandle
+ * @returns 'granted' | 'denied' | 'prompt'
+ */
+async function verifyHandlePermission(
+	handle: FileSystemFileHandle,
+	withWrite = false,
+): Promise<PermissionState> {
+	try {
+		const opts: FileSystemHandlePermissionDescriptor = {};
+		if (withWrite) opts.mode = 'readwrite';
+
+		// Check current permission
+		const permission = await handle.queryPermission(opts);
+		if (permission === 'granted') return 'granted';
+
+		// Request permission (requires user gesture, so this might fail)
+		try {
+			const requestedPermission = await handle.requestPermission(opts);
+			return requestedPermission;
+		} catch (_e) {
+			// requestPermission failed (probably no user gesture)
+			return permission;
+		}
+	} catch (_e) {
+		return 'prompt';
+	}
+}
+
+/**
+ * Prompt user to select a file and get a FileSystemFileHandle
+ * This is used when initially loading a file to get a handle we can store
+ */
+export async function promptForFileHandle(
+	_expectedFileName?: string,
+): Promise<FileSystemFileHandle | null> {
+	if (!isFileSystemAccessSupported()) return null;
+
+	try {
+		const options: OpenFilePickerOptions = {
+			types: [
+				{
+					description: 'WhatsApp ZIP files',
+					accept: {
+						'application/zip': ['.zip'],
+					},
+				},
+			],
+			multiple: false,
+		};
+
+		const [handle] = await window.showOpenFilePicker(options);
+		return handle || null;
+	} catch (_e) {
+		// User cancelled
+		return null;
+	}
+}
+
+/**
  * Request persistent storage to prevent eviction
  *
  * Note: This is a browser permission request that may fail if:
@@ -108,6 +193,7 @@ export async function savePersistedChat(
 		perspective: string | null;
 	},
 	filePath?: string, // For Electron
+	fileHandle?: FileSystemFileHandle, // For web with File System Access API
 ): Promise<string> {
 	if (!browser) throw new Error('Persistence only available in browser');
 
@@ -129,16 +215,15 @@ export async function savePersistedChat(
 	if (isElectron && filePath) {
 		// Electron: store absolute file path
 		fileReference = { type: 'electron-path', filePath };
+	} else if (fileHandle) {
+		// Web (Chromium): store file handle
+		const handleId = id; // Use the same ID for the handle
+		await storeFileHandle(handleId, fileHandle);
+		fileReference = { type: 'file-handle', handleId };
 	} else if (isFileSystemAccessSupported() && file) {
-		// Web (Chromium): try to get file handle
-		try {
-			// Modern browsers allow getting a handle from a File object
-			// We need to prompt the user to select the file again to get a handle we can store
-			// For now, mark as reselect-required since we can't get a handle from drag-drop
-			fileReference = { type: 'reselect-required' };
-		} catch (_e) {
-			fileReference = { type: 'reselect-required' };
-		}
+		// Web (Chromium): File System Access API supported but no handle provided
+		// Mark as reselect-required for now (handle will be requested on first restore)
+		fileReference = { type: 'reselect-required' };
 	} else {
 		// Firefox/Safari or no file: require reselect
 		fileReference = { type: 'reselect-required' };
@@ -349,6 +434,7 @@ export async function restoreChat(
 	};
 	error?: string;
 	needsReselect?: boolean;
+	needsPermission?: boolean;
 }> {
 	if (!browser)
 		return { success: false, error: 'Restoration only available in browser' };
@@ -397,10 +483,47 @@ export async function restoreChat(
 			};
 		}
 
-		// File handle (not implemented yet - requires user permission flow)
+		// File handle (Chromium with File System Access API)
 		if (fileReference.type === 'file-handle') {
-			// For now, treat as reselect-required
-			return { success: false, needsReselect: true };
+			const handle = await getStoredFileHandle(fileReference.handleId);
+			if (!handle) {
+				return {
+					success: false,
+					error: 'File handle not found',
+					needsReselect: true,
+				};
+			}
+
+			// Check and request permission if needed
+			const permission = await verifyHandlePermission(handle, false);
+			if (permission !== 'granted') {
+				return {
+					success: false,
+					error: 'File permission denied',
+					needsReselect: true,
+					needsPermission: true,
+				};
+			}
+
+			// Read file from handle
+			try {
+				const fileFromHandle = await handle.getFile();
+				const buffer = await fileFromHandle.arrayBuffer();
+				return {
+					success: true,
+					data: {
+						buffer,
+						name: fileFromHandle.name,
+						metadata: persistedChat,
+					},
+				};
+			} catch (_e) {
+				return {
+					success: false,
+					error: 'Failed to read file from handle',
+					needsReselect: true,
+				};
+			}
 		}
 
 		// Reselect required

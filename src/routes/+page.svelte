@@ -43,7 +43,9 @@ import {
 	findPersistedChatByTitle,
 	getDontShowRestoreModal,
 	getPersistedChats,
+	isFileSystemAccessSupported,
 	type PersistedChatMetadata,
+	promptForFileHandle,
 	removePersistedChat,
 	restoreChat,
 	savePersistedChat,
@@ -183,9 +185,12 @@ let reselectChatMetadata = $state<PersistedChatMetadata | null>(null);
 let persistedChatsToRestore = $state<PersistedChatMetadata[]>([]);
 let isRestoring = $state(false);
 
-// Track file references for persistence (chatTitle -> {file, filePath})
+// Track file references for persistence (chatTitle -> {file, filePath, fileHandle})
 let chatFileReferences = $state<
-	Map<string, { file: File | null; filePath?: string }>
+	Map<
+		string,
+		{ file: File | null; filePath?: string; fileHandle?: FileSystemFileHandle }
+	>
 >(new Map());
 
 // Get auto-load media setting for the current chat
@@ -263,7 +268,7 @@ async function handleFilesSelected(files: FileList) {
 				loadingChats = loadingChats.filter((lc) => lc.id !== loadingId);
 				appState.addChat(chatData);
 
-				// Store file reference for persistence (for Electron)
+				// Store file reference for persistence
 				if (isElectron && window.electronAPI?.openFile) {
 					// In Electron, we can get the file path from the openFile dialog
 					// But for drag-drop, we don't have the path, so store the file object
@@ -271,6 +276,30 @@ async function handleFilesSelected(files: FileList) {
 				} else {
 					// In web, store the file object
 					chatFileReferences.set(chatData.title, { file });
+
+					// For Chromium browsers with File System Access API, request a file handle
+					// This allows automatic restoration without re-selecting the file
+					if (isFileSystemAccessSupported()) {
+						// Request file handle in the background (don't block UI)
+						(async () => {
+							try {
+								const handle = await promptForFileHandle(file.name);
+								if (handle) {
+									// Store the handle for future use
+									const existing = chatFileReferences.get(chatData.title);
+									if (existing) {
+										chatFileReferences.set(chatData.title, {
+											...existing,
+											fileHandle: handle,
+										});
+									}
+								}
+							} catch (e) {
+								console.log('Could not get file handle:', e);
+								// Not a critical error, user can still manually reselect later
+							}
+						})();
+					}
 				}
 
 				// Start background indexing for bookmark navigation and flat items
@@ -783,6 +812,7 @@ async function handleToggleRemember(chatTitle: string, enabled: boolean) {
 				transcriptions,
 				settings,
 				fileRef?.filePath,
+				fileRef?.fileHandle, // Pass file handle if available
 			);
 
 			rememberedChats.add(chatTitle);
