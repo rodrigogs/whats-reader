@@ -49,6 +49,7 @@ import {
 	removePersistedChat,
 	restoreChat,
 	savePersistedChat,
+	storeFileHandle,
 	updatePersistedChat,
 	validateRestoredFile,
 } from '$lib/persistence.svelte';
@@ -185,11 +186,16 @@ let reselectChatMetadata = $state<PersistedChatMetadata | null>(null);
 let persistedChatsToRestore = $state<PersistedChatMetadata[]>([]);
 let isRestoring = $state(false);
 
-// Track file references for persistence (chatTitle -> {file, filePath, fileHandle})
+// Track file references for persistence (chatTitle -> {file, filePath, fileHandle, persistedId})
 let chatFileReferences = $state<
 	Map<
 		string,
-		{ file: File | null; filePath?: string; fileHandle?: FileSystemFileHandle }
+		{
+			file: File | null;
+			filePath?: string;
+			fileHandle?: FileSystemFileHandle;
+			persistedId?: string;
+		}
 	>
 >(new Map());
 
@@ -803,7 +809,8 @@ async function handleToggleRemember(chatTitle: string, enabled: boolean) {
 				perspective: perspectiveByChat.get(chatTitle) || null,
 			};
 
-			await savePersistedChat(
+			// Save the persisted chat and get the ID
+			const persistedId = await savePersistedChat(
 				chat,
 				fileRef?.file || null,
 				bookmarks,
@@ -813,9 +820,24 @@ async function handleToggleRemember(chatTitle: string, enabled: boolean) {
 				fileHandle, // Pass file handle if we got one
 			);
 
-			// Store the handle in our reference map too
-			if (fileHandle && fileRef) {
-				chatFileReferences.set(chatTitle, { ...fileRef, fileHandle });
+			// If we got a file handle after saving, update the metadata
+			if (fileHandle && persistedId) {
+				// Store file handle in IndexedDB with the persisted ID
+				await storeFileHandle(persistedId, fileHandle);
+
+				// Update the persisted metadata to reference the handle
+				await updatePersistedChat(persistedId, {
+					fileReference: { type: 'file-handle', handleId: persistedId },
+				});
+			}
+
+			// Store the handle and persisted ID in our reference map
+			if (fileRef) {
+				chatFileReferences.set(chatTitle, {
+					...fileRef,
+					fileHandle,
+					persistedId,
+				});
 			}
 
 			rememberedChats.add(chatTitle);

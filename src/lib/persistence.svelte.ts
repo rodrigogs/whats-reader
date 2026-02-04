@@ -73,7 +73,7 @@ export function isFileSystemAccessSupported(): boolean {
 /**
  * Store a FileSystemFileHandle in IndexedDB
  */
-async function storeFileHandle(
+export async function storeFileHandle(
 	handleId: string,
 	handle: FileSystemFileHandle,
 ): Promise<void> {
