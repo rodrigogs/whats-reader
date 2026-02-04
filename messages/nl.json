@@ -241,5 +241,22 @@
   "media_gallery_type_other": "Ander",
   "media_gallery_clear_filter": "Filter wissen",
   "media_gallery_participant_search_placeholder": "Zoeken op naam of nummer...",
-  "media_gallery_participant_no_match": "Geen deelnemer komt overeen met \"{query}\""
+  "persistence_remember_conversation": "Remember Conversation",
+  "persistence_conversation_saved": "Conversation will be remembered",
+  "persistence_conversation_removed": "Conversation removed from saved sessions",
+  "persistence_restore_title": "Restore Saved Conversations",
+  "persistence_restore_description": "You have saved conversations from previous sessions:",
+  "persistence_restore_button": "Restore Selected ({count})",
+  "persistence_start_fresh": "Start Fresh",
+  "persistence_dont_show_again": "Don't show this again",
+  "persistence_last_opened": "Last opened: {date}",
+  "persistence_message_count": "{count} messages",
+  "persistence_reselect_title": "Please Re-select File",
+  "persistence_reselect_description": "To restore \"{chatTitle}\", please select the original file:",
+  "persistence_reselect_expected_file": "Expected file: {fileName}",
+  "persistence_skip": "Skip",
+  "persistence_validation_failed": "This file doesn't match the saved conversation",
+  "persistence_validation_confirm": "This might be the correct file, but we couldn't fully verify. Continue anyway?",
+  "persistence_file_not_found": "The original file was moved or deleted",
+  "persistence_restoring": "Restoring conversations..."
 }

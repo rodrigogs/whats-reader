@@ -227,6 +227,29 @@ ipcMain.handle('fs:fileExists', async (_event, filePath) => {
 	return fs.existsSync(filePath);
 });
 
+// Read file from absolute path (for persistence)
+ipcMain.handle('file:readFromPath', async (_event, filePath) => {
+	try {
+		const content = fs.readFileSync(filePath);
+		const fileName = path.basename(filePath);
+		return {
+			success: true,
+			buffer: content.buffer,
+			name: fileName,
+		};
+	} catch (error) {
+		return {
+			success: false,
+			error: error.message,
+		};
+	}
+});
+
+// Check if file exists at path (for persistence)
+ipcMain.handle('file:exists', async (_event, filePath) => {
+	return fs.existsSync(filePath);
+});
+
 ipcMain.handle('shell:openExternal', async (_event, url) => {
 	// Validate URL before opening
 	if (!url.startsWith('https://github.com/rodrigogs/whats-reader')) {

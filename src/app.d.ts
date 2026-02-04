@@ -13,6 +13,13 @@ interface ReadResult {
 	error?: string;
 }
 
+interface FileReadResult {
+	success: boolean;
+	buffer?: ArrayBuffer;
+	name?: string;
+	error?: string;
+}
+
 interface DirEntry {
 	name: string;
 	isDirectory: boolean;
@@ -31,6 +38,7 @@ interface ElectronAPI {
 	readFile: (filePath: string) => Promise<ReadResult>;
 	readDir: (dirPath: string) => Promise<ReadDirResult>;
 	fileExists: (filePath: string) => Promise<boolean>;
+	readFileFromPath: (filePath: string) => Promise<FileReadResult>;
 	openExternal: (url: string) => Promise<void>;
 	platform: string;
 	isElectron: boolean;
