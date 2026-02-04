@@ -31,6 +31,7 @@ import ModalContent from '$lib/components/ModalContent.svelte';
 import ModalHeader from '$lib/components/ModalHeader.svelte';
 import ReselectFileModal from '$lib/components/ReselectFileModal.svelte';
 import RestoreSessionModal from '$lib/components/RestoreSessionModal.svelte';
+import Toast from '$lib/components/Toast.svelte';
 import {
 	isElectronMac as checkIsElectronMac,
 	isElectronApp,
@@ -97,6 +98,19 @@ let showMediaGallery = $state(false);
 let showParticipants = $state(false);
 let participantStats = $state<Map<string, number> | null>(null);
 let scrollToMessageId = $state<string | null>(null);
+
+// Toast notification state
+let toastMessage = $state<string | null>(null);
+let toastType = $state<'success' | 'error' | 'info'>('success');
+
+function showToast(message: string, type: 'success' | 'error' | 'info' = 'success') {
+	toastMessage = message;
+	toastType = type;
+}
+
+function hideToast() {
+	toastMessage = null;
+}
 
 // Compute participant stats when modal opens (not during render)
 function openParticipantsModal() {
@@ -344,6 +358,11 @@ function handleSelectChat(index: number) {
 }
 
 function handleRemoveChat(index: number) {
+	const chat = appState.chats[index];
+	if (chat) {
+		// Clean up file reference
+		chatFileReferences.delete(chat.title);
+	}
 	appState.removeChat(index);
 }
 
@@ -518,13 +537,8 @@ async function handleRestoreChats(chatIds: string[]) {
 				result.data.buffer,
 				result.data.name,
 				persistedChat,
-				result.data.metadata.fileReference.type === 'electron-path'
-					? (
-							result.data.metadata.fileReference as {
-								type: 'electron-path';
-								filePath: string;
-							}
-						).filePath
+				isElectronPathReference(result.data.metadata.fileReference)
+					? result.data.metadata.fileReference.filePath
 					: undefined,
 			);
 
@@ -771,9 +785,10 @@ async function handleToggleRemember(chatTitle: string, enabled: boolean) {
 			rememberedChats.add(chatTitle);
 			rememberedChats = new Set(rememberedChats);
 
-			// Show toast (you could add a toast notification here)
+			showToast(m.persistence_conversation_saved(), 'success');
 		} catch (e) {
 			console.error('Failed to save conversation:', e);
+			showToast('Failed to save conversation', 'error');
 		}
 	} else {
 		// Remove from persistence
@@ -786,9 +801,10 @@ async function handleToggleRemember(chatTitle: string, enabled: boolean) {
 			rememberedChats.delete(chatTitle);
 			rememberedChats = new Set(rememberedChats);
 
-			// Show toast (you could add a toast notification here)
+			showToast(m.persistence_conversation_removed(), 'success');
 		} catch (e) {
 			console.error('Failed to remove conversation:', e);
+			showToast('Failed to remove conversation', 'error');
 		}
 	}
 }
@@ -1416,4 +1432,9 @@ onFileSelected={handleReselectFile}
 onSkip={handleSkipReselect}
 onClose={handleSkipReselect}
 />
+{/if}
+
+<!-- Toast Notification -->
+{#if toastMessage}
+<Toast message={toastMessage} type={toastType} onClose={hideToast} />
 {/if}

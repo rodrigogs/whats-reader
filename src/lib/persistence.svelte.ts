@@ -59,6 +59,9 @@ const PERSISTENCE_PREFIX = 'whatsapp-persisted-chat-';
 const HANDLE_PREFIX = 'whatsapp-file-handle-';
 const DONT_SHOW_KEY = 'whatsapp-dont-show-restore-modal';
 
+// Number of message IDs to store for validation (helps with iOS exports that lack chat title)
+const VALIDATION_MESSAGE_ID_COUNT = 5;
+
 /**
  * Check if File System Access API is supported
  */
@@ -111,9 +114,9 @@ export async function savePersistedChat(
 	// Generate unique ID
 	const id = crypto.randomUUID();
 
-	// Extract first 5 message IDs for validation
+	// Extract first message IDs for validation
 	const firstMessageIds = chat.messages
-		.slice(0, 5)
+		.slice(0, VALIDATION_MESSAGE_ID_COUNT)
 		.map((msg) => msg.id)
 		.filter(Boolean);
 
@@ -302,7 +305,7 @@ export function validateRestoredFile(
 
 	// Check first message IDs
 	const parsedFirstIds = parsed.messages
-		.slice(0, 5)
+		.slice(0, VALIDATION_MESSAGE_ID_COUNT)
 		.map((msg) => msg.id)
 		.filter(Boolean);
 	const firstIdsMatch =
@@ -450,6 +453,15 @@ export async function setDontShowRestoreModal(value: boolean): Promise<void> {
 	} catch (e) {
 		console.error('Failed to set dont show preference:', e);
 	}
+}
+
+/**
+ * Type guard to check if a file reference is an electron-path type
+ */
+export function isElectronPathReference(
+	ref: PersistedChatMetadata['fileReference'],
+): ref is { type: 'electron-path'; filePath: string } {
+	return ref.type === 'electron-path';
 }
 
 /**
