@@ -60,7 +60,7 @@ $effect(() => {
 
 	<!-- Modal with enhanced elevation and animation -->
 	<div
-		class="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[480px] md:max-h-[80vh] bg-white dark:bg-gray-800 rounded-xl shadow-2xl z-[70] flex flex-col overflow-hidden animate-in zoom-in-95 fade-in duration-200 {className}"
+		class="fixed inset-6 sm:inset-8 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[90vw] md:max-w-[520px] max-h-[85vh] md:max-h-[80vh] bg-white dark:bg-gray-800 rounded-xl shadow-2xl z-[70] flex flex-col overflow-hidden animate-in zoom-in-95 fade-in duration-200 {className}"
 		style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);"
 		role="dialog"
 		aria-modal="true"
