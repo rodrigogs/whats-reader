@@ -275,31 +275,9 @@ async function handleFilesSelected(files: FileList) {
 					chatFileReferences.set(chatData.title, { file });
 				} else {
 					// In web, store the file object
+					// Don't request file handle here - that would cause a double prompt!
+					// Handle will be requested when user clicks "Remember Conversation"
 					chatFileReferences.set(chatData.title, { file });
-
-					// For Chromium browsers with File System Access API, request a file handle
-					// This allows automatic restoration without re-selecting the file
-					if (isFileSystemAccessSupported()) {
-						// Request file handle in the background (don't block UI)
-						(async () => {
-							try {
-								const handle = await promptForFileHandle(file.name);
-								if (handle) {
-									// Store the handle for future use
-									const existing = chatFileReferences.get(chatData.title);
-									if (existing) {
-										chatFileReferences.set(chatData.title, {
-											...existing,
-											fileHandle: handle,
-										});
-									}
-								}
-							} catch (e) {
-								console.log('Could not get file handle:', e);
-								// Not a critical error, user can still manually reselect later
-							}
-						})();
-					}
 				}
 
 				// Start background indexing for bookmark navigation and flat items
@@ -797,6 +775,26 @@ async function handleToggleRemember(chatTitle: string, enabled: boolean) {
 
 		try {
 			const fileRef = chatFileReferences.get(chatTitle);
+			let fileHandle: FileSystemFileHandle | undefined;
+
+			// For web with File System Access API, request file handle now (with user gesture)
+			if (!isElectron && isFileSystemAccessSupported() && fileRef?.file) {
+				try {
+					// Show explanatory toast before file picker
+					showToast(
+						'Select the file once more to enable automatic restoration in the future',
+						'info',
+					);
+
+					// This requires user gesture (we have it - user just clicked)
+					fileHandle =
+						(await promptForFileHandle(fileRef.file.name)) || undefined;
+				} catch (e) {
+					console.log('Could not get file handle:', e);
+					// Not critical - user can still use persistence, just needs to reselect
+				}
+			}
+
 			const bookmarks = bookmarksState.getBookmarksForChatAsExport(chatTitle);
 			const transcriptions = getTranscriptionsForChat(chatTitle);
 			const settings = {
@@ -812,8 +810,13 @@ async function handleToggleRemember(chatTitle: string, enabled: boolean) {
 				transcriptions,
 				settings,
 				fileRef?.filePath,
-				fileRef?.fileHandle, // Pass file handle if available
+				fileHandle, // Pass file handle if we got one
 			);
+
+			// Store the handle in our reference map too
+			if (fileHandle && fileRef) {
+				chatFileReferences.set(chatTitle, { ...fileRef, fileHandle });
+			}
 
 			rememberedChats.add(chatTitle);
 			rememberedChats = new Set(rememberedChats);

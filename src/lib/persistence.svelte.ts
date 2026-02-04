@@ -97,7 +97,8 @@ async function getStoredFileHandle(
 }
 
 /**
- * Verify and request permission for a FileSystemFileHandle
+ * Verify permission for a FileSystemFileHandle
+ * Only checks permission status, does NOT request it (that requires user gesture)
  * @returns 'granted' | 'denied' | 'prompt'
  */
 async function verifyHandlePermission(
@@ -108,18 +109,10 @@ async function verifyHandlePermission(
 		const opts: FileSystemHandlePermissionDescriptor = {};
 		if (withWrite) opts.mode = 'readwrite';
 
-		// Check current permission
+		// Only check current permission - do NOT request
+		// requestPermission() requires a user gesture and would fail here
 		const permission = await handle.queryPermission(opts);
-		if (permission === 'granted') return 'granted';
-
-		// Request permission (requires user gesture, so this might fail)
-		try {
-			const requestedPermission = await handle.requestPermission(opts);
-			return requestedPermission;
-		} catch (_e) {
-			// requestPermission failed (probably no user gesture)
-			return permission;
-		}
+		return permission;
 	} catch (_e) {
 		return 'prompt';
 	}
