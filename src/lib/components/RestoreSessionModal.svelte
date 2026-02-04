@@ -78,103 +78,148 @@ function formatDate(dateStr: string): string {
 		});
 	}
 }
+
+function getInitials(title: string): string {
+	const words = title.trim().split(/\s+/);
+	if (words.length === 1) {
+		return words[0].substring(0, 2).toUpperCase();
+	}
+	return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+}
 </script>
 
 <Modal open={true} onClose={onClose}>
 	<ModalHeader title={m.persistence_restore_title()} onClose={onClose} />
 	<ModalContent>
-		<div class="flex flex-col gap-4">
-			<!-- Description -->
-			<p class="text-sm text-neutral-600 dark:text-neutral-400">
-				{m.persistence_restore_description()}
-			</p>
+		<div class="flex flex-col gap-5">
+			<!-- Description with icon -->
+			<div class="flex gap-3 items-start p-4 bg-[var(--color-whatsapp-light-green)] dark:bg-[var(--color-whatsapp-dark-green)]/20 rounded-xl border border-[var(--color-whatsapp-teal)]/20">
+				<div class="flex-shrink-0 mt-0.5">
+					<Icon name="clock" size="md" class="text-[var(--color-whatsapp-teal)]" />
+				</div>
+				<p class="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed">
+					{m.persistence_restore_description()}
+				</p>
+			</div>
 
-			<!-- Select all / Deselect all -->
-			<div class="flex gap-2 text-sm">
+			<!-- Select all / Deselect all - Improved buttons -->
+			<div class="flex gap-2">
 				<button
 					type="button"
-					class="text-primary-600 dark:text-primary-400 hover:underline"
+					class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-whatsapp-teal)] hover:bg-[var(--color-whatsapp-teal)]/10 rounded-lg transition-colors"
 					onclick={selectAll}
 				>
-					Select All
+					<Icon name="check-all" size="xs" />
+					<span>Select All</span>
 				</button>
-				<span class="text-neutral-400">•</span>
 				<button
 					type="button"
-					class="text-primary-600 dark:text-primary-400 hover:underline"
+					class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
 					onclick={deselectAll}
 				>
-					Deselect All
+					<Icon name="x" size="xs" />
+					<span>Deselect All</span>
 				</button>
 			</div>
 
-			<!-- Chat list -->
-			<div class="flex flex-col gap-2 max-h-96 overflow-y-auto">
+			<!-- Chat list with improved cards -->
+			<div class="flex flex-col gap-3 max-h-96 overflow-y-auto pr-1 scrollbar-thin">
 				{#each persistedChats as chat (chat.id)}
 					<button
 						type="button"
-						class="flex items-start gap-3 p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-left"
+						class="group flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left
+							{selectedChatIds.has(chat.id)
+								? 'border-[var(--color-whatsapp-teal)] bg-[var(--color-whatsapp-light-green)] dark:bg-[var(--color-whatsapp-dark-green)]/20 shadow-md'
+								: 'border-neutral-200 dark:border-neutral-700 hover:border-[var(--color-whatsapp-teal)]/40 hover:bg-neutral-50 dark:hover:bg-neutral-800/50'}"
 						onclick={() => toggleChat(chat.id)}
 					>
-						<!-- Checkbox -->
-						<div class="flex-shrink-0 mt-1">
+						<!-- Avatar with initials -->
+						<div class="flex-shrink-0">
 							<div
-								class="w-5 h-5 rounded border-2 flex items-center justify-center transition-colors {selectedChatIds.has(
-									chat.id,
-								)
-									? 'bg-primary-600 border-primary-600'
-									: 'border-neutral-300 dark:border-neutral-600'}"
+								class="w-12 h-12 rounded-full flex items-center justify-center font-semibold text-white text-base shadow-sm
+									{selectedChatIds.has(chat.id)
+										? 'bg-[var(--color-whatsapp-teal)]'
+										: 'bg-[var(--color-whatsapp-dark-green)]'}"
+							>
+								{getInitials(chat.chatTitle)}
+							</div>
+						</div>
+
+						<!-- Chat info -->
+						<div class="flex-1 min-w-0">
+							<div class="flex items-center gap-2 mb-1">
+								<h3 class="font-semibold text-base text-neutral-900 dark:text-neutral-100 truncate">
+									{chat.chatTitle}
+								</h3>
+								{#if selectedChatIds.has(chat.id)}
+									<div class="flex-shrink-0">
+										<Icon name="check-circle" size="sm" class="text-[var(--color-whatsapp-teal)]" />
+									</div>
+								{/if}
+							</div>
+							<div class="flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400 mb-1.5">
+								<div class="flex items-center gap-1">
+									<Icon name="message-circle" size="xs" />
+									<span>{m.persistence_message_count({ count: chat.messageCount })}</span>
+								</div>
+								<span class="text-neutral-400">•</span>
+								<div class="flex items-center gap-1">
+									<Icon name="clock" size="xs" />
+									<span>{m.persistence_last_opened({ date: formatDate(chat.updatedAt) })}</span>
+								</div>
+							</div>
+							<div class="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-500">
+								<Icon name="file" size="xs" />
+								<span class="truncate">{chat.fileName}</span>
+							</div>
+						</div>
+
+						<!-- Custom checkbox indicator (right side) -->
+						<div class="flex-shrink-0">
+							<div
+								class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all
+									{selectedChatIds.has(chat.id)
+										? 'border-[var(--color-whatsapp-teal)] bg-[var(--color-whatsapp-teal)] scale-110'
+										: 'border-neutral-300 dark:border-neutral-600 group-hover:border-[var(--color-whatsapp-teal)]'}"
 							>
 								{#if selectedChatIds.has(chat.id)}
 									<Icon name="check" size="xs" class="text-white" />
 								{/if}
 							</div>
 						</div>
-
-						<!-- Chat info -->
-						<div class="flex-1 min-w-0">
-							<div class="font-medium text-neutral-900 dark:text-neutral-100 truncate">
-								{chat.chatTitle}
-							</div>
-							<div class="text-sm text-neutral-600 dark:text-neutral-400 flex items-center gap-2 mt-1">
-								<span>{m.persistence_message_count({ count: chat.messageCount })}</span>
-								<span class="text-neutral-400">•</span>
-								<span>{m.persistence_last_opened({ date: formatDate(chat.updatedAt) })}</span>
-							</div>
-							<div class="text-xs text-neutral-500 dark:text-neutral-500 mt-1 truncate">
-								{chat.fileName}
-							</div>
-						</div>
 					</button>
 				{/each}
 			</div>
 
-			<!-- Don't show again checkbox -->
-			<label class="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 cursor-pointer">
+			<!-- Don't show again checkbox with better styling -->
+			<label class="flex items-center gap-3 p-3 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50 cursor-pointer transition-colors">
 				<input
 					type="checkbox"
 					bind:checked={dontShowAgain}
-					class="w-4 h-4 rounded border-neutral-300 dark:border-neutral-600"
+					class="w-4 h-4 rounded border-neutral-300 dark:border-neutral-600 text-[var(--color-whatsapp-teal)] focus:ring-[var(--color-whatsapp-teal)] focus:ring-offset-0"
 				/>
-				{m.persistence_dont_show_again()}
+				<span class="text-sm text-neutral-700 dark:text-neutral-300 select-none">
+					{m.persistence_dont_show_again()}
+				</span>
 			</label>
 
-			<!-- Actions -->
-			<div class="flex gap-3 justify-end pt-2">
+			<!-- Actions with improved buttons -->
+			<div class="flex gap-3 pt-2 border-t border-neutral-200 dark:border-neutral-700">
 				<button
 					type="button"
-					class="px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+					class="flex-1 px-4 py-2.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
 					onclick={handleStartFresh}
 				>
 					{m.persistence_start_fresh()}
 				</button>
 				<button
 					type="button"
-					class="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+					class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-[var(--color-whatsapp-teal)] hover:bg-[var(--color-whatsapp-dark-green)] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm disabled:shadow-none"
 					onclick={handleRestore}
 					disabled={selectedChatIds.size === 0}
 				>
-					{m.persistence_restore_button({ count: selectedChatIds.size })}
+					<Icon name="download" size="sm" />
+					<span>{m.persistence_restore_button({ count: selectedChatIds.size })}</span>
 				</button>
 			</div>
 		</div>
