@@ -68,7 +68,7 @@ function handleFileInput(e: Event) {
 			<!-- Expected file info -->
 			<div class="bg-neutral-100 dark:bg-neutral-800 p-3 rounded-lg">
 				<div class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
-					{m.persistence_reselect_expected_file({ fileName: '' })}
+					{m.persistence_reselect_expected_file({ fileName: chatMetadata.fileName })}
 				</div>
 				<div class="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
 					<Icon name="file" size="md" />

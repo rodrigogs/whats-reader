@@ -51,6 +51,7 @@ import {
 } from '$lib/persistence.svelte';
 import { appState, type ChatData } from '$lib/state.svelte';
 import {
+	getTranscriptionsForChat,
 	setTranscriptionLanguage,
 	setTranscriptionsForChat,
 } from '$lib/transcription.svelte';
@@ -751,7 +752,7 @@ async function handleToggleRemember(chatTitle: string, enabled: boolean) {
 		try {
 			const fileRef = chatFileReferences.get(chatTitle);
 			const bookmarks = bookmarksState.getBookmarksForChatAsExport(chatTitle);
-			const transcriptions = {}; // Get transcriptions for this chat
+			const transcriptions = getTranscriptionsForChat(chatTitle);
 			const settings = {
 				language: languageByChat.get(chatTitle) || 'portuguese',
 				autoLoadMedia: autoLoadMediaByChat.get(chatTitle) || false,

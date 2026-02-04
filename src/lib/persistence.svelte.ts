@@ -69,6 +69,16 @@ export function isFileSystemAccessSupported(): boolean {
 
 /**
  * Request persistent storage to prevent eviction
+ *
+ * Note: This is a browser permission request that may fail if:
+ * - The browser doesn't support the API
+ * - The user denies permission
+ * - The site doesn't meet browser criteria for persistent storage
+ *
+ * If the request fails, the data may still be stored but could be evicted
+ * by the browser if storage space is needed.
+ *
+ * @returns Promise<boolean> - true if persistent storage was granted, false otherwise
  */
 export async function requestPersistentStorage(): Promise<boolean> {
 	if (!browser || !navigator.storage?.persist) return false;
