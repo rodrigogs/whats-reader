@@ -103,7 +103,10 @@ let scrollToMessageId = $state<string | null>(null);
 let toastMessage = $state<string | null>(null);
 let toastType = $state<'success' | 'error' | 'info'>('success');
 
-function showToast(message: string, type: 'success' | 'error' | 'info' = 'success') {
+function showToast(
+	message: string,
+	type: 'success' | 'error' | 'info' = 'success',
+) {
 	toastMessage = message;
 	toastType = type;
 }
