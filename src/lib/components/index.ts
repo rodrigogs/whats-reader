@@ -17,6 +17,8 @@ export { default as MessageBubble } from './MessageBubble.svelte';
 export { default as Modal } from './Modal.svelte';
 export { default as ModalContent } from './ModalContent.svelte';
 export { default as ModalHeader } from './ModalHeader.svelte';
+export { default as ReselectFileModal } from './ReselectFileModal.svelte';
+export { default as RestoreSessionModal } from './RestoreSessionModal.svelte';
 export { default as SearchBar } from './SearchBar.svelte';
 export { default as UpdateToast } from './UpdateToast.svelte';
 export { default as VersionBadge } from './VersionBadge.svelte';
