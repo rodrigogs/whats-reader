@@ -1,0 +1,5 @@
+2024/12/01, 10:04 pm - Alice: Messages and calls are end-to-end encrypted. Only people in this chat can read, listen to, or share them. Learn more.
+2024/12/01, 10:05 pm - Alice: Hello there
+2024/12/01, 10:06 pm - Bob: Hi!
+2024/12/01, 10:07 pm - Alice: <Media omitted>
+2024/12/01, 10:08 pm - Bob: Nice

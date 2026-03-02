@@ -1,0 +1,3 @@
+[2018/06/13, 21:25:15] Ana: mensagem com colchetes
+[2018/06/13 1:55:00 p. m.] Bruno: ampm com espaços
+[2018/06/13, 01:56:00 AM] Ana: uppercase também funciona

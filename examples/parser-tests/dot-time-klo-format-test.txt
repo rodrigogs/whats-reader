@@ -1,0 +1,3 @@
+13.6.2018 klo 21.25.15 - Mika: tämä on testi
+13.06.18 21.25.15: Laura: tämä on toinen testi
+13.06.2018, 21.25 - Mika: ilman sekunteja
