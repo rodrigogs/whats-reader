@@ -696,13 +696,13 @@ onDestroy(() => {
 						<Icon name="close" size="md" />
 					</IconButton>
 				</div>
-				
+
 				<DropdownSearch
 					bind:value={participantSearchQuery}
 					bind:ref={participantSearchInputRef}
 					placeholder={m.media_gallery_participant_search_placeholder()}
 				/>
-				
+
 				<div class="max-h-80 overflow-y-auto py-2">
 					{#each filteredMediaParticipants as participant (participant)}
 						<ListItemButton
@@ -811,7 +811,7 @@ onDestroy(() => {
 							{/if}
 							·
 							{#if lightboxItem.messageTimestamp}
-								{new Date(lightboxItem.messageTimestamp).toLocaleString()}
+								{new Date(lightboxItem.messageTimestamp).toLocaleString(getLocale())}
 							{:else}
 								{m.media_gallery_unknown_date()}
 							{/if}
