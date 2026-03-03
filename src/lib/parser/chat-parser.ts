@@ -253,7 +253,24 @@ const DATE_PATTERNS = [
 			);
 		},
 	},
-	// YYYY/MM/DD, HH:MM - Asian format
+	// YYYY/MM/DD, HH:MM AM/PM - Asian format with 12-hour time
+	{
+		regex:
+			/^(\d{4})\/(\d{1,2})\/(\d{1,2}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)\s*-\s*/i,
+		parse: (match: RegExpMatchArray) => {
+			const [, year, month, day, hours, minutes, seconds, ampm] = match;
+			return parseDateTime(
+				parseInt(day, 10),
+				parseInt(month, 10),
+				parseInt(year, 10),
+				parseInt(hours, 10),
+				parseInt(minutes, 10),
+				seconds ? parseInt(seconds, 10) : 0,
+				ampm,
+			);
+		},
+	},
+	// YYYY/MM/DD, HH:MM - Asian format (24-hour)
 	{
 		regex:
 			/^(\d{4})\/(\d{1,2})\/(\d{1,2}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*-\s*/,

@@ -48,6 +48,15 @@ This directory contains WhatsApp chat export examples in various formats for tes
   - Date format with dashes instead of slashes/dots
   - Standard English media indicators
 
+### 6. `yyyy-mm-dd-format-test.txt`
+- **Date Format**: `YYYY/MM/DD, HH:MM AM/PM`
+- **Example**: `2024/12/01, 10:04 pm`
+- **Locale**: Asian format with 12-hour time
+- **Features Tested**:
+  - Year-first format with 12-hour AM/PM time
+  - Lowercase am/pm variants
+  - Tests for issue #69
+
 ## Supported Date Formats
 
 The parser supports the following date patterns:
@@ -72,11 +81,16 @@ The parser supports the following date patterns:
    - Example: `10-12-24, 14:30`
    - Alternative European format
 
-6. **Asian Format**: `YYYY/MM/DD, HH:MM`
+6. **Asian Format (24h)**: `YYYY/MM/DD, HH:MM`
    - Example: `2024/12/10, 14:30`
    - Year-first format (Japan, China, Korea)
 
-7. **Bracketed Format**: `[DD/MM/YY, HH:MM:SS]`
+7. **Asian Format (12h)**: `YYYY/MM/DD, HH:MM AM/PM`
+   - Example: `2024/12/10, 2:30 PM`
+   - Year-first format with 12-hour time
+   - Resolves issue #69
+
+8. **Bracketed Format**: `[DD/MM/YY, HH:MM:SS]`
    - Example: `[10/12/24, 14:30:45]`
    - Some older WhatsApp versions
 
