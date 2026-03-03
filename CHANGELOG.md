@@ -1,3 +1,10 @@
+## [1.29.3](https://github.com/rodrigogs/whats-reader/compare/v1.29.2...v1.29.3) (2026-03-03)
+
+
+### Bug Fixes
+
+* add support for YYYY/MM/DD format with 12-hour AM/PM time ([4223d81](https://github.com/rodrigogs/whats-reader/commit/4223d818f2cbc6b3f164001c3dadf4788921fbfe)), closes [#69](https://github.com/rodrigogs/whats-reader/issues/69)
+
 ## [1.29.2](https://github.com/rodrigogs/whats-reader/compare/v1.29.1...v1.29.2) (2026-03-03)
 
 
