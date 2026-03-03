@@ -1,3 +1,10 @@
+## [1.29.2](https://github.com/rodrigogs/whats-reader/compare/v1.29.1...v1.29.2) (2026-03-03)
+
+
+### Bug Fixes
+
+* trigger release ([82c7622](https://github.com/rodrigogs/whats-reader/commit/82c7622e3c1bbdc267c0305209d66d7498869c7d))
+
 ## [1.29.1](https://github.com/rodrigogs/whats-reader/compare/v1.29.0...v1.29.1) (2026-01-11)
 
 
