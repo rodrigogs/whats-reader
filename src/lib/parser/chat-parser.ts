@@ -587,6 +587,54 @@ function isSystemMessage(content: string): boolean {
 	);
 }
 
+/**
+ * Compute the position in `originalLine` that corresponds to the end of the
+ * timestamp prefix whose normalized form has length `normalizedMatchLength`.
+ *
+ * `normalizeLineForParsing` makes five transforms; three of them change length:
+ *   1. Strips leading U+200E / U+200F directional marks (shortens)
+ *   2. Collapses `\s+klo\s+` → single space (shortens)
+ *   3. Rewrites `a.m.`/`p.m.` variants → `AM`/`PM` (shortens)
+ * The remaining two replace characters 1-for-1 (U+202F/U+00A0 → space; dot
+ * time separators → colon), so they do not shift positions.
+ * This function walks both strings in parallel to account for the differences.
+ */
+function getOriginalRemainderOffset(
+	originalLine: string,
+	normalizedMatchLength: number,
+): number {
+	// Step 1: skip leading directional marks that normalization strips
+	const leadingMarks = originalLine.match(/^[\u200E\u200F]+/);
+	let origPos = leadingMarks ? leadingMarks[0].length : 0;
+	let normPos = 0;
+
+	while (normPos < normalizedMatchLength && origPos < originalLine.length) {
+		const remaining = originalLine.substring(origPos);
+
+		// Step 3: \s+klo\s+ → single space in normalized
+		const kloMatch = remaining.match(/^\s+klo\s+/i);
+		if (kloMatch) {
+			normPos += 1; // one space in normalized
+			origPos += kloMatch[0].length;
+			continue;
+		}
+
+		// Step 5: a.m./p.m. variants → AM/PM in normalized (2 chars)
+		const ampmMatch = remaining.match(/^([ap])\s*\.?\s*m\.?\b/i);
+		if (ampmMatch) {
+			normPos += 2;
+			origPos += ampmMatch[0].length;
+			continue;
+		}
+
+		// Steps 2 and 4 are 1-for-1 character replacements
+		normPos++;
+		origPos++;
+	}
+
+	return origPos;
+}
+
 function parseLine(
 	line: string,
 	datePatterns: DatePattern[] = DATE_PATTERNS,
@@ -602,7 +650,12 @@ function parseLine(
 		const match = normalizedLine.match(regex);
 		if (match) {
 			const timestamp = parse(match);
-			const remainder = normalizedLine.substring(match[0].length);
+
+			// Derive remainder from the original line so that sender/content
+			// preserve the exact exported text (and ID hashes stay stable).
+			// Normalization is used only for timestamp detection and parsing.
+			const splitOffset = getOriginalRemainderOffset(line, match[0].length);
+			const remainder = line.substring(splitOffset);
 
 			// Try to extract sender and content
 			// Format is usually: "Sender Name: message content"
