@@ -51,6 +51,7 @@ const MEDIA_INDICATORS = [
 	'<媒体省略>',
 	'<미디어 생략>',
 	'<Медиа пропущены>',
+	'<attached:',
 	'(file attached)',
 	'(arquivo anexado)',
 	'(fichier joint)',
