@@ -167,6 +167,7 @@ The parser supports the following date patterns:
 The parser recognizes media indicators in multiple languages:
 
 - **English**: `<Media omitted>`, `(file attached)`
+- **iOS export**: `<attached: filename.ext>`
 - **Portuguese**: `<Mídia oculta>`, `(arquivo anexado)`
 - **French**: `<Médias omis>`, `(fichier joint)`
 - **German**: `<Medien ausgelassen>`, `(Datei angehängt)`
