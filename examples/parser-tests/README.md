@@ -162,6 +162,15 @@ The parser supports the following date patterns:
   - Underscore-prefixed filename (`_chat.txt`)
   - Right-to-left language support (Arabic text)
 
+### 11. `ios-attached-media-test.txt`
+- **Date Format**: `[DD/MM/YYYY, HH:MM:SS AM/PM]`
+- **Example**: `[13/11/2025, 12:26:10 PM]`
+- **Locale**: iOS (all locales)
+- **Features Tested**:
+  - iOS `<attached: filename.ext>` media indicator format
+  - Audio media detection (`<attached: *.opus>`)
+  - Image media detection (`<attached: *.jpg>`)
+
 ## Media Indicators Supported
 
 The parser recognizes media indicators in multiple languages:
