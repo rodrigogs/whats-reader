@@ -230,11 +230,22 @@ ipcMain.handle('fs:fileExists', async (_event, filePath) => {
 // Read file from absolute path (for persistence)
 ipcMain.handle('file:readFromPath', async (_event, filePath) => {
 	try {
-		const content = fs.readFileSync(filePath);
+		// Only allow .zip files to prevent path traversal attacks
+		if (path.extname(filePath).toLowerCase() !== '.zip') {
+			return {
+				success: false,
+				error: 'Only .zip files are allowed',
+			};
+		}
+
+		const content = await fs.promises.readFile(filePath);
 		const fileName = path.basename(filePath);
 		return {
 			success: true,
-			buffer: content.buffer,
+			buffer: content.buffer.slice(
+				content.byteOffset,
+				content.byteOffset + content.byteLength,
+			),
 			name: fileName,
 		};
 	} catch (error) {
