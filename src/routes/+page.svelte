@@ -206,6 +206,85 @@ const autoLoadMediaForCurrentChat = $derived.by(() => {
 	return autoLoadMediaByChat.get(appState.selectedChat.title) || false;
 });
 
+const STAGE_PROGRESS = {
+	reading: { offset: 0.0, weight: 0.1 },
+	extracting: { offset: 0.1, weight: 0.5 },
+	parsing: { offset: 0.6, weight: 0.4 },
+} as const;
+
+function startIndexWorker(chatData: ChatData) {
+	const indexWorker = new Worker(
+		new URL('$lib/workers/index-worker.ts', import.meta.url),
+		{ type: 'module' },
+	);
+
+	indexWorker.onmessage = (
+		event: MessageEvent<{
+			chatTitle: string;
+			indexEntries: [string, number][];
+			flatItems: Array<
+				| { type: 'date'; dateKey: string }
+				| { type: 'message'; messageId: string }
+			>;
+			serializedMessages: Array<{
+				id: string;
+				timestamp: string;
+				sender: string;
+				content: string;
+				isSystemMessage: boolean;
+				isMediaMessage: boolean;
+				mediaType?: string;
+				rawLine: string;
+			}>;
+		}>,
+	) => {
+		const { chatTitle, indexEntries, flatItems, serializedMessages } =
+			event.data;
+		const messageIndex = new Map(indexEntries);
+		appState.updateChatMessageIndex(chatTitle, messageIndex);
+		appState.updateChatFlatItems(chatTitle, flatItems);
+		appState.updateChatSerializedMessages(chatTitle, serializedMessages);
+		indexWorker.terminate();
+	};
+
+	indexWorker.onerror = (err) => {
+		console.error('Index worker error:', err);
+		indexWorker.terminate();
+	};
+
+	indexWorker.postMessage({
+		messages: chatData.messages.map((m) => ({
+			id: m.id,
+			timestamp: m.timestamp.toISOString(),
+			sender: m.sender,
+			content: m.content,
+			isSystemMessage: m.isSystemMessage,
+			isMediaMessage: m.isMediaMessage,
+			mediaType: m.mediaType,
+			rawLine: m.rawLine,
+		})),
+		chatTitle: chatData.title,
+	});
+}
+
+function makeProgressCallback(loadingId: string) {
+	return async ({
+		stage,
+		progress,
+	}: {
+		stage: LoadingChat['stage'];
+		progress: number;
+	}) => {
+		const { offset: stageOffset, weight: stageWeight } =
+			STAGE_PROGRESS[stage] ?? STAGE_PROGRESS.extracting;
+		const overallProgress =
+			10 + (stageOffset + (progress / 100) * stageWeight) * 90;
+		loadingChats = loadingChats.map((lc) =>
+			lc.id === loadingId ? { ...lc, progress: overallProgress, stage } : lc,
+		);
+	};
+}
+
 async function handleFilesSelected(files: FileList) {
 	appState.clearError();
 
@@ -250,25 +329,7 @@ async function handleFilesSelected(files: FileList) {
 				// Parse ZIP file using Web Worker
 				const chatData: ChatData = await parseZipFile(
 					buffer,
-					async ({ stage, progress }) => {
-						const STAGE_PROGRESS = {
-							reading: { offset: 0.0, weight: 0.1 },
-							extracting: { offset: 0.1, weight: 0.5 },
-							parsing: { offset: 0.6, weight: 0.4 },
-						} as const;
-
-						const { offset: stageOffset, weight: stageWeight } =
-							STAGE_PROGRESS[stage] ?? STAGE_PROGRESS.extracting;
-
-						const overallProgress =
-							10 + (stageOffset + (progress / 100) * stageWeight) * 90;
-
-						loadingChats = loadingChats.map((lc) =>
-							lc.id === loadingId
-								? { ...lc, progress: overallProgress, stage }
-								: lc,
-						);
-					},
+					makeProgressCallback(loadingId),
 				);
 
 				// Remove loading placeholder and add actual chat
@@ -276,73 +337,10 @@ async function handleFilesSelected(files: FileList) {
 				appState.addChat(chatData);
 
 				// Store file reference for persistence
-				if (isElectron && window.electronAPI?.openFile) {
-					// In Electron, we can get the file path from the openFile dialog
-					// But for drag-drop, we don't have the path, so store the file object
-					chatFileReferences.set(chatData.title, { file });
-				} else {
-					// In web, store the file object
-					// Don't request file handle here - that would cause a double prompt!
-					// Handle will be requested when user clicks "Remember Conversation"
-					chatFileReferences.set(chatData.title, { file });
-				}
+				chatFileReferences.set(chatData.title, { file });
 
-				// Start background indexing for bookmark navigation and flat items
-				const indexWorker = new Worker(
-					new URL('$lib/workers/index-worker.ts', import.meta.url),
-					{ type: 'module' },
-				);
-
-				indexWorker.onmessage = (
-					event: MessageEvent<{
-						chatTitle: string;
-						indexEntries: [string, number][];
-						flatItems: Array<
-							| { type: 'date'; dateKey: string }
-							| { type: 'message'; messageId: string }
-						>;
-						serializedMessages: Array<{
-							id: string;
-							timestamp: string;
-							sender: string;
-							content: string;
-							isSystemMessage: boolean;
-							isMediaMessage: boolean;
-							mediaType?: string;
-							rawLine: string;
-						}>;
-					}>,
-				) => {
-					const { chatTitle, indexEntries, flatItems, serializedMessages } =
-						event.data;
-					const messageIndex = new Map(indexEntries);
-					appState.updateChatMessageIndex(chatTitle, messageIndex);
-					appState.updateChatFlatItems(chatTitle, flatItems);
-					appState.updateChatSerializedMessages(chatTitle, serializedMessages);
-					indexWorker.terminate();
-				};
-
-				indexWorker.onerror = (err) => {
-					console.error('Index worker error:', err);
-					indexWorker.terminate();
-				};
-
-				// Send messages to worker for indexing
-				const serializedMessages = chatData.messages.map((m) => ({
-					id: m.id,
-					timestamp: m.timestamp.toISOString(),
-					sender: m.sender,
-					content: m.content,
-					isSystemMessage: m.isSystemMessage,
-					isMediaMessage: m.isMediaMessage,
-					mediaType: m.mediaType,
-					rawLine: m.rawLine,
-				}));
-
-				indexWorker.postMessage({
-					messages: serializedMessages,
-					chatTitle: chatData.title,
-				});
+				// Start background indexing
+				startIndexWorker(chatData);
 
 				// On mobile, collapse sidebar after loading chats
 				if (browser && isMobileViewport()) {
@@ -647,25 +645,7 @@ async function loadChatFromBuffer(
 		// Parse ZIP file using Web Worker
 		const chatData: ChatData = await parseZipFile(
 			buffer,
-			async ({ stage, progress }) => {
-				const STAGE_PROGRESS = {
-					reading: { offset: 0.0, weight: 0.1 },
-					extracting: { offset: 0.1, weight: 0.5 },
-					parsing: { offset: 0.6, weight: 0.4 },
-				} as const;
-
-				const { offset: stageOffset, weight: stageWeight } =
-					STAGE_PROGRESS[stage] ?? STAGE_PROGRESS.extracting;
-
-				const overallProgress =
-					10 + (stageOffset + (progress / 100) * stageWeight) * 90;
-
-				loadingChats = loadingChats.map((lc) =>
-					lc.id === loadingId
-						? { ...lc, progress: overallProgress, stage }
-						: lc,
-				);
-			},
+			makeProgressCallback(loadingId),
 		);
 
 		// If restoring, validate the file
@@ -723,62 +703,8 @@ async function loadChatFromBuffer(
 			chatFileReferences.set(chatData.title, { file: null, filePath });
 		}
 
-		// Start background indexing for bookmark navigation and flat items
-		const indexWorker = new Worker(
-			new URL('$lib/workers/index-worker.ts', import.meta.url),
-			{ type: 'module' },
-		);
-
-		indexWorker.onmessage = (
-			event: MessageEvent<{
-				chatTitle: string;
-				indexEntries: [string, number][];
-				flatItems: Array<
-					| { type: 'date'; dateKey: string }
-					| { type: 'message'; messageId: string }
-				>;
-				serializedMessages: Array<{
-					id: string;
-					timestamp: string;
-					sender: string;
-					content: string;
-					isSystemMessage: boolean;
-					isMediaMessage: boolean;
-					mediaType?: string;
-					rawLine: string;
-				}>;
-			}>,
-		) => {
-			const { chatTitle, indexEntries, flatItems, serializedMessages } =
-				event.data;
-			const messageIndex = new Map(indexEntries);
-			appState.updateChatMessageIndex(chatTitle, messageIndex);
-			appState.updateChatFlatItems(chatTitle, flatItems);
-			appState.updateChatSerializedMessages(chatTitle, serializedMessages);
-			indexWorker.terminate();
-		};
-
-		indexWorker.onerror = (err) => {
-			console.error('Index worker error:', err);
-			indexWorker.terminate();
-		};
-
-		// Send messages to worker for indexing
-		const serializedMessages = chatData.messages.map((m) => ({
-			id: m.id,
-			timestamp: m.timestamp.toISOString(),
-			sender: m.sender,
-			content: m.content,
-			isSystemMessage: m.isSystemMessage,
-			isMediaMessage: m.isMediaMessage,
-			mediaType: m.mediaType,
-			rawLine: m.rawLine,
-		}));
-
-		indexWorker.postMessage({
-			messages: serializedMessages,
-			chatTitle: chatData.title,
-		});
+		// Start background indexing
+		startIndexWorker(chatData);
 	} catch (error) {
 		console.error('Error parsing file:', error);
 		// Remove loading placeholder on error

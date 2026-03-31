@@ -230,29 +230,34 @@ ipcMain.handle('fs:fileExists', async (_event, filePath) => {
 // Read file from absolute path (for persistence)
 ipcMain.handle('file:readFromPath', async (_event, filePath) => {
 	try {
-		// Only allow .zip files to prevent path traversal attacks
-		if (path.extname(filePath).toLowerCase() !== '.zip') {
-			return {
-				success: false,
-				error: 'Only .zip files are allowed',
-			};
+		// Normalize and validate path
+		const normalized = path.resolve(filePath);
+		if (normalized !== filePath && path.normalize(filePath) !== filePath) {
+			return { success: false, error: 'Invalid file path' };
 		}
 
-		const content = await fs.promises.readFile(filePath);
-		const fileName = path.basename(filePath);
+		// Only allow .zip files
+		if (path.extname(normalized).toLowerCase() !== '.zip') {
+			return { success: false, error: 'Only .zip files are allowed' };
+		}
+
+		// Verify it's a regular file (not a symlink to something else)
+		const stat = await fs.promises.lstat(normalized);
+		if (!stat.isFile()) {
+			return { success: false, error: 'Path is not a regular file' };
+		}
+
+		const content = await fs.promises.readFile(normalized);
 		return {
 			success: true,
 			buffer: content.buffer.slice(
 				content.byteOffset,
 				content.byteOffset + content.byteLength,
 			),
-			name: fileName,
+			name: path.basename(normalized),
 		};
 	} catch (error) {
-		return {
-			success: false,
-			error: error.message,
-		};
+		return { success: false, error: error.message };
 	}
 });
 
