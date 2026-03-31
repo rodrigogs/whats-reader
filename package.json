@@ -41,6 +41,7 @@
 		"@floating-ui/dom": "^1.7.4",
 		"@huggingface/transformers": "^3.8.1",
 		"electron-updater": "^6.6.2",
+		"idb-keyval": "^6.2.2",
 		"jszip": "^3.10.1"
 	},
 	"overrides": {

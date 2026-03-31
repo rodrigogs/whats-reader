@@ -25,6 +25,8 @@ interface Props {
 	autoLoadMediaByChat?: Map<string, boolean>;
 	onAutoLoadMediaChange?: (chatTitle: string, enabled: boolean) => void;
 	loadingChats?: LoadingChat[];
+	rememberedChats?: Set<string>;
+	onToggleRemember?: (chatTitle: string, enabled: boolean) => void;
 }
 
 let {
@@ -37,6 +39,8 @@ let {
 	autoLoadMediaByChat = new Map(),
 	onAutoLoadMediaChange,
 	loadingChats = [],
+	rememberedChats = new Set(),
+	onToggleRemember,
 }: Props = $props();
 
 const stageLabels = {
@@ -119,6 +123,19 @@ function handleAutoLoadToggle() {
 		const chat = chats[contextMenuIndex];
 		const currentEnabled = isAutoLoadEnabled(chat.title);
 		onAutoLoadMediaChange(chat.title, !currentEnabled);
+	}
+	closeContextMenu();
+}
+
+function isRemembered(chatTitle: string): boolean {
+	return rememberedChats.has(chatTitle);
+}
+
+function handleToggleRemember() {
+	if (contextMenuIndex !== null && onToggleRemember) {
+		const chat = chats[contextMenuIndex];
+		const currentRemembered = isRemembered(chat.title);
+		onToggleRemember(chat.title, !currentRemembered);
 	}
 	closeContextMenu();
 }
@@ -352,6 +369,20 @@ function getLastMessage(chat: ChatData): string {
 					</div>
 				{/if}
 			</div>
+			
+			<!-- Divider -->
+			<div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+			
+			<!-- Remember Conversation toggle -->
+			<ListItemButton class="justify-between" onclick={handleToggleRemember}>
+				<span class="flex items-center gap-2">
+					<Icon name="bookmark" size="sm" />
+					{m.persistence_remember_conversation()}
+				</span>
+				{#if isRemembered(chats[contextMenuIndex]?.title || '')}
+					<Icon name="check" size="sm" class="text-[var(--color-whatsapp-teal)]" />
+				{/if}
+			</ListItemButton>
 			
 			<!-- Divider -->
 			<div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>

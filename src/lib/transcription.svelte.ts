@@ -162,6 +162,43 @@ export function getAllTranscriptions(): Record<string, string> {
 }
 
 /**
+ * Get transcriptions for a specific chat (for persistence)
+ *
+ * Note: Currently returns all transcriptions as we don't track chatId per transcription.
+ * In the future, we could filter by chatId if we store it with each transcription.
+ *
+ * @param _chatId - Chat ID (currently unused, reserved for future filtering)
+ */
+export function getTranscriptionsForChat(
+	_chatId: string,
+): Record<string, string> {
+	// For now, return all transcriptions
+	// In the future, we could filter by chatId if we track it per transcription
+	return getAllTranscriptions();
+}
+
+/**
+ * Set transcriptions for a chat (for restoration)
+ *
+ * Note: Currently merges with all transcriptions as we don't track chatId per transcription.
+ * In the future, we could use chatId to manage transcriptions separately per chat.
+ *
+ * @param _chatId - Chat ID (currently unused, reserved for future use)
+ * @param transcriptions - Map of messageId to transcription text
+ */
+export function setTranscriptionsForChat(
+	_chatId: string,
+	transcriptions: Record<string, string>,
+): void {
+	// Merge with existing transcriptions
+	for (const [messageId, text] of Object.entries(transcriptions)) {
+		transcriptionStore.set(messageId, text);
+	}
+	// Trigger reactivity
+	transcriptionStore = new Map(transcriptionStore);
+}
+
+/**
  * Pre-load the Whisper model
  */
 export function preloadModel(): void {

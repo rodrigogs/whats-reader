@@ -15,6 +15,6 @@ interface Props {
 let { class: className = '', children }: Props = $props();
 </script>
 
-<div class="flex-1 overflow-y-auto {className}">
+<div class="flex-1 overflow-y-auto p-4 sm:p-6 {className}">
 	{@render children()}
 </div>
