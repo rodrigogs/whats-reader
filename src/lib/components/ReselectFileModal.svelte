@@ -15,12 +15,13 @@ interface Props {
 
 let { chatMetadata, onFileSelected, onSkip, onClose }: Props = $props();
 
-let isDragging = $state(false);
+let dragCounter = $state(0);
+let isDragging = $derived(dragCounter > 0);
 
 function handleDrop(e: DragEvent) {
 	e.preventDefault();
 	e.stopPropagation();
-	isDragging = false;
+	dragCounter = 0;
 
 	const files = e.dataTransfer?.files;
 	if (files && files.length > 0) {
@@ -34,13 +35,18 @@ function handleDrop(e: DragEvent) {
 function handleDragOver(e: DragEvent) {
 	e.preventDefault();
 	e.stopPropagation();
-	isDragging = true;
+}
+
+function handleDragEnter(e: DragEvent) {
+	e.preventDefault();
+	e.stopPropagation();
+	dragCounter++;
 }
 
 function handleDragLeave(e: DragEvent) {
 	e.preventDefault();
 	e.stopPropagation();
-	isDragging = false;
+	dragCounter--;
 }
 
 function handleFileInput(e: Event) {
@@ -107,6 +113,7 @@ function getInitials(title: string): string {
 						: 'border-neutral-300 dark:border-neutral-600 hover:border-[var(--color-whatsapp-teal)]/50 hover:bg-neutral-50 dark:hover:bg-neutral-800/30'}"
 				ondrop={handleDrop}
 				ondragover={handleDragOver}
+				ondragenter={handleDragEnter}
 				ondragleave={handleDragLeave}
 			>
 				<div class="flex flex-col items-center gap-3 sm:gap-4">
