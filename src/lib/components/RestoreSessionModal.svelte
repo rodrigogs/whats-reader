@@ -1,5 +1,5 @@
 <script lang="ts">
-import { tick } from 'svelte';
+import { getInitials } from '$lib/helpers/format';
 import * as m from '$lib/paraglide/messages';
 import { getLocale } from '$lib/paraglide/runtime';
 import type { PersistedChatMetadata } from '$lib/persistence.svelte';
@@ -77,14 +77,6 @@ function formatDate(dateStr: string): string {
 			day: 'numeric',
 		});
 	}
-}
-
-function getInitials(title: string): string {
-	const words = title.trim().split(/\s+/);
-	if (words.length === 1) {
-		return words[0].substring(0, 2).toUpperCase();
-	}
-	return (words[0][0] + words[words.length - 1][0]).toUpperCase();
 }
 </script>
 

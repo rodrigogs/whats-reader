@@ -1,7 +1,6 @@
 <script lang="ts">
 import { tick } from 'svelte';
 import { browser } from '$app/environment';
-import { floating } from '$lib/actions/floating';
 import favicon from '$lib/assets/favicon.svg';
 import { getAutoUpdaterState, initAutoUpdater } from '$lib/auto-updater.svelte';
 import { bookmarksState } from '$lib/bookmarks.svelte';
@@ -184,6 +183,7 @@ let rememberedChats = $state<Set<string>>(new Set()); // Track which chats are r
 let showRestoreSessionModal = $state(false);
 let showReselectFileModal = $state(false);
 let reselectChatMetadata = $state<PersistedChatMetadata | null>(null);
+let reselectResolve: ((file: File | null) => void) | null = null;
 let persistedChatsToRestore = $state<PersistedChatMetadata[]>([]);
 let isRestoring = $state(false);
 
@@ -514,9 +514,11 @@ const currentUser = $derived.by(() => {
 	return undefined;
 });
 
-// Check for persisted chats on app load
+// Check for persisted chats on app load (one-time)
+let persistenceChecked = false;
 $effect(() => {
-	if (!browser) return;
+	if (!browser || persistenceChecked) return;
+	persistenceChecked = true;
 
 	(async () => {
 		try {
@@ -549,10 +551,21 @@ async function handleRestoreChats(chatIds: string[]) {
 			const result = await restoreChat(persistedChat);
 
 			if (result.needsReselect) {
-				// Show reselect modal
+				// Show reselect modal and wait for user response
 				reselectChatMetadata = persistedChat;
 				showReselectFileModal = true;
-				// Wait for user to provide file (handled by handleReselectFile)
+				const file = await new Promise<File | null>((resolve) => {
+					reselectResolve = resolve;
+				});
+				reselectChatMetadata = null;
+				showReselectFileModal = false;
+
+				if (file) {
+					const reselectedBuffer = await file.arrayBuffer();
+					await loadChatFromBuffer(reselectedBuffer, file.name, persistedChat);
+					rememberedChats.add(persistedChat.chatTitle);
+					rememberedChats = new Set(rememberedChats);
+				}
 				continue;
 			}
 
@@ -587,32 +600,18 @@ async function handleRestoreChats(chatIds: string[]) {
 
 // Handle reselect file for a persisted chat
 async function handleReselectFile(file: File) {
-	if (!reselectChatMetadata) return;
-
-	showReselectFileModal = false;
-
-	try {
-		// Read file
-		const buffer = await file.arrayBuffer();
-
-		// Parse and load the chat
-		await loadChatFromBuffer(buffer, file.name, reselectChatMetadata);
-
-		// Mark as remembered
-		rememberedChats.add(reselectChatMetadata.chatTitle);
-		rememberedChats = new Set(rememberedChats);
-	} catch (e) {
-		console.error('Error loading reselected file:', e);
-		appState.setError(e instanceof Error ? e.message : 'Failed to load file');
-	} finally {
-		reselectChatMetadata = null;
+	if (reselectResolve) {
+		reselectResolve(file);
+		reselectResolve = null;
 	}
 }
 
 // Skip reselect for a chat
 function handleSkipReselect() {
-	showReselectFileModal = false;
-	reselectChatMetadata = null;
+	if (reselectResolve) {
+		reselectResolve(null);
+		reselectResolve = null;
+	}
 }
 
 // Handle start fresh (close restore modal without restoring)
@@ -809,8 +808,7 @@ async function handleToggleRemember(chatTitle: string, enabled: boolean) {
 					);
 
 					// This requires user gesture (we have it - user just clicked)
-					fileHandle =
-						(await promptForFileHandle(fileRef.file.name)) || undefined;
+					fileHandle = (await promptForFileHandle()) || undefined;
 				} catch (e) {
 					console.log('Could not get file handle:', e);
 					// Not critical - user can still use persistence, just needs to reselect
@@ -818,7 +816,7 @@ async function handleToggleRemember(chatTitle: string, enabled: boolean) {
 			}
 
 			const bookmarks = bookmarksState.getBookmarksForChatAsExport(chatTitle);
-			const transcriptions = getTranscriptionsForChat(chatTitle);
+			const transcriptions = getTranscriptionsForChat();
 			const settings = {
 				language: languageByChat.get(chatTitle) || 'portuguese',
 				autoLoadMedia: autoLoadMediaByChat.get(chatTitle) || false,

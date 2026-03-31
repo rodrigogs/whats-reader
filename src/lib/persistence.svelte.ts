@@ -136,9 +136,7 @@ async function verifyHandlePermission(
  * Prompt user to select a file and get a FileSystemFileHandle
  * This is used when initially loading a file to get a handle we can store
  */
-export async function promptForFileHandle(
-	_expectedFileName?: string,
-): Promise<FileSystemFileHandle | null> {
+export async function promptForFileHandle(): Promise<FileSystemFileHandle | null> {
 	if (!isFileSystemAccessSupported()) return null;
 
 	try {

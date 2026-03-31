@@ -3,6 +3,7 @@
  * Simple Toast Notification
  * Displays temporary notification messages
  */
+import { fly } from 'svelte/transition';
 
 interface Props {
 	message: string;
@@ -15,17 +16,19 @@ let { message, type = 'success', duration = 3000, onClose }: Props = $props();
 
 let visible = $state(true);
 
-// Auto-hide after duration
-if (duration > 0) {
-	setTimeout(() => {
+// Auto-hide after duration, with cleanup on destroy
+$effect(() => {
+	if (!visible || duration <= 0) return;
+
+	const timer = setTimeout(() => {
 		visible = false;
-		setTimeout(() => onClose?.(), 300); // Wait for fade out animation
 	}, duration);
-}
+
+	return () => clearTimeout(timer);
+});
 
 function handleClose() {
 	visible = false;
-	setTimeout(() => onClose?.(), 300);
 }
 
 const bgColors = {
@@ -33,20 +36,14 @@ const bgColors = {
 	error: 'bg-red-500 dark:bg-red-600',
 	info: 'bg-blue-500 dark:bg-blue-600',
 };
-
-const icons = {
-	success: 'check',
-	error: 'alert-circle',
-	info: 'info',
-};
 </script>
 
 {#if visible}
 	<div
-		class="fixed bottom-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white transition-all duration-300 {bgColors[
-			type
-		]} {visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}"
+		class="fixed bottom-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white {bgColors[type]}"
 		role="alert"
+		transition:fly={{ y: 8, duration: 300 }}
+		onoutroend={() => onClose?.()}
 	>
 		<svg
 			class="w-5 h-5"

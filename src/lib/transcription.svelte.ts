@@ -164,16 +164,11 @@ export function getAllTranscriptions(): Record<string, string> {
 /**
  * Get transcriptions for a specific chat (for persistence)
  *
- * Note: Currently returns all transcriptions as we don't track chatId per transcription.
- * In the future, we could filter by chatId if we store it with each transcription.
- *
- * @param _chatId - Chat ID (currently unused, reserved for future filtering)
+ * Note: Currently returns all transcriptions since message IDs are unique across chats,
+ * so filtering by chatId is not necessary. If this assumption changes, add chatId tracking
+ * per transcription and accept a chatId parameter here.
  */
-export function getTranscriptionsForChat(
-	_chatId: string,
-): Record<string, string> {
-	// For now, return all transcriptions
-	// In the future, we could filter by chatId if we track it per transcription
+export function getTranscriptionsForChat(): Record<string, string> {
 	return getAllTranscriptions();
 }
 

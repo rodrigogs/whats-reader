@@ -1,4 +1,5 @@
 <script lang="ts">
+import { getInitials } from '$lib/helpers/format';
 import * as m from '$lib/paraglide/messages';
 import type { PersistedChatMetadata } from '$lib/persistence.svelte';
 import Icon from './Icon.svelte';
@@ -58,14 +59,6 @@ function handleFileInput(e: Event) {
 			onFileSelected(file);
 		}
 	}
-}
-
-function getInitials(title: string): string {
-	const words = title.trim().split(/\s+/);
-	if (words.length === 1) {
-		return words[0].substring(0, 2).toUpperCase();
-	}
-	return (words[0][0] + words[words.length - 1][0]).toUpperCase();
 }
 </script>
 
