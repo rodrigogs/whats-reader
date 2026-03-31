@@ -258,5 +258,10 @@
   "persistence_validation_failed": "This file doesn't match the saved conversation",
   "persistence_validation_confirm": "This might be the correct file, but we couldn't fully verify. Continue anyway?",
   "persistence_file_not_found": "The original file was moved or deleted",
-  "persistence_restoring": "Restoring conversations..."
+  "persistence_restoring": "Restoring conversations...",
+  "persistence_select_all": "Tout sélectionner",
+  "persistence_deselect_all": "Tout désélectionner",
+  "persistence_drop_zip": "Déposez le fichier ZIP WhatsApp ici",
+  "persistence_or_browse": "ou cliquez ci-dessous pour parcourir",
+  "persistence_browse_files": "Parcourir les fichiers"
 }

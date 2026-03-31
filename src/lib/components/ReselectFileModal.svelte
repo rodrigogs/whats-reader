@@ -119,10 +119,10 @@ function getInitials(title: string): string {
 					<!-- Text -->
 					<div class="space-y-1 sm:space-y-2">
 						<p class="text-sm sm:text-base font-semibold text-neutral-800 dark:text-neutral-200">
-							Drop WhatsApp ZIP file here
+							{m.persistence_drop_zip()}
 						</p>
 						<p class="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
-							or click below to browse
+							{m.persistence_or_browse()}
 						</p>
 					</div>
 					
@@ -136,7 +136,7 @@ function getInitials(title: string): string {
 						/>
 						<span class="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-white bg-[var(--color-whatsapp-teal)] hover:bg-[var(--color-whatsapp-dark-green)] rounded-lg transition-colors shadow-sm">
 							<Icon name="folder" size="sm" />
-							<span>Browse Files</span>
+							<span>{m.persistence_browse_files()}</span>
 						</span>
 					</label>
 				</div>

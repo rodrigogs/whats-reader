@@ -110,7 +110,7 @@ function getInitials(title: string): string {
 					onclick={selectAll}
 				>
 					<Icon name="check-all" size="xs" />
-					<span>Select All</span>
+					<span>{m.persistence_select_all()}</span>
 				</button>
 				<button
 					type="button"
@@ -118,7 +118,7 @@ function getInitials(title: string): string {
 					onclick={deselectAll}
 				>
 					<Icon name="x" size="xs" />
-					<span>Deselect All</span>
+					<span>{m.persistence_deselect_all()}</span>
 				</button>
 			</div>
 
