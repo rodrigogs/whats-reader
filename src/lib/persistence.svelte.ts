@@ -91,7 +91,8 @@ async function getStoredFileHandle(
 			`${HANDLE_PREFIX}${handleId}`,
 		);
 		return handle || null;
-	} catch (_e) {
+	} catch (e) {
+		console.error('Failed to get stored file handle from IndexedDB:', e);
 		return null;
 	}
 }
@@ -125,7 +126,8 @@ async function verifyHandlePermission(
 		}
 
 		return permission;
-	} catch (_e) {
+	} catch (e) {
+		console.error('Failed to verify file handle permission:', e);
 		return 'prompt';
 	}
 }
@@ -154,8 +156,9 @@ export async function promptForFileHandle(
 
 		const [handle] = await window.showOpenFilePicker(options);
 		return handle || null;
-	} catch (_e) {
-		// User cancelled
+	} catch (e) {
+		// User cancelled or file picker failed
+		console.warn('File picker cancelled or failed:', e);
 		return null;
 	}
 }
@@ -522,7 +525,8 @@ export async function restoreChat(
 						metadata: persistedChat,
 					},
 				};
-			} catch (_e) {
+			} catch (e) {
+				console.error('Failed to read file from handle:', e);
 				return {
 					success: false,
 					error: 'Failed to read file from handle',
@@ -566,7 +570,8 @@ export async function getDontShowRestoreModal(): Promise<boolean> {
 	if (!browser) return false;
 	try {
 		return (await get<boolean>(DONT_SHOW_KEY)) || false;
-	} catch (_e) {
+	} catch (e) {
+		console.error('Failed to get dont-show-restore-modal preference:', e);
 		return false;
 	}
 }
