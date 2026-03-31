@@ -67,7 +67,15 @@ export type IconName =
 	| 'arrow-circle-right'
 	| 'microphone'
 	| 'circle'
-	| 'tag';
+	| 'tag'
+	// Persistence feature icons
+	| 'alert-circle'
+	| 'folder'
+	| 'clock'
+	| 'check-all'
+	| 'x'
+	| 'check-circle'
+	| 'message-circle';
 
 type IconSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 
@@ -392,6 +400,43 @@ const icons: Record<
 	},
 	tag: {
 		path: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z',
+		stroke: 'currentColor',
+		strokeWidth: '2',
+	},
+
+	// Persistence feature icons
+	'alert-circle': {
+		path: 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+		stroke: 'currentColor',
+		strokeWidth: '2',
+	},
+	folder: {
+		path: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z',
+		stroke: 'currentColor',
+		strokeWidth: '2',
+	},
+	clock: {
+		path: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+		stroke: 'currentColor',
+		strokeWidth: '2',
+	},
+	'check-all': {
+		path: 'M18 7l-8 8-4-4M22 7l-8 8m0 0l-2-2',
+		stroke: 'currentColor',
+		strokeWidth: '2',
+	},
+	x: {
+		path: 'M6 18L18 6M6 6l12 12',
+		stroke: 'currentColor',
+		strokeWidth: '2',
+	},
+	'check-circle': {
+		path: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+		stroke: 'currentColor',
+		strokeWidth: '2',
+	},
+	'message-circle': {
+		path: 'M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z',
 		stroke: 'currentColor',
 		strokeWidth: '2',
 	},

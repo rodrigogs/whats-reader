@@ -61,8 +61,35 @@ declare global {
 		// interface Platform {}
 	}
 
+	// File System Access API types (experimental, not in default TypeScript libs)
+	// See https://wicg.github.io/file-system-access/
+	interface FileSystemHandlePermissionDescriptor {
+		mode?: 'read' | 'readwrite';
+	}
+
+	interface OpenFilePickerOptions {
+		types?: {
+			description?: string;
+			accept: Record<string, string[]>;
+		}[];
+		multiple?: boolean;
+		excludeAcceptAllOption?: boolean;
+	}
+
+	interface FileSystemFileHandle {
+		queryPermission(
+			descriptor?: FileSystemHandlePermissionDescriptor,
+		): Promise<PermissionState>;
+		requestPermission(
+			descriptor?: FileSystemHandlePermissionDescriptor,
+		): Promise<PermissionState>;
+	}
+
 	interface Window {
 		electronAPI?: ElectronAPI;
+		showOpenFilePicker(
+			options?: OpenFilePickerOptions,
+		): Promise<FileSystemFileHandle[]>;
 	}
 }
 

@@ -43,6 +43,7 @@ import {
 	findPersistedChatByTitle,
 	getDontShowRestoreModal,
 	getPersistedChats,
+	isElectronPathReference,
 	isFileSystemAccessSupported,
 	type PersistedChatMetadata,
 	promptForFileHandle,
