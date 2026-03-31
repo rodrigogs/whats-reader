@@ -374,11 +374,26 @@ function handleSelectChat(index: number) {
 	}
 }
 
-function handleRemoveChat(index: number) {
+async function handleRemoveChat(index: number) {
 	const chat = appState.chats[index];
 	if (chat) {
+		const chatTitle = chat.title;
 		// Clean up file reference
-		chatFileReferences.delete(chat.title);
+		chatFileReferences.delete(chatTitle);
+
+		// Clean up persisted data in IndexedDB if this chat was remembered
+		if (rememberedChats.has(chatTitle)) {
+			try {
+				const persisted = await findPersistedChatByTitle(chatTitle);
+				if (persisted) {
+					await removePersistedChat(persisted.id);
+				}
+			} catch (e) {
+				console.error('Failed to clean up persisted chat:', e);
+			}
+			rememberedChats.delete(chatTitle);
+			rememberedChats = new Set(rememberedChats);
+		}
 	}
 	appState.removeChat(index);
 }
