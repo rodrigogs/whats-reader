@@ -263,5 +263,9 @@
   "persistence_deselect_all": "Alles deselecteren",
   "persistence_drop_zip": "WhatsApp ZIP-bestand hier neerzetten",
   "persistence_or_browse": "of klik hieronder om te bladeren",
-  "persistence_browse_files": "Bestanden bladeren"
+  "persistence_browse_files": "Bestanden bladeren",
+  "persistence_reselect_hint": "Selecteer het bestand nogmaals om automatisch herstel in de toekomst mogelijk te maken",
+  "persistence_save_failed": "Gesprek opslaan mislukt",
+  "persistence_remove_failed": "Gesprek verwijderen mislukt",
+  "persistence_close_notification": "Melding sluiten"
 }

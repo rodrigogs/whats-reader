@@ -263,5 +263,9 @@
   "persistence_deselect_all": "Deseleziona tutto",
   "persistence_drop_zip": "Trascina qui il file ZIP di WhatsApp",
   "persistence_or_browse": "o clicca sotto per sfogliare",
-  "persistence_browse_files": "Sfoglia file"
+  "persistence_browse_files": "Sfoglia file",
+  "persistence_reselect_hint": "Seleziona il file ancora una volta per abilitare il ripristino automatico in futuro",
+  "persistence_save_failed": "Impossibile salvare la conversazione",
+  "persistence_remove_failed": "Impossibile rimuovere la conversazione",
+  "persistence_close_notification": "Chiudi notifica"
 }

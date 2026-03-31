@@ -4,6 +4,7 @@
  * Displays temporary notification messages
  */
 import { fly } from 'svelte/transition';
+import * as m from '$lib/paraglide/messages';
 
 interface Props {
 	message: string;
@@ -80,7 +81,7 @@ const bgColors = {
 			type="button"
 			onclick={handleClose}
 			class="ml-2 hover:opacity-80 transition-opacity"
-			aria-label="Close notification"
+			aria-label={m.persistence_close_notification()}
 		>
 			<svg
 				class="w-4 h-4"

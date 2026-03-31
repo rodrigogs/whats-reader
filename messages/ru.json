@@ -263,5 +263,9 @@
   "persistence_deselect_all": "Снять выбор",
   "persistence_drop_zip": "Перетащите ZIP-файл WhatsApp сюда",
   "persistence_or_browse": "или нажмите ниже для поиска",
-  "persistence_browse_files": "Обзор файлов"
+  "persistence_browse_files": "Обзор файлов",
+  "persistence_reselect_hint": "Выберите файл ещё раз, чтобы включить автоматическое восстановление в будущем",
+  "persistence_save_failed": "Не удалось сохранить разговор",
+  "persistence_remove_failed": "Не удалось удалить разговор",
+  "persistence_close_notification": "Закрыть уведомление"
 }

@@ -188,6 +188,7 @@ let persistedChatsToRestore = $state<PersistedChatMetadata[]>([]);
 let isRestoring = $state(false);
 
 // Track file references for persistence (chatTitle -> {file, filePath, fileHandle, persistedId})
+// Note: mutated via .set()/.delete() without reassignment — read imperatively, not in reactive contexts
 let chatFileReferences = $state<
 	Map<
 		string,
@@ -728,10 +729,7 @@ async function handleToggleRemember(chatTitle: string, enabled: boolean) {
 			if (!isElectron && isFileSystemAccessSupported() && fileRef?.file) {
 				try {
 					// Show explanatory toast before file picker
-					showToast(
-						'Select the file once more to enable automatic restoration in the future',
-						'info',
-					);
+					showToast(m.persistence_reselect_hint(), 'info');
 
 					// This requires user gesture (we have it - user just clicked)
 					fileHandle = (await promptForFileHandle()) || undefined;
@@ -742,7 +740,15 @@ async function handleToggleRemember(chatTitle: string, enabled: boolean) {
 			}
 
 			const bookmarks = bookmarksState.getBookmarksForChatAsExport(chatTitle);
-			const transcriptions = getTranscriptionsForChat();
+			// Filter transcriptions to only include this chat's message IDs
+			const allTranscriptions = getTranscriptionsForChat();
+			const chatMessageIds = new Set(chat.messages.map((msg) => msg.id));
+			const transcriptions: Record<string, string> = {};
+			for (const [id, text] of Object.entries(allTranscriptions)) {
+				if (chatMessageIds.has(id)) {
+					transcriptions[id] = text;
+				}
+			}
 			const settings = {
 				language: languageByChat.get(chatTitle) || 'portuguese',
 				autoLoadMedia: autoLoadMediaByChat.get(chatTitle) || false,
@@ -786,7 +792,7 @@ async function handleToggleRemember(chatTitle: string, enabled: boolean) {
 			showToast(m.persistence_conversation_saved(), 'success');
 		} catch (e) {
 			console.error('Failed to save conversation:', e);
-			showToast('Failed to save conversation', 'error');
+			showToast(m.persistence_save_failed(), 'error');
 		}
 	} else {
 		// Remove from persistence
@@ -802,7 +808,7 @@ async function handleToggleRemember(chatTitle: string, enabled: boolean) {
 			showToast(m.persistence_conversation_removed(), 'success');
 		} catch (e) {
 			console.error('Failed to remove conversation:', e);
-			showToast('Failed to remove conversation', 'error');
+			showToast(m.persistence_remove_failed(), 'error');
 		}
 	}
 }

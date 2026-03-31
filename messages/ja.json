@@ -263,5 +263,9 @@
   "persistence_deselect_all": "すべて解除",
   "persistence_drop_zip": "WhatsAppのZIPファイルをここにドロップ",
   "persistence_or_browse": "または下をクリックして参照",
-  "persistence_browse_files": "ファイルを参照"
+  "persistence_browse_files": "ファイルを参照",
+  "persistence_reselect_hint": "今後の自動復元を有効にするには、もう一度ファイルを選択してください",
+  "persistence_save_failed": "会話の保存に失敗しました",
+  "persistence_remove_failed": "会話の削除に失敗しました",
+  "persistence_close_notification": "通知を閉じる"
 }

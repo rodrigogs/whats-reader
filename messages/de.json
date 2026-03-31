@@ -263,5 +263,9 @@
   "persistence_deselect_all": "Alle abwählen",
   "persistence_drop_zip": "WhatsApp-ZIP-Datei hier ablegen",
   "persistence_or_browse": "oder klicken Sie unten zum Durchsuchen",
-  "persistence_browse_files": "Dateien durchsuchen"
+  "persistence_browse_files": "Dateien durchsuchen",
+  "persistence_reselect_hint": "Wählen Sie die Datei noch einmal aus, um die automatische Wiederherstellung in Zukunft zu aktivieren",
+  "persistence_save_failed": "Fehler beim Speichern der Unterhaltung",
+  "persistence_remove_failed": "Fehler beim Entfernen der Unterhaltung",
+  "persistence_close_notification": "Benachrichtigung schließen"
 }

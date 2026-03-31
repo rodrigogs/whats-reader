@@ -263,5 +263,9 @@
   "persistence_deselect_all": "Deseleccionar Todo",
   "persistence_drop_zip": "Suelta el archivo ZIP de WhatsApp aquí",
   "persistence_or_browse": "o haz clic abajo para buscar",
-  "persistence_browse_files": "Buscar Archivos"
+  "persistence_browse_files": "Buscar Archivos",
+  "persistence_reselect_hint": "Selecciona el archivo una vez más para habilitar la restauración automática en el futuro",
+  "persistence_save_failed": "Error al guardar la conversación",
+  "persistence_remove_failed": "Error al eliminar la conversación",
+  "persistence_close_notification": "Cerrar notificación"
 }
