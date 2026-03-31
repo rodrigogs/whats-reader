@@ -122,17 +122,18 @@ The parser supports the following date patterns:
 
 The parser recognizes media indicators in multiple languages:
 
-- **English**: `<Media omitted>`, `(file attached)`
-- **iOS export**: `<attached: filename.ext>`
-- **Portuguese**: `<Mídia oculta>`, `(arquivo anexado)`
-- **French**: `<Médias omis>`, `(fichier joint)`
-- **German**: `<Medien ausgelassen>`, `(Datei angehängt)`
-- **Spanish**: `<Archivo omitido>`, `(archivo adjunto)`
-- **Italian**: `<Media eliminati>`, `(file allegato)`
-- **Dutch**: `<Medien weggelaten>`, `(bestand bijgevoegd)`
-- **Japanese**: `<メディアなし>`, `(ファイル添付)`
-- **Chinese**: `<媒体省略>`, `(附件)`
-- **Russian**: `<Медиа пропущены>`, `(файл прикреплен)`
+- **English**: `<Media omitted>`, `(file attached)`, iOS: `<attached:`
+- **Portuguese**: `<Mídia oculta>`, `(arquivo anexado)`, iOS: `<anexo:`, `<anexado:`
+- **French**: `<Médias omis>`, `(fichier joint)`, iOS: `<pièce jointe`
+- **German**: `<Medien ausgelassen>`, `(Datei angehängt)`, iOS: `<Anhang:`, `<angehängt:`
+- **Spanish**: `<Archivo omitido>`, `(archivo adjunto)`, iOS: `<adjunto:`
+- **Italian**: `<Media eliminati>`, `(file allegato)`, iOS: `<allegato:`
+- **Dutch**: `<Medien weggelaten>`, `(bestand bijgevoegd)`, iOS: `<bijgevoegd:`
+- **Japanese**: `<メディアなし>`, `(ファイル添付)`, iOS: `<添付ファイル:`
+- **Chinese**: `<媒体省略>`, `(附件)`, iOS: `<附件:`
+- **Korean**: `<미디어 생략>`, iOS: `<첨부됨:`
+- **Russian**: `<Медиа пропущены>`, `(файл прикреплен)`, iOS: `<прикреплено:`
+- **Plus 20+ additional iOS languages**: Catalan, Swedish, Norwegian, Danish, Finnish, Irish, Czech, Slovak, Polish, Hungarian, Romanian, Croatian, Turkish, Vietnamese, Indonesian, Malay, Ukrainian, Greek, Arabic, Persian, Urdu, Hebrew, Hindi, Marathi, Gujarati, Thai
 
 ## System Message Indicators
 

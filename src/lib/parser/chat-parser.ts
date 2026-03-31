@@ -51,7 +51,48 @@ const MEDIA_INDICATORS = [
 	'<媒体省略>',
 	'<미디어 생략>',
 	'<Медиа пропущены>',
-	'<attached:',
+	// iOS <attached: ...> markers (from WhatsApp Localizable.strings key zQ+5d)
+	'<attached:', // English
+	'<Anhang:', // German
+	'<angehängt:', // German (alt)
+	'<adjunto:', // Spanish
+	'<adjunt:', // Catalan
+	'<allegato:', // Italian
+	'<anexo:', // Portuguese (PT)
+	'<anexado:', // Portuguese (BR)
+	'<pièce jointe', // French (space before colon in some exports)
+	'<bijgevoegd:', // Dutch
+	'<bifogat:', // Swedish
+	'<vedlagt:', // Norwegian
+	'<vedhæftet:', // Danish
+	'<liite:', // Finnish
+	'<ceangailte:', // Irish
+	'<příloha:', // Czech
+	'<príloha:', // Slovak
+	'<załączono:', // Polish
+	'<csatolva:', // Hungarian
+	'<atașare:', // Romanian
+	'<priloženo:', // Croatian/Slovenian
+	'<eklendi:', // Turkish
+	'<đính kèm:', // Vietnamese
+	'<terlampir:', // Indonesian
+	'<dilampir:', // Malay
+	'<прикреплено:', // Russian
+	'<додано:', // Ukrainian
+	'<επισυνάφθηκε:', // Greek
+	'<المُرفق:', // Arabic
+	'<پیوست:', // Persian
+	'<پیوستہ:', // Urdu
+	'<מצורף:', // Hebrew
+	'<अटैच किया गया:', // Hindi
+	'<संलग्न केले:', // Marathi
+	'<જોડાયેલ:', // Gujarati
+	'<แนบ:', // Thai
+	'<附件:', // Chinese
+	'<附件：', // Chinese (fullwidth colon)
+	'<添付ファイル:', // Japanese
+	'<添付ファイル：', // Japanese (fullwidth colon)
+	'<첨부됨:', // Korean
 	'(file attached)',
 	'(arquivo anexado)',
 	'(fichier joint)',
