@@ -185,7 +185,6 @@ let showReselectFileModal = $state(false);
 let reselectChatMetadata = $state<PersistedChatMetadata | null>(null);
 let reselectResolve: ((file: File | null) => void) | null = null;
 let persistedChatsToRestore = $state<PersistedChatMetadata[]>([]);
-let isRestoring = $state(false);
 
 // Track file references for persistence (chatTitle -> {file, filePath, fileHandle, persistedId})
 // Note: mutated via .set()/.delete() without reassignment — read imperatively, not in reactive contexts
@@ -540,7 +539,6 @@ $effect(() => {
 // Handle restoring selected chats
 async function handleRestoreChats(chatIds: string[]) {
 	showRestoreSessionModal = false;
-	isRestoring = true;
 
 	for (const chatId of chatIds) {
 		const persistedChat = persistedChatsToRestore.find((c) => c.id === chatId);
@@ -593,8 +591,6 @@ async function handleRestoreChats(chatIds: string[]) {
 			console.error(`Error restoring chat ${persistedChat.chatTitle}:`, e);
 		}
 	}
-
-	isRestoring = false;
 }
 
 // Handle reselect file for a persisted chat
