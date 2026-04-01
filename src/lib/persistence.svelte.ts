@@ -225,14 +225,6 @@ export async function savePersistedChat(
 	// Check if running in Electron
 	const isElectron = window.electronAPI?.isElectron;
 
-	console.log('[persistence] savePersistedChat:', {
-		isElectron,
-		filePath,
-		hasFileHandle: !!fileHandle,
-		hasFile: !!file,
-		isFileSystemAccessSupported: isFileSystemAccessSupported(),
-	});
-
 	if (isElectron && filePath) {
 		// Electron: store absolute file path
 		fileReference = { type: 'electron-path', filePath };
@@ -461,12 +453,6 @@ export async function restoreChat(
 		return { success: false, error: 'Restoration only available in browser' };
 
 	const { fileReference } = persistedChat;
-
-	console.log('[persistence] restoreChat:', {
-		chatTitle: persistedChat.chatTitle,
-		fileReferenceType: fileReference.type,
-		fileReference,
-	});
 
 	try {
 		// Electron path
