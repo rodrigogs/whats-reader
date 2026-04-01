@@ -9,7 +9,11 @@ import ModalHeader from './ModalHeader.svelte';
 
 interface Props {
 	chatMetadata: PersistedChatMetadata;
-	onFileSelected: (file: File, filePath?: string) => void;
+	onFileSelected: (
+		file: File,
+		filePath?: string,
+		fileHandle?: FileSystemFileHandle,
+	) => void;
 	onSkip: () => void;
 	onClose: () => void;
 }
@@ -19,7 +23,7 @@ let { chatMetadata, onFileSelected, onSkip, onClose }: Props = $props();
 let dragCounter = $state(0);
 let isDragging = $derived(dragCounter > 0);
 
-function handleDrop(e: DragEvent) {
+async function handleDrop(e: DragEvent) {
 	e.preventDefault();
 	e.stopPropagation();
 	dragCounter = 0;
@@ -28,7 +32,20 @@ function handleDrop(e: DragEvent) {
 	if (files && files.length > 0) {
 		const file = files[0];
 		if (file.name.toLowerCase().endsWith('.zip')) {
-			onFileSelected(file);
+			// Try to capture FileSystemFileHandle from drop
+			let handle: FileSystemFileHandle | undefined;
+			if (
+				e.dataTransfer?.items?.[0] &&
+				'getAsFileSystemHandle' in DataTransferItem.prototype
+			) {
+				try {
+					const h = await e.dataTransfer.items[0].getAsFileSystemHandle();
+					if (h?.kind === 'file') handle = h as FileSystemFileHandle;
+				} catch {
+					// Not supported
+				}
+			}
+			onFileSelected(file, undefined, handle);
 		}
 	}
 }
@@ -73,6 +90,29 @@ async function openBrowse() {
 				type: 'application/zip',
 			});
 			onFileSelected(file, result.path);
+		}
+		return;
+	}
+	// In Chrome/Edge, use showOpenFilePicker to capture a FileSystemFileHandle
+	// so the entry can be upgraded from 'reselect-required' to 'file-handle'
+	if ('showOpenFilePicker' in window) {
+		try {
+			const [handle] = await window.showOpenFilePicker({
+				types: [
+					{
+						description: 'WhatsApp ZIP files',
+						accept: { 'application/zip': ['.zip'] },
+					},
+				],
+				multiple: false,
+			});
+			if (handle) {
+				const file = await handle.getFile();
+				onFileSelected(file, undefined, handle);
+				return;
+			}
+		} catch {
+			// User cancelled — do nothing
 		}
 		return;
 	}

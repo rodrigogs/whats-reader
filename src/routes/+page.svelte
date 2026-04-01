@@ -186,7 +186,13 @@ let showRestoreSessionModal = $state(false);
 let showReselectFileModal = $state(false);
 let reselectChatMetadata = $state<PersistedChatMetadata | null>(null);
 let reselectResolve:
-	| ((result: { file: File; path?: string } | null) => void)
+	| ((
+			result: {
+				file: File;
+				path?: string;
+				handle?: FileSystemFileHandle;
+			} | null,
+	  ) => void)
 	| null = null;
 let persistedChatsToRestore = $state<PersistedChatMetadata[]>([]);
 
@@ -588,6 +594,7 @@ async function handleRestoreChats(chatIds: string[]) {
 				const reselected = await new Promise<{
 					file: File;
 					path?: string;
+					handle?: FileSystemFileHandle;
 				} | null>((resolve) => {
 					reselectResolve = resolve;
 				});
@@ -611,15 +618,26 @@ async function handleRestoreChats(chatIds: string[]) {
 					chatFileReferences.set(persistedChat.chatTitle, {
 						file: reselected.file,
 						filePath: reselectedPath,
+						fileHandle: reselected.handle,
 						persistedId: persistedChat.id,
 					});
 
-					// Update persisted entry so future restores work automatically
+					// Upgrade persisted entry so future restores work automatically
 					if (reselectedPath) {
 						await updatePersistedChat(persistedChat.id, {
 							fileReference: {
 								type: 'electron-path',
 								filePath: reselectedPath,
+							},
+						});
+					} else if (reselected.handle) {
+						// Chrome/Edge: store handle and upgrade entry
+						const { storeFileHandle } = await import('$lib/persistence.svelte');
+						await storeFileHandle(persistedChat.id, reselected.handle);
+						await updatePersistedChat(persistedChat.id, {
+							fileReference: {
+								type: 'file-handle',
+								handleId: persistedChat.id,
 							},
 						});
 					}
@@ -663,9 +681,13 @@ async function handleRestoreChats(chatIds: string[]) {
 }
 
 // Handle reselect file for a persisted chat
-async function handleReselectFile(file: File, filePath?: string) {
+async function handleReselectFile(
+	file: File,
+	filePath?: string,
+	fileHandle?: FileSystemFileHandle,
+) {
 	if (reselectResolve) {
-		reselectResolve({ file, path: filePath });
+		reselectResolve({ file, path: filePath, handle: fileHandle });
 		reselectResolve = null;
 	}
 }
