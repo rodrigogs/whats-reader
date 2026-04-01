@@ -325,6 +325,13 @@ async function handleFilesSelected(
 				? (file as File & { path: string }).path
 				: undefined);
 		const droppedHandle = handles?.[currentHandleIndex];
+		console.log('[persistence] handleFilesSelected:', {
+			fileName: file.name,
+			droppedFilePath,
+			hasHandle: !!droppedHandle,
+			pathsArg: paths,
+			fileHasPath: 'path' in file,
+		});
 
 		// Process file asynchronously
 		(async () => {
@@ -766,6 +773,13 @@ async function rememberChat(chatTitle: string) {
 
 	try {
 		const fileRef = chatFileReferences.get(chatTitle);
+		console.log('[persistence] rememberChat fileRef:', {
+			chatTitle,
+			hasFileRef: !!fileRef,
+			filePath: fileRef?.filePath,
+			hasFile: !!fileRef?.file,
+			hasHandle: !!fileRef?.fileHandle,
+		});
 		// Use handle captured during drag-drop (no file picker needed)
 		const fileHandle = fileRef?.fileHandle;
 
