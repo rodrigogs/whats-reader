@@ -2,18 +2,11 @@
 import { floating } from '$lib/actions/floating';
 import * as m from '$lib/paraglide/messages';
 import { getLocale } from '$lib/paraglide/runtime';
-import type { ChatData } from '$lib/state.svelte';
+import type { ChatData, LoadingChat } from '$lib/state.svelte';
 import { getAvailableLanguages } from '$lib/transcription.svelte';
 import Icon from './Icon.svelte';
 import IconButton from './IconButton.svelte';
 import ListItemButton from './ListItemButton.svelte';
-
-interface LoadingChat {
-	id: string;
-	filename: string;
-	progress: number;
-	stage: 'reading' | 'extracting' | 'parsing';
-}
 
 interface Props {
 	chats: ChatData[];

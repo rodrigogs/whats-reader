@@ -31,6 +31,7 @@ import ModalHeader from '$lib/components/ModalHeader.svelte';
 import ReselectFileModal from '$lib/components/ReselectFileModal.svelte';
 import RestoreSessionModal from '$lib/components/RestoreSessionModal.svelte';
 import Toast from '$lib/components/Toast.svelte';
+import { sanitizeFilename } from '$lib/helpers/format';
 import {
 	isElectronMac as checkIsElectronMac,
 	isElectronApp,
@@ -49,11 +50,9 @@ import {
 	removePersistedChat,
 	restoreChat,
 	savePersistedChat,
-	storeFileHandle,
-	updatePersistedChat,
 	validateRestoredFile,
 } from '$lib/persistence.svelte';
-import { appState, type ChatData } from '$lib/state.svelte';
+import { appState, type ChatData, type LoadingChat } from '$lib/state.svelte';
 import {
 	getTranscriptionsForChat,
 	setTranscriptionLanguage,
@@ -143,12 +142,6 @@ let showChatOptionsDropdown = $state(false);
 let chatOptionsButtonRef = $state<HTMLButtonElement | null>(null);
 
 // Loading chats state - shows placeholder items while importing
-interface LoadingChat {
-	id: string;
-	filename: string;
-	progress: number;
-	stage: 'reading' | 'extracting' | 'parsing';
-}
 let loadingChats = $state<LoadingChat[]>([]);
 
 // Derived loading state for FileDropZone (empty state)
@@ -179,7 +172,17 @@ let languageByChat = $state<Map<string, string>>(new Map());
 let autoLoadMediaByChat = $state<Map<string, boolean>>(new Map());
 
 // Persistence state
-let rememberedChats = $state<Set<string>>(new Set()); // Track which chats are remembered
+let rememberedChats = $state<Set<string>>(new Set());
+
+function addRemembered(chatTitle: string) {
+	rememberedChats.add(chatTitle);
+	rememberedChats = new Set(rememberedChats);
+}
+
+function removeRemembered(chatTitle: string) {
+	rememberedChats.delete(chatTitle);
+	rememberedChats = new Set(rememberedChats);
+}
 let showRestoreSessionModal = $state(false);
 let showReselectFileModal = $state(false);
 let reselectChatMetadata = $state<PersistedChatMetadata | null>(null);
@@ -296,9 +299,7 @@ async function handleFilesSelected(files: FileList) {
 
 		// Create a loading placeholder for this file
 		const loadingId = crypto.randomUUID();
-		const filename = file.name
-			.replace(/\.zip$/i, '')
-			.replace(/^WhatsApp Chat (with |com )/i, '');
+		const filename = sanitizeFilename(file.name);
 
 		loadingChats = [
 			...loadingChats,
@@ -372,28 +373,26 @@ function handleSelectChat(index: number) {
 	}
 }
 
-async function handleRemoveChat(index: number) {
+function handleRemoveChat(index: number) {
 	const chat = appState.chats[index];
-	if (chat) {
-		const chatTitle = chat.title;
-		// Clean up file reference
+	const chatTitle = chat?.title;
+
+	// Remove from UI immediately (sync) to avoid stale index issues
+	appState.removeChat(index);
+
+	if (chatTitle) {
 		chatFileReferences.delete(chatTitle);
 
-		// Clean up persisted data in IndexedDB if this chat was remembered
+		// Clean up IndexedDB in background (non-blocking)
 		if (rememberedChats.has(chatTitle)) {
-			try {
-				const persisted = await findPersistedChatByTitle(chatTitle);
-				if (persisted) {
-					await removePersistedChat(persisted.id);
-				}
-			} catch (e) {
-				console.error('Failed to clean up persisted chat:', e);
-			}
-			rememberedChats.delete(chatTitle);
-			rememberedChats = new Set(rememberedChats);
+			removeRemembered(chatTitle);
+			findPersistedChatByTitle(chatTitle)
+				.then((persisted) => {
+					if (persisted) return removePersistedChat(persisted.id);
+				})
+				.catch((e) => console.error('Failed to clean up persisted chat:', e));
 		}
 	}
-	appState.removeChat(index);
 }
 
 function handleLanguageChange(chatTitle: string, language: string) {
@@ -560,8 +559,11 @@ async function handleRestoreChats(chatIds: string[]) {
 				if (file) {
 					const reselectedBuffer = await file.arrayBuffer();
 					await loadChatFromBuffer(reselectedBuffer, file.name, persistedChat);
-					rememberedChats.add(persistedChat.chatTitle);
-					rememberedChats = new Set(rememberedChats);
+					chatFileReferences.set(persistedChat.chatTitle, {
+						file,
+						persistedId: persistedChat.id,
+					});
+					addRemembered(persistedChat.chatTitle);
 				}
 				continue;
 			}
@@ -584,9 +586,16 @@ async function handleRestoreChats(chatIds: string[]) {
 					: undefined,
 			);
 
-			// Mark as remembered
-			rememberedChats.add(persistedChat.chatTitle);
-			rememberedChats = new Set(rememberedChats);
+			// Store file reference for subsequent toggle operations
+			chatFileReferences.set(persistedChat.chatTitle, {
+				file: null,
+				filePath: isElectronPathReference(result.data.metadata.fileReference)
+					? result.data.metadata.fileReference.filePath
+					: undefined,
+				persistedId: persistedChat.id,
+			});
+
+			addRemembered(persistedChat.chatTitle);
 		} catch (e) {
 			console.error(`Error restoring chat ${persistedChat.chatTitle}:`, e);
 		}
@@ -624,9 +633,7 @@ async function loadChatFromBuffer(
 ) {
 	// Create a loading placeholder
 	const loadingId = crypto.randomUUID();
-	const displayName = fileName
-		.replace(/\.zip$/i, '')
-		.replace(/^WhatsApp Chat (with |com )/i, '');
+	const displayName = sanitizeFilename(fileName);
 
 	loadingChats = [
 		...loadingChats,
@@ -710,102 +717,83 @@ async function loadChatFromBuffer(
 	}
 }
 
-// Toggle remember conversation for a chat
-async function handleToggleRemember(chatTitle: string, enabled: boolean) {
-	if (enabled) {
-		// Save the conversation
-		const chat = appState.chats.find((c) => c.title === chatTitle);
-		if (!chat) return;
+async function rememberChat(chatTitle: string) {
+	const chat = appState.chats.find((c) => c.title === chatTitle);
+	if (!chat) return;
 
-		try {
-			const fileRef = chatFileReferences.get(chatTitle);
-			let fileHandle: FileSystemFileHandle | undefined;
+	try {
+		const fileRef = chatFileReferences.get(chatTitle);
+		let fileHandle: FileSystemFileHandle | undefined;
 
-			// For web with File System Access API, request file handle now (with user gesture)
-			if (!isElectron && isFileSystemAccessSupported() && fileRef?.file) {
-				try {
-					// Show explanatory toast before file picker
-					showToast(m.persistence_reselect_hint(), 'info');
-
-					// This requires user gesture (we have it - user just clicked)
-					fileHandle = (await promptForFileHandle()) || undefined;
-				} catch (e) {
-					console.log('Could not get file handle:', e);
-					// Not critical - user can still use persistence, just needs to reselect
-				}
+		// For web with File System Access API, request file handle now (with user gesture)
+		if (!isElectron && isFileSystemAccessSupported() && fileRef?.file) {
+			try {
+				showToast(m.persistence_reselect_hint(), 'info');
+				fileHandle = (await promptForFileHandle()) || undefined;
+			} catch (e) {
+				console.log('Could not get file handle:', e);
 			}
+		}
 
-			const bookmarks = bookmarksState.getBookmarksForChatAsExport(chatTitle);
-			// Filter transcriptions to only include this chat's message IDs
-			const allTranscriptions = getTranscriptionsForChat();
-			const chatMessageIds = new Set(chat.messages.map((msg) => msg.id));
-			const transcriptions: Record<string, string> = {};
-			for (const [id, text] of Object.entries(allTranscriptions)) {
-				if (chatMessageIds.has(id)) {
-					transcriptions[id] = text;
-				}
+		const bookmarks = bookmarksState.getBookmarksForChatAsExport(chatTitle);
+		const allTranscriptions = getTranscriptionsForChat();
+		const chatMessageIds = new Set(chat.messages.map((msg) => msg.id));
+		const transcriptions: Record<string, string> = {};
+		for (const [id, text] of Object.entries(allTranscriptions)) {
+			if (chatMessageIds.has(id)) {
+				transcriptions[id] = text;
 			}
-			const settings = {
+		}
+
+		const persistedId = await savePersistedChat(
+			chat,
+			fileRef?.file || null,
+			bookmarks,
+			transcriptions,
+			{
 				language: languageByChat.get(chatTitle) || 'portuguese',
 				autoLoadMedia: autoLoadMediaByChat.get(chatTitle) || false,
 				perspective: perspectiveByChat.get(chatTitle) || null,
-			};
+			},
+			fileRef?.filePath,
+			fileHandle,
+		);
 
-			// Save the persisted chat and get the ID
-			const persistedId = await savePersistedChat(
-				chat,
-				fileRef?.file || null,
-				bookmarks,
-				transcriptions,
-				settings,
-				fileRef?.filePath,
-				fileHandle, // Pass file handle if we got one
-			);
-
-			// If we got a file handle after saving, update the metadata
-			if (fileHandle && persistedId) {
-				// Store file handle in IndexedDB with the persisted ID
-				await storeFileHandle(persistedId, fileHandle);
-
-				// Update the persisted metadata to reference the handle
-				await updatePersistedChat(persistedId, {
-					fileReference: { type: 'file-handle', handleId: persistedId },
-				});
-			}
-
-			// Store the handle and persisted ID in our reference map
-			if (fileRef) {
-				chatFileReferences.set(chatTitle, {
-					...fileRef,
-					fileHandle,
-					persistedId,
-				});
-			}
-
-			rememberedChats.add(chatTitle);
-			rememberedChats = new Set(rememberedChats);
-
-			showToast(m.persistence_conversation_saved(), 'success');
-		} catch (e) {
-			console.error('Failed to save conversation:', e);
-			showToast(m.persistence_save_failed(), 'error');
+		if (fileRef) {
+			chatFileReferences.set(chatTitle, {
+				...fileRef,
+				fileHandle,
+				persistedId,
+			});
 		}
+
+		addRemembered(chatTitle);
+		showToast(m.persistence_conversation_saved(), 'success');
+	} catch (e) {
+		console.error('Failed to save conversation:', e);
+		showToast(m.persistence_save_failed(), 'error');
+	}
+}
+
+async function forgetChat(chatTitle: string) {
+	try {
+		const persistedChat = await findPersistedChatByTitle(chatTitle);
+		if (persistedChat) {
+			await removePersistedChat(persistedChat.id);
+		}
+		removeRemembered(chatTitle);
+		showToast(m.persistence_conversation_removed(), 'success');
+	} catch (e) {
+		console.error('Failed to remove conversation:', e);
+		showToast(m.persistence_remove_failed(), 'error');
+	}
+}
+
+function handleToggleRemember(chatTitle: string, enabled: boolean) {
+	if (enabled) {
+		rememberChat(chatTitle);
 	} else {
-		// Remove from persistence
-		try {
-			const persistedChat = await findPersistedChatByTitle(chatTitle);
-			if (persistedChat) {
-				await removePersistedChat(persistedChat.id);
-			}
-
-			rememberedChats.delete(chatTitle);
-			rememberedChats = new Set(rememberedChats);
-
-			showToast(m.persistence_conversation_removed(), 'success');
-		} catch (e) {
-			console.error('Failed to remove conversation:', e);
-			showToast(m.persistence_remove_failed(), 'error');
-		}
+		forgetChat(chatTitle);
 	}
 }
 </script>

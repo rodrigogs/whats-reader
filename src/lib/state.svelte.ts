@@ -11,6 +11,13 @@ import { getAllTranscriptions } from './transcription.svelte';
 // ChatData is now always a ParsedZipChat since we only support ZIP files
 export type ChatData = ParsedZipChat;
 
+export interface LoadingChat {
+	id: string;
+	filename: string;
+	progress: number;
+	stage: 'reading' | 'extracting' | 'parsing';
+}
+
 export interface AppState {
 	chats: ChatData[];
 	selectedChatIndex: number | null;
