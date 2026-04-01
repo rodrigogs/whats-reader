@@ -291,6 +291,7 @@ function makeProgressCallback(loadingId: string) {
 async function handleFilesSelected(
 	files: FileList,
 	handles?: FileSystemFileHandle[],
+	paths?: string[],
 ) {
 	appState.clearError();
 
@@ -315,13 +316,14 @@ async function handleFilesSelected(
 			},
 		];
 
-		// Capture handle index before async IIFE (closure over loop variable)
+		// Capture values before async IIFE to avoid closure-over-loop-variable bug
 		const currentHandleIndex = handleIndex;
-		// Capture file path eagerly (Electron provides file.path on dropped files)
+		// File path: prefer explicit path from Electron dialog, fall back to file.path from drag-drop
 		const droppedFilePath =
-			isElectron && 'path' in file
+			paths?.[currentHandleIndex] ||
+			(isElectron && 'path' in file
 				? (file as File & { path: string }).path
-				: undefined;
+				: undefined);
 		const droppedHandle = handles?.[currentHandleIndex];
 
 		// Process file asynchronously

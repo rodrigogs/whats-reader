@@ -3,7 +3,11 @@ import * as m from '$lib/paraglide/messages';
 import Icon from './Icon.svelte';
 
 interface Props {
-	onFilesSelected: (files: FileList, handles?: FileSystemFileHandle[]) => void;
+	onFilesSelected: (
+		files: FileList,
+		handles?: FileSystemFileHandle[],
+		paths?: string[],
+	) => void;
 	accept?: string;
 	isLoading?: boolean;
 	loadingProgress?: number;
@@ -74,14 +78,18 @@ async function openElectronFilePicker() {
 	if (window.electronAPI) {
 		const result = await window.electronAPI.openFile();
 		if (result) {
-			// Convert ArrayBuffer to File-like object
 			const blob = new Blob([result.buffer]);
 			const file = new File([blob], result.name, {
 				type: getMimeType(result.name),
 			});
 			const dataTransfer = new DataTransfer();
 			dataTransfer.items.add(file);
-			onFilesSelected(dataTransfer.files);
+			// Pass the absolute file path from Electron's dialog for persistence
+			onFilesSelected(
+				dataTransfer.files,
+				undefined,
+				result.path ? [result.path] : undefined,
+			);
 		}
 	} else {
 		openFilePicker();
