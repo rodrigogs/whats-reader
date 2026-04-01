@@ -34,24 +34,26 @@ async function handleDrop(e: DragEvent) {
 	isDragOver = false;
 
 	if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-		// Try to capture FileSystemFileHandles for persistence (Chrome 86+)
+		// Capture FileSystemFileHandles for persistence (Chrome 86+)
+		// IMPORTANT: Start ALL promises synchronously before any await,
+		// because DataTransferItems become invalid after the first async yield
 		let handles: FileSystemFileHandle[] | undefined;
 		if (
 			e.dataTransfer.items &&
 			'getAsFileSystemHandle' in DataTransferItem.prototype
 		) {
-			handles = [];
-			for (const item of e.dataTransfer.items) {
+			const promises = Array.from(e.dataTransfer.items).map((item) => {
 				try {
-					const handle = await item.getAsFileSystemHandle();
-					if (handle?.kind === 'file') {
-						handles.push(handle as FileSystemFileHandle);
-					}
+					return item.getAsFileSystemHandle();
 				} catch {
-					// getAsFileSystemHandle not supported or failed
+					return Promise.resolve(null);
 				}
-			}
-			if (handles.length === 0) handles = undefined;
+			});
+			const resolved = await Promise.all(promises);
+			const fileHandles = resolved.filter(
+				(h): h is FileSystemFileHandle => h?.kind === 'file',
+			);
+			if (fileHandles.length > 0) handles = fileHandles;
 		}
 		onFilesSelected(e.dataTransfer.files, handles);
 	}

@@ -315,6 +315,15 @@ async function handleFilesSelected(
 			},
 		];
 
+		// Capture handle index before async IIFE (closure over loop variable)
+		const currentHandleIndex = handleIndex;
+		// Capture file path eagerly (Electron provides file.path on dropped files)
+		const droppedFilePath =
+			isElectron && 'path' in file
+				? (file as File & { path: string }).path
+				: undefined;
+		const droppedHandle = handles?.[currentHandleIndex];
+
 		// Process file asynchronously
 		(async () => {
 			try {
@@ -342,13 +351,6 @@ async function handleFilesSelected(
 				appState.addChat(chatData);
 
 				// Store file reference for persistence
-				// In Electron, file.path contains the absolute path (Chromium extension)
-				const droppedFilePath =
-					isElectron && 'path' in file
-						? (file as File & { path: string }).path
-						: undefined;
-				// Capture FileSystemFileHandle from drag-drop (Chrome 86+, no picker needed)
-				const droppedHandle = handles?.[handleIndex];
 				chatFileReferences.set(chatData.title, {
 					file,
 					filePath: droppedFilePath,
