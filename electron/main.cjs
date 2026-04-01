@@ -230,32 +230,36 @@ ipcMain.handle('fs:fileExists', async (_event, filePath) => {
 // Read file from absolute path (for persistence)
 ipcMain.handle('file:readFromPath', async (_event, filePath) => {
 	try {
-		// Normalize and validate path
 		const normalized = path.resolve(filePath);
-		if (normalized !== filePath && path.normalize(filePath) !== filePath) {
+		if (normalized !== filePath) {
 			return { success: false, error: 'Invalid file path' };
 		}
-
-		// Only allow .zip files
 		if (path.extname(normalized).toLowerCase() !== '.zip') {
 			return { success: false, error: 'Only .zip files are allowed' };
 		}
 
-		// Verify it's a regular file (not a symlink to something else)
-		const stat = await fs.promises.lstat(normalized);
-		if (!stat.isFile()) {
-			return { success: false, error: 'Path is not a regular file' };
+		// Use O_NOFOLLOW to reject symlinks atomically, avoiding TOCTOU race
+		const fd = await fs.promises.open(
+			normalized,
+			fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW,
+		);
+		try {
+			const stat = await fd.stat();
+			if (!stat.isFile()) {
+				return { success: false, error: 'Path is not a regular file' };
+			}
+			const content = await fd.readFile();
+			return {
+				success: true,
+				buffer: content.buffer.slice(
+					content.byteOffset,
+					content.byteOffset + content.byteLength,
+				),
+				name: path.basename(normalized),
+			};
+		} finally {
+			await fd.close();
 		}
-
-		const content = await fs.promises.readFile(normalized);
-		return {
-			success: true,
-			buffer: content.buffer.slice(
-				content.byteOffset,
-				content.byteOffset + content.byteLength,
-			),
-			name: path.basename(normalized),
-		};
 	} catch (error) {
 		return { success: false, error: error.message };
 	}
