@@ -315,6 +315,17 @@ function getLastMessage(chat: ChatData): string {
 				</ListItemButton>
 			{/if}
 			
+			<!-- Remember Conversation toggle -->
+			<ListItemButton class="justify-between" onclick={handleToggleRemember}>
+				<span class="flex items-center gap-2">
+					<Icon name="bookmark" size="sm" />
+					{m.persistence_remember_conversation()}
+				</span>
+				{#if isRemembered(chats[contextMenuIndex]?.title || '')}
+					<Icon name="check" size="sm" class="text-[var(--color-whatsapp-teal)]" />
+				{/if}
+			</ListItemButton>
+
 			<!-- Language submenu trigger -->
 			<div class="relative">
 				<ListItemButton
@@ -335,9 +346,9 @@ function getLastMessage(chat: ChatData): string {
 					<!-- svelte-ignore a11y_interactive_supports_focus -->
 					<div
 						class="fixed z-[60] bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-1 w-[160px] overflow-y-auto"
-						use:floating={{ 
-							reference: languageTriggerRef, 
-							placement: 'left-start', 
+						use:floating={{
+							reference: languageTriggerRef,
+							placement: 'left-start',
 							fallbackPlacements: ['right-start', 'bottom-start', 'bottom-end', 'top-start'],
 							offsetDistance: 4,
 							enableSizeConstraint: true
@@ -362,20 +373,6 @@ function getLastMessage(chat: ChatData): string {
 					</div>
 				{/if}
 			</div>
-			
-			<!-- Divider -->
-			<div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-			
-			<!-- Remember Conversation toggle -->
-			<ListItemButton class="justify-between" onclick={handleToggleRemember}>
-				<span class="flex items-center gap-2">
-					<Icon name="bookmark" size="sm" />
-					{m.persistence_remember_conversation()}
-				</span>
-				{#if isRemembered(chats[contextMenuIndex]?.title || '')}
-					<Icon name="check" size="sm" class="text-[var(--color-whatsapp-teal)]" />
-				{/if}
-			</ListItemButton>
 			
 			<!-- Divider -->
 			<div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
