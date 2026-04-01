@@ -9,7 +9,7 @@ import ModalHeader from './ModalHeader.svelte';
 
 interface Props {
 	chatMetadata: PersistedChatMetadata;
-	onFileSelected: (file: File) => void;
+	onFileSelected: (file: File, filePath?: string) => void;
 	onSkip: () => void;
 	onClose: () => void;
 }
@@ -63,15 +63,31 @@ function handleFileInput(e: Event) {
 	}
 }
 
+async function openBrowse() {
+	// In Electron, use the native dialog to capture the absolute file path
+	if (window.electronAPI) {
+		const result = await window.electronAPI.openFile();
+		if (result?.name.toLowerCase().endsWith('.zip')) {
+			const blob = new Blob([result.buffer]);
+			const file = new File([blob], result.name, {
+				type: 'application/zip',
+			});
+			onFileSelected(file, result.path);
+		}
+		return;
+	}
+	fileInputRef?.click();
+}
+
 function handleDropZoneKeydown(e: KeyboardEvent) {
 	if (e.key === 'Enter' || e.key === ' ') {
 		e.preventDefault();
-		fileInputRef?.click();
+		openBrowse();
 	}
 }
 
 function handleDropZoneClick() {
-	fileInputRef?.click();
+	openBrowse();
 }
 </script>
 

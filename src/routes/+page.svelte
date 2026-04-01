@@ -185,7 +185,9 @@ function removeRemembered(chatTitle: string) {
 let showRestoreSessionModal = $state(false);
 let showReselectFileModal = $state(false);
 let reselectChatMetadata = $state<PersistedChatMetadata | null>(null);
-let reselectResolve: ((file: File | null) => void) | null = null;
+let reselectResolve:
+	| ((result: { file: File; path?: string } | null) => void)
+	| null = null;
 let persistedChatsToRestore = $state<PersistedChatMetadata[]>([]);
 
 // Track file references for persistence (chatTitle -> {file, filePath, fileHandle, persistedId})
@@ -583,28 +585,36 @@ async function handleRestoreChats(chatIds: string[]) {
 				// Show reselect modal and wait for user response
 				reselectChatMetadata = persistedChat;
 				showReselectFileModal = true;
-				const file = await new Promise<File | null>((resolve) => {
+				const reselected = await new Promise<{
+					file: File;
+					path?: string;
+				} | null>((resolve) => {
 					reselectResolve = resolve;
 				});
 				reselectChatMetadata = null;
 				showReselectFileModal = false;
 
-				if (file) {
-					const reselectedBuffer = await file.arrayBuffer();
-					await loadChatFromBuffer(reselectedBuffer, file.name, persistedChat);
+				if (reselected) {
+					const reselectedBuffer = await reselected.file.arrayBuffer();
+					await loadChatFromBuffer(
+						reselectedBuffer,
+						reselected.file.name,
+						persistedChat,
+					);
 
-					// Capture file path (Electron) for future automatic restores
+					// Use path from Electron dialog, or fall back to file.path from drag-drop
 					const reselectedPath =
-						isElectron && 'path' in file
-							? (file as File & { path: string }).path
-							: undefined;
+						reselected.path ||
+						(isElectron && 'path' in reselected.file
+							? (reselected.file as File & { path: string }).path
+							: undefined);
 					chatFileReferences.set(persistedChat.chatTitle, {
-						file,
+						file: reselected.file,
 						filePath: reselectedPath,
 						persistedId: persistedChat.id,
 					});
 
-					// Update persisted entry so future restores use the new path
+					// Update persisted entry so future restores work automatically
 					if (reselectedPath) {
 						await updatePersistedChat(persistedChat.id, {
 							fileReference: {
@@ -653,9 +663,9 @@ async function handleRestoreChats(chatIds: string[]) {
 }
 
 // Handle reselect file for a persisted chat
-async function handleReselectFile(file: File) {
+async function handleReselectFile(file: File, filePath?: string) {
 	if (reselectResolve) {
-		reselectResolve(file);
+		reselectResolve({ file, path: filePath });
 		reselectResolve = null;
 	}
 }
