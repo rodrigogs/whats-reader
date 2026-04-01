@@ -230,8 +230,15 @@ ipcMain.handle('fs:fileExists', async (_event, filePath) => {
 // Read file from absolute path (for persistence)
 ipcMain.handle('file:readFromPath', async (_event, filePath) => {
 	try {
+		if (typeof filePath !== 'string') {
+			return { success: false, error: 'Invalid file path' };
+		}
 		const normalized = path.resolve(filePath);
-		if (normalized !== filePath) {
+		// Require absolute path and reject path traversal segments
+		if (!path.isAbsolute(filePath)) {
+			return { success: false, error: 'Invalid file path' };
+		}
+		if (filePath.split(/[/\\]+/).includes('..')) {
 			return { success: false, error: 'Invalid file path' };
 		}
 		if (path.extname(normalized).toLowerCase() !== '.zip') {
@@ -261,7 +268,10 @@ ipcMain.handle('file:readFromPath', async (_event, filePath) => {
 			await fd.close();
 		}
 	} catch (error) {
-		return { success: false, error: error.message };
+		return {
+			success: false,
+			error: error instanceof Error ? error.message : String(error),
+		};
 	}
 });
 

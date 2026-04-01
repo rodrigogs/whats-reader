@@ -162,34 +162,32 @@ export function getAllTranscriptions(): Record<string, string> {
 }
 
 /**
- * Get transcriptions for a specific chat (for persistence)
- *
- * Note: Currently returns all transcriptions since message IDs are unique across chats,
- * so filtering by chatId is not necessary. If this assumption changes, add chatId tracking
- * per transcription and accept a chatId parameter here.
+ * Get transcriptions for a specific chat (for persistence).
+ * Filters by provided message IDs to avoid cross-chat leakage.
  */
-export function getTranscriptionsForChat(): Record<string, string> {
-	return getAllTranscriptions();
+export function getTranscriptionsForChat(
+	messageIds: string[],
+): Record<string, string> {
+	const idSet = new Set(messageIds);
+	const result: Record<string, string> = {};
+	for (const [key, value] of transcriptionStore) {
+		if (idSet.has(key)) {
+			result[key] = value;
+		}
+	}
+	return result;
 }
 
 /**
- * Set transcriptions for a chat (for restoration)
- *
- * Note: Currently merges with all transcriptions as we don't track chatId per transcription.
- * In the future, we could use chatId to manage transcriptions separately per chat.
- *
- * @param _chatId - Chat ID (currently unused, reserved for future use)
- * @param transcriptions - Map of messageId to transcription text
+ * Set transcriptions for a chat (for restoration).
+ * Merges into the runtime store keyed by bare messageId.
  */
 export function setTranscriptionsForChat(
-	_chatId: string,
 	transcriptions: Record<string, string>,
 ): void {
-	// Merge with existing transcriptions
 	for (const [messageId, text] of Object.entries(transcriptions)) {
 		transcriptionStore.set(messageId, text);
 	}
-	// Trigger reactivity
 	transcriptionStore = new Map(transcriptionStore);
 }
 

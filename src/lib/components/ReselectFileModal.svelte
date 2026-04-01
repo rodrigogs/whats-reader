@@ -27,7 +27,7 @@ function handleDrop(e: DragEvent) {
 	const files = e.dataTransfer?.files;
 	if (files && files.length > 0) {
 		const file = files[0];
-		if (file.name.endsWith('.zip')) {
+		if (file.name.toLowerCase().endsWith('.zip')) {
 			onFileSelected(file);
 		}
 	}
@@ -47,18 +47,31 @@ function handleDragEnter(e: DragEvent) {
 function handleDragLeave(e: DragEvent) {
 	e.preventDefault();
 	e.stopPropagation();
-	dragCounter--;
+	dragCounter = Math.max(0, dragCounter - 1);
 }
+
+let fileInputRef: HTMLInputElement | undefined = $state();
 
 function handleFileInput(e: Event) {
 	const input = e.target as HTMLInputElement;
 	const files = input.files;
 	if (files && files.length > 0) {
 		const file = files[0];
-		if (file.name.endsWith('.zip')) {
+		if (file.name.toLowerCase().endsWith('.zip')) {
 			onFileSelected(file);
 		}
 	}
+}
+
+function handleDropZoneKeydown(e: KeyboardEvent) {
+	if (e.key === 'Enter' || e.key === ' ') {
+		e.preventDefault();
+		fileInputRef?.click();
+	}
+}
+
+function handleDropZoneClick() {
+	fileInputRef?.click();
 }
 </script>
 
@@ -109,6 +122,8 @@ function handleFileInput(e: Event) {
 				ondragover={handleDragOver}
 				ondragenter={handleDragEnter}
 				ondragleave={handleDragLeave}
+				onkeydown={handleDropZoneKeydown}
+				onclick={handleDropZoneClick}
 			>
 				<div class="flex flex-col items-center gap-3 sm:gap-4">
 					<!-- Icon -->
@@ -130,6 +145,7 @@ function handleFileInput(e: Event) {
 					<!-- Browse button -->
 					<label class="cursor-pointer">
 						<input
+							bind:this={fileInputRef}
 							type="file"
 							accept=".zip"
 							class="hidden"

@@ -203,6 +203,12 @@ export async function savePersistedChat(
 ): Promise<string> {
 	if (!browser) throw new Error('Persistence only available in browser');
 
+	// Remove any existing entry for this chat to prevent duplicates
+	const existing = await findPersistedChatByTitle(chat.title);
+	if (existing) {
+		await removePersistedChat(existing.id);
+	}
+
 	// Generate unique ID
 	const id = crypto.randomUUID();
 

@@ -338,7 +338,15 @@ async function handleFilesSelected(files: FileList) {
 				appState.addChat(chatData);
 
 				// Store file reference for persistence
-				chatFileReferences.set(chatData.title, { file });
+				// In Electron, file.path contains the absolute path (Chromium extension)
+				const droppedFilePath =
+					isElectron && 'path' in file
+						? (file as File & { path: string }).path
+						: undefined;
+				chatFileReferences.set(chatData.title, {
+					file,
+					filePath: droppedFilePath,
+				});
 
 				// Start background indexing
 				startIndexWorker(chatData);
@@ -652,49 +660,48 @@ async function loadChatFromBuffer(
 			makeProgressCallback(loadingId),
 		);
 
-		// If restoring, validate the file
+		// If restoring, validate the file and only apply metadata if valid
 		if (restoredMetadata) {
 			const validation = validateRestoredFile(chatData, restoredMetadata);
 			if (!validation.valid) {
 				console.warn('Restored file validation failed:', validation.reasons);
-				// Still load it but log the issue
-			}
+			} else {
+				// Restore bookmarks
+				if (restoredMetadata.bookmarks.length > 0) {
+					bookmarksState.importBookmarks({
+						version: 1,
+						exportedAt: restoredMetadata.savedAt,
+						bookmarks: restoredMetadata.bookmarks,
+					});
+				}
 
-			// Restore bookmarks
-			if (restoredMetadata.bookmarks.length > 0) {
-				bookmarksState.importBookmarks({
-					version: 1,
-					exportedAt: restoredMetadata.savedAt,
-					bookmarks: restoredMetadata.bookmarks,
-				});
-			}
+				// Restore transcriptions
+				if (Object.keys(restoredMetadata.transcriptions).length > 0) {
+					setTranscriptionsForChat(restoredMetadata.transcriptions);
+				}
 
-			// Restore transcriptions
-			if (Object.keys(restoredMetadata.transcriptions).length > 0) {
-				setTranscriptionsForChat(
-					chatData.title,
-					restoredMetadata.transcriptions,
-				);
-			}
-
-			// Restore settings
-			if (restoredMetadata.settings.language) {
-				languageByChat.set(chatData.title, restoredMetadata.settings.language);
-				languageByChat = new Map(languageByChat);
-			}
-			if (restoredMetadata.settings.autoLoadMedia !== undefined) {
-				autoLoadMediaByChat.set(
-					chatData.title,
-					restoredMetadata.settings.autoLoadMedia,
-				);
-				autoLoadMediaByChat = new Map(autoLoadMediaByChat);
-			}
-			if (restoredMetadata.settings.perspective !== undefined) {
-				perspectiveByChat.set(
-					chatData.title,
-					restoredMetadata.settings.perspective,
-				);
-				perspectiveByChat = new Map(perspectiveByChat);
+				// Restore settings
+				if (restoredMetadata.settings.language) {
+					languageByChat.set(
+						chatData.title,
+						restoredMetadata.settings.language,
+					);
+					languageByChat = new Map(languageByChat);
+				}
+				if (restoredMetadata.settings.autoLoadMedia !== undefined) {
+					autoLoadMediaByChat.set(
+						chatData.title,
+						restoredMetadata.settings.autoLoadMedia,
+					);
+					autoLoadMediaByChat = new Map(autoLoadMediaByChat);
+				}
+				if (restoredMetadata.settings.perspective !== undefined) {
+					perspectiveByChat.set(
+						chatData.title,
+						restoredMetadata.settings.perspective,
+					);
+					perspectiveByChat = new Map(perspectiveByChat);
+				}
 			}
 		}
 
@@ -736,14 +743,8 @@ async function rememberChat(chatTitle: string) {
 		}
 
 		const bookmarks = bookmarksState.getBookmarksForChatAsExport(chatTitle);
-		const allTranscriptions = getTranscriptionsForChat();
-		const chatMessageIds = new Set(chat.messages.map((msg) => msg.id));
-		const transcriptions: Record<string, string> = {};
-		for (const [id, text] of Object.entries(allTranscriptions)) {
-			if (chatMessageIds.has(id)) {
-				transcriptions[id] = text;
-			}
-		}
+		const chatMessageIds = chat.messages.map((msg) => msg.id);
+		const transcriptions = getTranscriptionsForChat(chatMessageIds);
 
 		const persistedId = await savePersistedChat(
 			chat,
