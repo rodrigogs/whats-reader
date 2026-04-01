@@ -261,6 +261,7 @@
   "persistence_or_browse": "ou cliquez ci-dessous pour parcourir",
   "persistence_browse_files": "Parcourir les fichiers",
   "persistence_save_failed": "Échec de l'enregistrement de la conversation",
+  "persistence_restore_failed": "Échec de la restauration de la conversation",
   "persistence_remove_failed": "Échec de la suppression de la conversation",
   "close_notification": "Fermer la notification"
 }

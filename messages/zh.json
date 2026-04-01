@@ -261,6 +261,7 @@
   "persistence_or_browse": "或点击下方浏览",
   "persistence_browse_files": "浏览文件",
   "persistence_save_failed": "保存对话失败",
+  "persistence_restore_failed": "恢复对话失败",
   "persistence_remove_failed": "删除对话失败",
   "close_notification": "关闭通知"
 }

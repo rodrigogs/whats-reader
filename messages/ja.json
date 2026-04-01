@@ -261,6 +261,7 @@
   "persistence_or_browse": "または下をクリックして参照",
   "persistence_browse_files": "ファイルを参照",
   "persistence_save_failed": "会話の保存に失敗しました",
+  "persistence_restore_failed": "会話の復元に失敗しました",
   "persistence_remove_failed": "会話の削除に失敗しました",
   "close_notification": "通知を閉じる"
 }

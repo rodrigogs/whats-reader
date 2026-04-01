@@ -1,5 +1,6 @@
 // Component exports
 export { default as Button } from './Button.svelte';
+export { default as ChatAvatar } from './ChatAvatar.svelte';
 export { default as ChatList } from './ChatList.svelte';
 export { default as ChatStats } from './ChatStats.svelte';
 export { default as ChatView } from './ChatView.svelte';

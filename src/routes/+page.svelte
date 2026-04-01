@@ -404,7 +404,7 @@ async function handleFilesSelected(
 				// Remove loading placeholder on error
 				loadingChats = loadingChats.filter((lc) => lc.id !== loadingId);
 				appState.setError(
-					error instanceof Error ? error.message : 'Failed to parse file',
+					error instanceof Error ? error.message : m.error_parse_failed(),
 				);
 			}
 		})();
@@ -614,41 +614,44 @@ async function handleRestoreChats(chatIds: string[]) {
 
 				if (reselected) {
 					const reselectedBuffer = await reselected.file.arrayBuffer();
-					await loadChatFromBuffer(
+					const { validationPassed } = await loadChatFromBuffer(
 						reselectedBuffer,
 						reselected.file.name,
 						persistedChat,
 					);
 
-					// Use path from Electron dialog, or fall back to file.path from drag-drop
-					const reselectedPath =
-						reselected.path || getElectronFilePath(reselected.file);
-					chatFileReferences.set(persistedChat.chatTitle, {
-						file: reselected.file,
-						filePath: reselectedPath,
-						fileHandle: reselected.handle,
-						persistedId: persistedChat.id,
-					});
+					// Only upgrade persisted entry and mark remembered when validation passes
+					// to avoid binding saved metadata to the wrong file
+					if (validationPassed) {
+						const reselectedPath =
+							reselected.path || getElectronFilePath(reselected.file);
+						chatFileReferences.set(persistedChat.chatTitle, {
+							file: reselected.file,
+							filePath: reselectedPath,
+							fileHandle: reselected.handle,
+							persistedId: persistedChat.id,
+						});
 
-					// Upgrade persisted entry so future restores work automatically
-					if (reselectedPath) {
-						await updatePersistedChat(persistedChat.id, {
-							fileReference: {
-								type: 'electron-path',
-								filePath: reselectedPath,
-							},
-						});
-					} else if (reselected.handle) {
-						// Chrome/Edge: store handle and upgrade entry
-						await storeFileHandle(persistedChat.id, reselected.handle);
-						await updatePersistedChat(persistedChat.id, {
-							fileReference: {
-								type: 'file-handle',
-								handleId: persistedChat.id,
-							},
-						});
+						// Upgrade persisted entry so future restores work automatically
+						if (reselectedPath) {
+							await updatePersistedChat(persistedChat.id, {
+								fileReference: {
+									type: 'electron-path',
+									filePath: reselectedPath,
+								},
+							});
+						} else if (reselected.handle) {
+							// Chrome/Edge: store handle and upgrade entry
+							await storeFileHandle(persistedChat.id, reselected.handle);
+							await updatePersistedChat(persistedChat.id, {
+								fileReference: {
+									type: 'file-handle',
+									handleId: persistedChat.id,
+								},
+							});
+						}
+						addRemembered(persistedChat.chatTitle);
 					}
-					addRemembered(persistedChat.chatTitle);
 				}
 				continue;
 			}
@@ -658,6 +661,7 @@ async function handleRestoreChats(chatIds: string[]) {
 					`Failed to restore chat ${persistedChat.chatTitle}:`,
 					result.error,
 				);
+				showToast(m.persistence_restore_failed(), 'error');
 				continue;
 			}
 
@@ -683,7 +687,7 @@ async function handleRestoreChats(chatIds: string[]) {
 			addRemembered(persistedChat.chatTitle);
 		} catch (e) {
 			console.error(`Error restoring chat ${persistedChat.chatTitle}:`, e);
-			showToast(m.persistence_save_failed(), 'error');
+			showToast(m.persistence_restore_failed(), 'error');
 		}
 	}
 }
@@ -720,7 +724,7 @@ async function loadChatFromBuffer(
 	fileName: string,
 	restoredMetadata?: PersistedChatMetadata,
 	filePath?: string,
-) {
+): Promise<{ validationPassed: boolean }> {
 	// Create a loading placeholder
 	const loadingId = crypto.randomUUID();
 	const displayName = sanitizeFilename(fileName);
@@ -743,10 +747,12 @@ async function loadChatFromBuffer(
 		);
 
 		// If restoring, validate the file and only apply metadata if valid
+		let validationPassed = true;
 		if (restoredMetadata) {
 			const validation = validateRestoredFile(chatData, restoredMetadata);
 			if (!validation.valid) {
 				console.warn('Restored file validation failed:', validation.reasons);
+				validationPassed = false;
 			} else {
 				// Restore bookmarks
 				if (restoredMetadata.bookmarks.length > 0) {
@@ -798,6 +804,8 @@ async function loadChatFromBuffer(
 
 		// Start background indexing
 		startIndexWorker(chatData);
+
+		return { validationPassed };
 	} catch (error) {
 		console.error('Error parsing file:', error);
 		// Remove loading placeholder on error
@@ -1237,22 +1245,20 @@ function handleToggleRemember(chatTitle: string, enabled: boolean) {
 				
 				<!-- Chats title bar - matches search bar styling exactly -->
 				<div class="p-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-					<!-- svelte-ignore a11y_interactive_supports_focus -->
-					<div
-						role="button"
+					<button
+						type="button"
 						class="relative flex items-center w-full h-10 pl-10 pr-4 bg-gray-100 dark:bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
 						onclick={handleSidebarImport}
-						onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && handleSidebarImport()}
 					>
 						<div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
 							<Icon name="plus" size="md" class="text-gray-400" />
 						</div>
 						<span class="text-gray-500">{m.import_chat()}</span>
-					</div>
+					</button>
 					<input
 						bind:this={sidebarFileInput}
 						type="file"
-						accept=".txt,.zip"
+						accept=".zip"
 						class="hidden"
 						onchange={(e) => {
 							const input = e.target as HTMLInputElement;

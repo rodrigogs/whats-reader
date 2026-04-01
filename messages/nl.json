@@ -261,6 +261,7 @@
   "persistence_or_browse": "of klik hieronder om te bladeren",
   "persistence_browse_files": "Bestanden bladeren",
   "persistence_save_failed": "Gesprek opslaan mislukt",
+  "persistence_restore_failed": "Gesprek herstellen mislukt",
   "persistence_remove_failed": "Gesprek verwijderen mislukt",
   "close_notification": "Melding sluiten"
 }

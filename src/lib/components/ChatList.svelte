@@ -1,9 +1,11 @@
 <script lang="ts">
 import { floating } from '$lib/actions/floating';
+import { formatRelativeDate } from '$lib/helpers/format';
 import * as m from '$lib/paraglide/messages';
 import { getLocale } from '$lib/paraglide/runtime';
 import type { ChatData, LoadingChat } from '$lib/state.svelte';
 import { getAvailableLanguages } from '$lib/transcription.svelte';
+import ChatAvatar from './ChatAvatar.svelte';
 import Icon from './Icon.svelte';
 import IconButton from './IconButton.svelte';
 import ListItemButton from './ListItemButton.svelte';
@@ -36,11 +38,11 @@ let {
 	onToggleRemember,
 }: Props = $props();
 
-const stageLabels = {
+const stageLabels = $derived({
 	reading: m.loading_reading(),
 	extracting: m.loading_extracting(),
 	parsing: m.loading_parsing(),
-};
+});
 
 // Context menu state
 let contextMenuIndex = $state<number | null>(null);
@@ -134,24 +136,13 @@ function handleToggleRemember() {
 }
 
 function formatDate(date: Date | null): string {
-	if (!date) return '';
-	const locale = getLocale();
-	const now = new Date();
-	const diff = now.getTime() - date.getTime();
-	const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-	if (days === 0) {
-		return date.toLocaleTimeString(locale, {
-			hour: '2-digit',
-			minute: '2-digit',
-		});
-	} else if (days === 1) {
-		return m.time_yesterday();
-	} else if (days < 7) {
-		return date.toLocaleDateString(locale, { weekday: 'short' });
-	} else {
-		return date.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
-	}
+	return formatRelativeDate(
+		date,
+		getLocale(),
+		m.time_today(),
+		m.time_yesterday(),
+		'compact',
+	);
 }
 
 function getLastMessage(chat: ChatData): string {
@@ -216,11 +207,7 @@ function getLastMessage(chat: ChatData): string {
 					tabindex="0"
 				>
 					<!-- Avatar -->
-					<div
-						class="w-12 h-12 rounded-full bg-[var(--color-whatsapp-teal)] flex items-center justify-center text-white font-semibold flex-shrink-0"
-					>
-						{chat.title.charAt(0).toUpperCase()}
-					</div>
+					<ChatAvatar name={chat.title} size="md" />
 
 					<!-- Chat info -->
 					<div class="flex-1 min-w-0 text-left">
@@ -307,7 +294,7 @@ function getLastMessage(chat: ChatData): string {
 				<ListItemButton class="justify-between" onclick={handleAutoLoadToggle}>
 					<span class="flex items-center gap-2">
 					<Icon name="image" size="sm" />
-						Auto-load Media
+						{m.auto_load_media()}
 					</span>
 					{#if isAutoLoadEnabled(chats[contextMenuIndex]?.title || '')}
 						<Icon name="check" size="sm" class="text-[var(--color-whatsapp-teal)]" />

@@ -262,6 +262,7 @@
   "persistence_or_browse": "or click below to browse",
   "persistence_browse_files": "Browse Files",
   "persistence_save_failed": "Failed to save conversation",
+  "persistence_restore_failed": "Failed to restore conversation",
   "persistence_remove_failed": "Failed to remove conversation",
   "close_notification": "Close notification"
 }

@@ -1,8 +1,9 @@
 <script lang="ts">
 import { openElectronFile, openZipFilePicker } from '$lib/helpers/file-picker';
-import { getInitials } from '$lib/helpers/format';
 import * as m from '$lib/paraglide/messages';
 import type { PersistedChatMetadata } from '$lib/persistence.svelte';
+import Button from './Button.svelte';
+import ChatAvatar from './ChatAvatar.svelte';
 import Icon from './Icon.svelte';
 import Modal from './Modal.svelte';
 import ModalContent from './ModalContent.svelte';
@@ -93,9 +94,9 @@ async function openBrowse() {
 	// In Chrome/Edge, use showOpenFilePicker to capture a FileSystemFileHandle
 	// so the entry can be upgraded from 'reselect-required' to 'file-handle'
 	const result = await openZipFilePicker(false);
-	if (result) {
-		const file = await result.handles![0].getFile();
-		onFileSelected(file, undefined, result.handles![0]);
+	if (result?.handles?.[0]) {
+		const file = await result.handles[0].getFile();
+		onFileSelected(file, undefined, result.handles[0]);
 		return;
 	}
 	if (!('showOpenFilePicker' in window)) {
@@ -119,37 +120,31 @@ function handleDropZoneClick() {
 	<ModalHeader title={m.persistence_reselect_title()} onClose={onClose} />
 	<ModalContent>
 		<div class="flex flex-col gap-5 sm:gap-6">
-			<!-- Description with icon -->
+			<!-- Description -->
 			<div class="flex gap-2 sm:gap-3 items-start p-3 sm:p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg sm:rounded-xl border border-amber-200 dark:border-amber-800/30">
 				<div class="flex-shrink-0 mt-0.5">
 					<Icon name="alert-circle" size="md" class="text-amber-600 dark:text-amber-500" />
 				</div>
-				<p class="text-xs sm:text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed">
+				<p class="text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
 					{m.persistence_reselect_description({ chatTitle: chatMetadata.chatTitle })}
 				</p>
 			</div>
 
 			<!-- Chat info card -->
 			<div class="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-[var(--color-whatsapp-light-green)] dark:bg-[var(--color-whatsapp-dark-green)]/20 rounded-lg sm:rounded-xl border border-[var(--color-whatsapp-teal)]/20">
-				<!-- Avatar with initials -->
-				<div class="flex-shrink-0">
-					<div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-semibold text-white text-sm sm:text-base shadow-sm bg-[var(--color-whatsapp-teal)]">
-						{getInitials(chatMetadata.chatTitle)}
-					</div>
-				</div>
-				<!-- Chat details -->
+				<ChatAvatar name={chatMetadata.chatTitle} responsive />
 				<div class="flex-1 min-w-0">
-					<h3 class="font-semibold text-sm sm:text-base text-neutral-900 dark:text-neutral-100 truncate mb-1">
+					<h3 class="font-semibold text-sm sm:text-base text-gray-900 dark:text-gray-100 truncate mb-1">
 						{chatMetadata.chatTitle}
 					</h3>
-					<div class="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400">
+					<div class="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
 						<Icon name="file" size="xs" />
 						<span class="truncate">{chatMetadata.fileName}</span>
 					</div>
 				</div>
 			</div>
 
-			<!-- File drop zone with improved styling -->
+			<!-- File drop zone -->
 			<div
 				role="button"
 				tabindex="0"
@@ -157,7 +152,7 @@ function handleDropZoneClick() {
 				class="border-2 border-dashed rounded-lg sm:rounded-xl p-6 sm:p-10 text-center transition-all cursor-pointer
 					{isDragging
 						? 'border-[var(--color-whatsapp-teal)] bg-[var(--color-whatsapp-light-green)] dark:bg-[var(--color-whatsapp-dark-green)]/20 scale-[1.02]'
-						: 'border-neutral-300 dark:border-neutral-600 hover:border-[var(--color-whatsapp-teal)]/50 hover:bg-neutral-50 dark:hover:bg-neutral-800/30'}"
+						: 'border-gray-300 dark:border-gray-600 hover:border-[var(--color-whatsapp-teal)]/50 hover:bg-gray-50 dark:hover:bg-gray-800/30'}"
 				ondrop={handleDrop}
 				ondragover={handleDragOver}
 				ondragenter={handleDragEnter}
@@ -171,17 +166,17 @@ function handleDropZoneClick() {
 						<Icon name="upload" size="xl" class="text-[var(--color-whatsapp-teal)] sm:hidden" />
 						<Icon name="upload" size="2xl" class="text-[var(--color-whatsapp-teal)] hidden sm:block" />
 					</div>
-					
+
 					<!-- Text -->
 					<div class="space-y-1 sm:space-y-2">
-						<p class="text-sm sm:text-base font-semibold text-neutral-800 dark:text-neutral-200">
+						<p class="text-sm sm:text-base font-semibold text-gray-800 dark:text-gray-200">
 							{m.persistence_drop_zip()}
 						</p>
-						<p class="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
+						<p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
 							{m.persistence_or_browse()}
 						</p>
 					</div>
-					
+
 					<!-- Browse button -->
 					<label class="cursor-pointer">
 						<input
@@ -200,14 +195,10 @@ function handleDropZoneClick() {
 			</div>
 
 			<!-- Actions -->
-			<div class="flex gap-3 pt-3 border-t border-neutral-200 dark:border-neutral-700">
-				<button
-					type="button"
-					class="flex-1 px-4 py-2.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
-					onclick={onSkip}
-				>
+			<div class="flex gap-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+				<Button variant="secondary" size="lg" class="flex-1" onclick={onSkip}>
 					{m.persistence_skip()}
-				</button>
+				</Button>
 			</div>
 		</div>
 	</ModalContent>

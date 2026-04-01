@@ -261,6 +261,7 @@
   "persistence_or_browse": "o clicca sotto per sfogliare",
   "persistence_browse_files": "Sfoglia file",
   "persistence_save_failed": "Impossibile salvare la conversazione",
+  "persistence_restore_failed": "Impossibile ripristinare la conversazione",
   "persistence_remove_failed": "Impossibile rimuovere la conversazione",
   "close_notification": "Chiudi notifica"
 }

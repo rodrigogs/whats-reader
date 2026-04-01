@@ -261,6 +261,7 @@
   "persistence_or_browse": "или нажмите ниже для поиска",
   "persistence_browse_files": "Обзор файлов",
   "persistence_save_failed": "Не удалось сохранить разговор",
+  "persistence_restore_failed": "Не удалось восстановить разговор",
   "persistence_remove_failed": "Не удалось удалить разговор",
   "close_notification": "Закрыть уведомление"
 }

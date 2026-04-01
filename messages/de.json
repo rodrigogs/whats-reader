@@ -261,6 +261,7 @@
   "persistence_or_browse": "oder klicken Sie unten zum Durchsuchen",
   "persistence_browse_files": "Dateien durchsuchen",
   "persistence_save_failed": "Fehler beim Speichern der Unterhaltung",
+  "persistence_restore_failed": "Fehler beim Wiederherstellen der Unterhaltung",
   "persistence_remove_failed": "Fehler beim Entfernen der Unterhaltung",
   "close_notification": "Benachrichtigung schließen"
 }

@@ -261,6 +261,7 @@
   "persistence_or_browse": "o haz clic abajo para buscar",
   "persistence_browse_files": "Buscar Archivos",
   "persistence_save_failed": "Error al guardar la conversación",
+  "persistence_restore_failed": "Error al restaurar la conversación",
   "persistence_remove_failed": "Error al eliminar la conversación",
   "close_notification": "Cerrar notificación"
 }

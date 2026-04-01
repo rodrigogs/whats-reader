@@ -515,13 +515,14 @@ function parseLine(line: string): {
  * a counter suffix is added to make them unique while still being deterministic.
  */
 function generateDeterministicId(
+	chatIdentifier: string,
 	timestamp: Date,
 	sender: string | null,
 	content: string,
 	existingIds: Set<string>,
 ): string {
-	// Create a string combining timestamp, sender, and full content
-	const baseString = `${timestamp.toISOString()}|${sender ?? ''}|${content}`;
+	// Include chat identifier to avoid collisions across different chats
+	const baseString = `${chatIdentifier}|${timestamp.toISOString()}|${sender ?? ''}|${content}`;
 
 	// Simple hash function (djb2)
 	let hash = 5381;
@@ -560,8 +561,9 @@ export function parseChat(
 	// Helper to finalize and push current message with deterministic ID
 	const pushCurrentMessage = () => {
 		if (currentMessage) {
-			// Generate deterministic ID based on final content
+			// Generate deterministic ID based on chat + message content
 			currentMessage.id = generateDeterministicId(
+				filename,
 				currentMessage.timestamp,
 				currentMessage.sender,
 				currentMessage.content,

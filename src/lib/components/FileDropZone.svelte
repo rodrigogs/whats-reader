@@ -112,7 +112,12 @@ async function openElectronFilePicker() {
 	role="button"
 	tabindex="0"
 	aria-label={m.dropzone_title()}
-	onkeydown={(e) => e.key === 'Enter' && openElectronFilePicker()}
+	onkeydown={(e) => {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			openElectronFilePicker();
+		}
+	}}
 >
 	<input
 		bind:this={fileInput}

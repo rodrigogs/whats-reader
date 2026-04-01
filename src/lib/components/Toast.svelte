@@ -25,8 +25,10 @@ $effect(() => {
 	visible = true;
 });
 
-// Auto-hide after duration, with cleanup on destroy
+// Auto-hide after duration, restarting timer when message changes
 $effect(() => {
+	// Track message so timer restarts when a new message arrives
+	void message;
 	if (!visible || duration <= 0) return;
 
 	const timer = setTimeout(() => {

@@ -261,6 +261,7 @@
   "persistence_or_browse": "ou clique abaixo para procurar",
   "persistence_browse_files": "Procurar Arquivos",
   "persistence_save_failed": "Falha ao salvar conversa",
+  "persistence_restore_failed": "Falha ao restaurar conversa",
   "persistence_remove_failed": "Falha ao remover conversa",
   "close_notification": "Fechar notificação"
 }

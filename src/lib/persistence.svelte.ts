@@ -49,7 +49,7 @@ export interface PersistedChatMetadata {
 	};
 }
 
-export interface ValidationResult {
+interface ValidationResult {
 	valid: boolean;
 	confidence: 'high' | 'medium' | 'low';
 	reasons: string[];
@@ -61,14 +61,6 @@ const DONT_SHOW_KEY = 'whatsapp-dont-show-restore-modal';
 
 // Number of message IDs to store for validation (helps with iOS exports that lack chat title)
 const VALIDATION_MESSAGE_ID_COUNT = 5;
-
-/**
- * Check if File System Access API is supported
- */
-export function isFileSystemAccessSupported(): boolean {
-	if (!browser) return false;
-	return 'showOpenFilePicker' in window;
-}
 
 /**
  * Store a FileSystemFileHandle in IndexedDB
@@ -105,12 +97,10 @@ async function getStoredFileHandle(
  */
 async function verifyHandlePermission(
 	handle: FileSystemFileHandle,
-	withWrite = false,
 	shouldRequest = false,
 ): Promise<PermissionState> {
 	try {
 		const opts: FileSystemHandlePermissionDescriptor = {};
-		if (withWrite) opts.mode = 'readwrite';
 
 		// First check current permission
 		let permission = await handle.queryPermission(opts);
@@ -146,7 +136,7 @@ async function verifyHandlePermission(
  *
  * @returns Promise<boolean> - true if persistent storage was granted, false otherwise
  */
-export async function requestPersistentStorage(): Promise<boolean> {
+async function requestPersistentStorage(): Promise<boolean> {
 	if (!browser || !navigator.storage?.persist) return false;
 	try {
 		const granted = await navigator.storage.persist();
@@ -204,12 +194,8 @@ export async function savePersistedChat(
 		const handleId = id; // Use the same ID for the handle
 		await storeFileHandle(handleId, fileHandle);
 		fileReference = { type: 'file-handle', handleId };
-	} else if (isFileSystemAccessSupported() && file) {
-		// Web (Chromium): File System Access API supported but no handle provided
-		// Mark as reselect-required for now (handle will be requested on first restore)
-		fileReference = { type: 'reselect-required' };
 	} else {
-		// Firefox/Safari or no file: require reselect
+		// No handle/path available: require reselect (Firefox/Safari, or no file)
 		fileReference = { type: 'reselect-required' };
 	}
 
@@ -279,9 +265,14 @@ export async function removePersistedChat(id: string): Promise<void> {
 	if (!browser) return;
 
 	try {
+		const metadata = await get<PersistedChatMetadata>(
+			`${PERSISTENCE_PREFIX}${id}`,
+		);
 		await del(`${PERSISTENCE_PREFIX}${id}`);
-		// Also remove file handle if exists
-		await del(`${HANDLE_PREFIX}${id}`);
+		// Remove associated file handle if this was a file-handle reference
+		if (metadata?.fileReference.type === 'file-handle') {
+			await del(`${HANDLE_PREFIX}${metadata.fileReference.handleId}`);
+		}
 	} catch (e) {
 		console.error('Failed to remove persisted chat:', e);
 	}
@@ -400,7 +391,6 @@ export async function restoreChat(
 	};
 	error?: string;
 	needsReselect?: boolean;
-	needsPermission?: boolean;
 }> {
 	if (!browser)
 		return { success: false, error: 'Restoration only available in browser' };
@@ -461,13 +451,12 @@ export async function restoreChat(
 			}
 
 			// Check and request permission (we have user gesture from "Restore" click)
-			const permission = await verifyHandlePermission(handle, false, true);
+			const permission = await verifyHandlePermission(handle, true);
 			if (permission !== 'granted') {
 				return {
 					success: false,
 					error: 'File permission denied',
 					needsReselect: true,
-					needsPermission: true,
 				};
 			}
 
