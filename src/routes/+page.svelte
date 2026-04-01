@@ -411,21 +411,13 @@ function handleRemoveChat(index: number) {
 	const chat = appState.chats[index];
 	const chatTitle = chat?.title;
 
-	// Remove from UI immediately (sync) to avoid stale index issues
+	// Remove from current session only — persisted data stays in IndexedDB
+	// so the chat can be restored on next app launch.
+	// To remove from saved chats, user must toggle "Remember Conversation" off.
 	appState.removeChat(index);
 
 	if (chatTitle) {
 		chatFileReferences.delete(chatTitle);
-
-		// Clean up IndexedDB in background (non-blocking)
-		if (rememberedChats.has(chatTitle)) {
-			removeRemembered(chatTitle);
-			findPersistedChatByTitle(chatTitle)
-				.then((persisted) => {
-					if (persisted) return removePersistedChat(persisted.id);
-				})
-				.catch((e) => console.error('Failed to clean up persisted chat:', e));
-		}
 	}
 }
 
