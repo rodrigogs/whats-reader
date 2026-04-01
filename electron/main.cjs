@@ -245,16 +245,19 @@ ipcMain.handle('file:readFromPath', async (_event, filePath) => {
 			return { success: false, error: 'Only .zip files are allowed' };
 		}
 
-		// Use O_NOFOLLOW to reject symlinks atomically, avoiding TOCTOU race
-		const fd = await fs.promises.open(
-			normalized,
-			fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW,
-		);
+		// Pre-check with lstat to reject symlinks (works cross-platform including Windows)
+		const lst = await fs.promises.lstat(normalized);
+		if (!lst.isFile() || lst.isSymbolicLink()) {
+			return { success: false, error: 'Path is not a regular file' };
+		}
+
+		// Use O_NOFOLLOW when available to reject symlinks atomically (not supported on Windows)
+		const openFlags =
+			typeof fs.constants.O_NOFOLLOW === 'number'
+				? fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW
+				: fs.constants.O_RDONLY;
+		const fd = await fs.promises.open(normalized, openFlags);
 		try {
-			const stat = await fd.stat();
-			if (!stat.isFile()) {
-				return { success: false, error: 'Path is not a regular file' };
-			}
 			const content = await fd.readFile();
 			return {
 				success: true,

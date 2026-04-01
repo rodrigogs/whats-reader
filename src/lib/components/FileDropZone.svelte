@@ -71,23 +71,25 @@ function handleFileSelect(e: Event) {
 }
 
 async function openFilePicker() {
-	// Use File System Access API when available to capture FileSystemFileHandle
+	// Use File System Access API when available to capture FileSystemFileHandles
 	if ('showOpenFilePicker' in window) {
 		try {
-			const [handle] = await window.showOpenFilePicker({
+			const handles = await window.showOpenFilePicker({
 				types: [
 					{
 						description: 'WhatsApp ZIP files',
 						accept: { 'application/zip': ['.zip'] },
 					},
 				],
-				multiple: false,
+				multiple: true,
 			});
-			if (handle) {
-				const file = await handle.getFile();
+			if (handles && handles.length > 0) {
 				const dataTransfer = new DataTransfer();
-				dataTransfer.items.add(file);
-				onFilesSelected(dataTransfer.files, [handle]);
+				for (const handle of handles) {
+					const file = await handle.getFile();
+					dataTransfer.items.add(file);
+				}
+				onFilesSelected(dataTransfer.files, handles);
 				return;
 			}
 		} catch {
