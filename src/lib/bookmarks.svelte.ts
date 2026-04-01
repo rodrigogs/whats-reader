@@ -207,7 +207,7 @@ function createBookmarksState() {
 
 		// Get bookmarks for a specific chat (for persistence)
 		getBookmarksForChatAsExport(chatId: string): Bookmark[] {
-			return bookmarks.filter((b) => b.chatId === chatId);
+			return this.getBookmarksForChat(chatId);
 		},
 
 		// Clear all bookmarks
