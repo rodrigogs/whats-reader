@@ -94,6 +94,7 @@ $effect(() => {
 
 let showStats = $state(false);
 let showSidebar = $state(true);
+let sidebarFileInput: HTMLInputElement | undefined = $state();
 let showBookmarks = $state(false);
 let showMediaGallery = $state(false);
 let showParticipants = $state(false);
@@ -293,6 +294,44 @@ function makeProgressCallback(loadingId: string) {
 			lc.id === loadingId ? { ...lc, progress: overallProgress, stage } : lc,
 		);
 	};
+}
+
+async function handleSidebarImport() {
+	if (window.electronAPI) {
+		const result = await window.electronAPI.openFile();
+		if (result) {
+			const blob = new Blob([result.buffer]);
+			const file = new File([blob], result.name, { type: 'application/zip' });
+			const dt = new DataTransfer();
+			dt.items.add(file);
+			handleFilesSelected(
+				dt.files,
+				undefined,
+				result.path ? [result.path] : undefined,
+			);
+		}
+	} else if ('showOpenFilePicker' in window) {
+		try {
+			const handles = await window.showOpenFilePicker({
+				types: [
+					{
+						description: 'WhatsApp ZIP',
+						accept: { 'application/zip': ['.zip'] },
+					},
+				],
+				multiple: true,
+			});
+			if (handles?.length) {
+				const dt = new DataTransfer();
+				for (const h of handles) dt.items.add(await h.getFile());
+				handleFilesSelected(dt.files, handles);
+			}
+		} catch {
+			// User cancelled
+		}
+	} else {
+		sidebarFileInput?.click();
+	}
 }
 
 async function handleFilesSelected(
@@ -1214,22 +1253,29 @@ function handleToggleRemember(chatTitle: string, enabled: boolean) {
 				
 				<!-- Chats title bar - matches search bar styling exactly -->
 				<div class="p-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-					<label class="relative flex items-center w-full h-10 pl-10 pr-4 bg-gray-100 dark:bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+					<!-- svelte-ignore a11y_interactive_supports_focus -->
+					<div
+						role="button"
+						class="relative flex items-center w-full h-10 pl-10 pr-4 bg-gray-100 dark:bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+						onclick={handleSidebarImport}
+						onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && handleSidebarImport()}
+					>
 						<div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
 							<Icon name="plus" size="md" class="text-gray-400" />
 						</div>
 						<span class="text-gray-500">{m.import_chat()}</span>
-						<input
-							type="file"
-							accept=".txt,.zip"
-							class="hidden"
-							onchange={(e) => {
-								const input = e.target as HTMLInputElement;
-								if (input.files) handleFilesSelected(input.files);
-							}}
-							multiple
-						/>
-					</label>
+					</div>
+					<input
+						bind:this={sidebarFileInput}
+						type="file"
+						accept=".txt,.zip"
+						class="hidden"
+						onchange={(e) => {
+							const input = e.target as HTMLInputElement;
+							if (input.files) handleFilesSelected(input.files);
+						}}
+						multiple
+					/>
 				</div>
 
 				<!-- Chat list -->

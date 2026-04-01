@@ -182,7 +182,11 @@ ipcMain.handle('dialog:openFile', async () => {
 	return {
 		path: filePath,
 		name: fileName,
-		buffer: fileContent.buffer,
+		// Slice the buffer to avoid sending the entire Node.js Buffer pool
+		buffer: fileContent.buffer.slice(
+			fileContent.byteOffset,
+			fileContent.byteOffset + fileContent.byteLength,
+		),
 	};
 });
 
