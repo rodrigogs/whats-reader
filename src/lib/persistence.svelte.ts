@@ -134,35 +134,6 @@ async function verifyHandlePermission(
 }
 
 /**
- * Prompt user to select a file and get a FileSystemFileHandle
- * This is used when initially loading a file to get a handle we can store
- */
-export async function promptForFileHandle(): Promise<FileSystemFileHandle | null> {
-	if (!isFileSystemAccessSupported()) return null;
-
-	try {
-		const options: OpenFilePickerOptions = {
-			types: [
-				{
-					description: 'WhatsApp ZIP files',
-					accept: {
-						'application/zip': ['.zip'],
-					},
-				},
-			],
-			multiple: false,
-		};
-
-		const [handle] = await window.showOpenFilePicker(options);
-		return handle || null;
-	} catch (e) {
-		// User cancelled or file picker failed
-		console.warn('File picker cancelled or failed:', e);
-		return null;
-	}
-}
-
-/**
  * Request persistent storage to prevent eviction
  *
  * Note: This is a browser permission request that may fail if:
@@ -341,24 +312,6 @@ export async function updatePersistedChat(
 	} catch (e) {
 		console.error('Failed to update persisted chat:', e);
 		throw e;
-	}
-}
-
-/**
- * Get persisted chat by ID
- */
-export async function getPersistedChat(
-	id: string,
-): Promise<PersistedChatMetadata | null> {
-	if (!browser) return null;
-
-	try {
-		return (
-			(await get<PersistedChatMetadata>(`${PERSISTENCE_PREFIX}${id}`)) || null
-		);
-	} catch (e) {
-		console.error('Failed to get persisted chat:', e);
-		return null;
 	}
 }
 

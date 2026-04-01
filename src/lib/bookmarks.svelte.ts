@@ -207,11 +207,6 @@ function createBookmarksState() {
 			return this.importBookmarks(data);
 		},
 
-		// Get bookmarks for a specific chat (for persistence)
-		getBookmarksForChatAsExport(chatId: string): Bookmark[] {
-			return this.getBookmarksForChat(chatId);
-		},
-
 		// Clear all bookmarks
 		clearAll(): void {
 			bookmarks = [];

@@ -1,4 +1,5 @@
 <script lang="ts">
+import { openElectronFile, openZipFilePicker } from '$lib/helpers/file-picker';
 import * as m from '$lib/paraglide/messages';
 import Icon from './Icon.svelte';
 
@@ -71,46 +72,23 @@ function handleFileSelect(e: Event) {
 }
 
 async function openFilePicker() {
-	// Use File System Access API when available to capture FileSystemFileHandles
-	if ('showOpenFilePicker' in window) {
-		try {
-			const handles = await window.showOpenFilePicker({
-				types: [
-					{
-						description: 'WhatsApp ZIP files',
-						accept: { 'application/zip': ['.zip'] },
-					},
-				],
-				multiple: true,
-			});
-			if (handles && handles.length > 0) {
-				const dataTransfer = new DataTransfer();
-				for (const handle of handles) {
-					const file = await handle.getFile();
-					dataTransfer.items.add(file);
-				}
-				onFilesSelected(dataTransfer.files, handles);
-				return;
-			}
-		} catch {
-			// User cancelled or API failed — fall back to regular input
-		}
+	const result = await openZipFilePicker(true);
+	if (result) {
+		onFilesSelected(result.files, result.handles);
 		return;
 	}
-	fileInput?.click();
+	// showOpenFilePicker not supported — fall back to regular input
+	if (!('showOpenFilePicker' in window)) {
+		fileInput?.click();
+	}
 }
 
 async function openElectronFilePicker() {
 	if (window.electronAPI) {
-		const result = await window.electronAPI.openFile();
+		const result = await openElectronFile();
 		if (result) {
-			const blob = new Blob([result.buffer]);
-			const file = new File([blob], result.name, {
-				type: getMimeType(result.name),
-			});
 			const dataTransfer = new DataTransfer();
-			dataTransfer.items.add(file);
-			// Pass the absolute file path from Electron's dialog for persistence
+			dataTransfer.items.add(result.file);
 			onFilesSelected(
 				dataTransfer.files,
 				undefined,
@@ -120,12 +98,6 @@ async function openElectronFilePicker() {
 	} else {
 		openFilePicker();
 	}
-}
-
-function getMimeType(filename: string): string {
-	const ext = filename.toLowerCase().split('.').pop();
-	if (ext === 'zip') return 'application/zip';
-	return 'application/octet-stream';
 }
 </script>
 
@@ -139,6 +111,7 @@ function getMimeType(filename: string): string {
 	onclick={openElectronFilePicker}
 	role="button"
 	tabindex="0"
+	aria-label={m.dropzone_title()}
 	onkeydown={(e) => e.key === 'Enter' && openElectronFilePicker()}
 >
 	<input

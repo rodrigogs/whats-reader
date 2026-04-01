@@ -254,19 +254,13 @@
   "persistence_message_count": "{count} 件のメッセージ",
   "persistence_reselect_title": "ファイルを再選択してください",
   "persistence_reselect_description": "\"{chatTitle}\" を復元するには、元のファイルを選択してください：",
-  "persistence_reselect_expected_file": "対象ファイル: {fileName}",
   "persistence_skip": "スキップ",
-  "persistence_validation_failed": "このファイルは保存された会話と一致しません",
-  "persistence_validation_confirm": "正しいファイルの可能性がありますが、完全には確認できませんでした。続行しますか？",
-  "persistence_file_not_found": "元のファイルは移動または削除されました",
-  "persistence_restoring": "会話を復元中...",
   "persistence_select_all": "すべて選択",
   "persistence_deselect_all": "すべて解除",
   "persistence_drop_zip": "WhatsAppのZIPファイルをここにドロップ",
   "persistence_or_browse": "または下をクリックして参照",
   "persistence_browse_files": "ファイルを参照",
-  "persistence_reselect_hint": "今後の自動復元を有効にするには、もう一度ファイルを選択してください",
   "persistence_save_failed": "会話の保存に失敗しました",
   "persistence_remove_failed": "会話の削除に失敗しました",
-  "persistence_close_notification": "通知を閉じる"
+  "close_notification": "通知を閉じる"
 }

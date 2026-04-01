@@ -254,19 +254,13 @@
   "persistence_message_count": "{count} 条消息",
   "persistence_reselect_title": "请重新选择文件",
   "persistence_reselect_description": "要恢复\"{chatTitle}\"，请选择原始文件：",
-  "persistence_reselect_expected_file": "预期文件: {fileName}",
   "persistence_skip": "跳过",
-  "persistence_validation_failed": "此文件与保存的对话不匹配",
-  "persistence_validation_confirm": "这可能是正确的文件，但我们无法完全验证。仍然继续吗？",
-  "persistence_file_not_found": "原始文件已被移动或删除",
-  "persistence_restoring": "正在恢复对话...",
   "persistence_select_all": "全选",
   "persistence_deselect_all": "取消全选",
   "persistence_drop_zip": "将WhatsApp ZIP文件拖放到此处",
   "persistence_or_browse": "或点击下方浏览",
   "persistence_browse_files": "浏览文件",
-  "persistence_reselect_hint": "请再次选择该文件以在将来启用自动还原",
   "persistence_save_failed": "保存对话失败",
   "persistence_remove_failed": "删除对话失败",
-  "persistence_close_notification": "关闭通知"
+  "close_notification": "关闭通知"
 }

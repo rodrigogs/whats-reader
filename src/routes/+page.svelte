@@ -31,6 +31,11 @@ import ModalHeader from '$lib/components/ModalHeader.svelte';
 import ReselectFileModal from '$lib/components/ReselectFileModal.svelte';
 import RestoreSessionModal from '$lib/components/RestoreSessionModal.svelte';
 import Toast from '$lib/components/Toast.svelte';
+import {
+	getElectronFilePath,
+	openElectronFile,
+	openZipFilePicker,
+} from '$lib/helpers/file-picker';
 import { sanitizeFilename } from '$lib/helpers/format';
 import {
 	isElectronMac as checkIsElectronMac,
@@ -48,6 +53,7 @@ import {
 	removePersistedChat,
 	restoreChat,
 	savePersistedChat,
+	storeFileHandle,
 	updatePersistedChat,
 	validateRestoredFile,
 } from '$lib/persistence.svelte';
@@ -298,39 +304,23 @@ function makeProgressCallback(loadingId: string) {
 
 async function handleSidebarImport() {
 	if (window.electronAPI) {
-		const result = await window.electronAPI.openFile();
+		const result = await openElectronFile();
 		if (result) {
-			const blob = new Blob([result.buffer]);
-			const file = new File([blob], result.name, { type: 'application/zip' });
 			const dt = new DataTransfer();
-			dt.items.add(file);
+			dt.items.add(result.file);
 			handleFilesSelected(
 				dt.files,
 				undefined,
 				result.path ? [result.path] : undefined,
 			);
 		}
-	} else if ('showOpenFilePicker' in window) {
-		try {
-			const handles = await window.showOpenFilePicker({
-				types: [
-					{
-						description: 'WhatsApp ZIP',
-						accept: { 'application/zip': ['.zip'] },
-					},
-				],
-				multiple: true,
-			});
-			if (handles?.length) {
-				const dt = new DataTransfer();
-				for (const h of handles) dt.items.add(await h.getFile());
-				handleFilesSelected(dt.files, handles);
-			}
-		} catch {
-			// User cancelled
-		}
 	} else {
-		sidebarFileInput?.click();
+		const result = await openZipFilePicker(true);
+		if (result) {
+			handleFilesSelected(result.files, result.handles);
+		} else if (!('showOpenFilePicker' in window)) {
+			sidebarFileInput?.click();
+		}
 	}
 }
 
@@ -366,10 +356,7 @@ async function handleFilesSelected(
 		const currentHandleIndex = handleIndex;
 		// File path: prefer explicit path from Electron dialog, fall back to file.path from drag-drop
 		const droppedFilePath =
-			paths?.[currentHandleIndex] ||
-			(isElectron && 'path' in file
-				? (file as File & { path: string }).path
-				: undefined);
+			paths?.[currentHandleIndex] || getElectronFilePath(file);
 		const droppedHandle = handles?.[currentHandleIndex];
 
 		// Process file asynchronously
@@ -635,10 +622,7 @@ async function handleRestoreChats(chatIds: string[]) {
 
 					// Use path from Electron dialog, or fall back to file.path from drag-drop
 					const reselectedPath =
-						reselected.path ||
-						(isElectron && 'path' in reselected.file
-							? (reselected.file as File & { path: string }).path
-							: undefined);
+						reselected.path || getElectronFilePath(reselected.file);
 					chatFileReferences.set(persistedChat.chatTitle, {
 						file: reselected.file,
 						filePath: reselectedPath,
@@ -656,7 +640,6 @@ async function handleRestoreChats(chatIds: string[]) {
 						});
 					} else if (reselected.handle) {
 						// Chrome/Edge: store handle and upgrade entry
-						const { storeFileHandle } = await import('$lib/persistence.svelte');
 						await storeFileHandle(persistedChat.id, reselected.handle);
 						await updatePersistedChat(persistedChat.id, {
 							fileReference: {
@@ -700,6 +683,7 @@ async function handleRestoreChats(chatIds: string[]) {
 			addRemembered(persistedChat.chatTitle);
 		} catch (e) {
 			console.error(`Error restoring chat ${persistedChat.chatTitle}:`, e);
+			showToast(m.persistence_save_failed(), 'error');
 		}
 	}
 }
@@ -831,7 +815,7 @@ async function rememberChat(chatTitle: string) {
 		// Use handle captured during drag-drop (no file picker needed)
 		const fileHandle = fileRef?.fileHandle;
 
-		const bookmarks = bookmarksState.getBookmarksForChatAsExport(chatTitle);
+		const bookmarks = bookmarksState.getBookmarksForChat(chatTitle);
 		const chatMessageIds = chat.messages.map((msg) => msg.id);
 		const transcriptions = getTranscriptionsForChat(chatMessageIds);
 

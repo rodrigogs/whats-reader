@@ -254,19 +254,13 @@
   "persistence_message_count": "{count} Nachrichten",
   "persistence_reselect_title": "Bitte Datei Erneut Auswählen",
   "persistence_reselect_description": "Um \"{chatTitle}\" wiederherzustellen, wählen Sie bitte die Originaldatei aus:",
-  "persistence_reselect_expected_file": "Erwartete Datei: {fileName}",
   "persistence_skip": "Überspringen",
-  "persistence_validation_failed": "Diese Datei stimmt nicht mit der gespeicherten Unterhaltung überein",
-  "persistence_validation_confirm": "Dies könnte die richtige Datei sein, aber wir konnten es nicht vollständig überprüfen. Trotzdem fortfahren?",
-  "persistence_file_not_found": "Die Originaldatei wurde verschoben oder gelöscht",
-  "persistence_restoring": "Unterhaltungen werden wiederhergestellt...",
   "persistence_select_all": "Alle auswählen",
   "persistence_deselect_all": "Alle abwählen",
   "persistence_drop_zip": "WhatsApp-ZIP-Datei hier ablegen",
   "persistence_or_browse": "oder klicken Sie unten zum Durchsuchen",
   "persistence_browse_files": "Dateien durchsuchen",
-  "persistence_reselect_hint": "Wählen Sie die Datei noch einmal aus, um die automatische Wiederherstellung in Zukunft zu aktivieren",
   "persistence_save_failed": "Fehler beim Speichern der Unterhaltung",
   "persistence_remove_failed": "Fehler beim Entfernen der Unterhaltung",
-  "persistence_close_notification": "Benachrichtigung schließen"
+  "close_notification": "Benachrichtigung schließen"
 }

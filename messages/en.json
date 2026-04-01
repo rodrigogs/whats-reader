@@ -255,19 +255,13 @@
   "persistence_message_count": "{count} messages",
   "persistence_reselect_title": "Please Re-select File",
   "persistence_reselect_description": "To restore \"{chatTitle}\", please select the original file:",
-  "persistence_reselect_expected_file": "Expected file: {fileName}",
   "persistence_skip": "Skip",
-  "persistence_validation_failed": "This file doesn't match the saved conversation",
-  "persistence_validation_confirm": "This might be the correct file, but we couldn't fully verify. Continue anyway?",
-  "persistence_file_not_found": "The original file was moved or deleted",
-  "persistence_restoring": "Restoring conversations...",
   "persistence_select_all": "Select All",
   "persistence_deselect_all": "Deselect All",
   "persistence_drop_zip": "Drop WhatsApp ZIP file here",
   "persistence_or_browse": "or click below to browse",
   "persistence_browse_files": "Browse Files",
-  "persistence_reselect_hint": "Select the file once more to enable automatic restoration in the future",
   "persistence_save_failed": "Failed to save conversation",
   "persistence_remove_failed": "Failed to remove conversation",
-  "persistence_close_notification": "Close notification"
+  "close_notification": "Close notification"
 }

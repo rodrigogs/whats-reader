@@ -68,7 +68,7 @@ const iconName = $derived(
 			type="button"
 			onclick={handleClose}
 			class="ml-2 hover:opacity-80 transition-opacity"
-			aria-label={m.persistence_close_notification()}
+			aria-label={m.close_notification()}
 		>
 			<Icon name="x" size="sm" />
 		</button>

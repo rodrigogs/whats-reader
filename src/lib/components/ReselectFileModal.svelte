@@ -1,4 +1,5 @@
 <script lang="ts">
+import { openElectronFile, openZipFilePicker } from '$lib/helpers/file-picker';
 import { getInitials } from '$lib/helpers/format';
 import * as m from '$lib/paraglide/messages';
 import type { PersistedChatMetadata } from '$lib/persistence.svelte';
@@ -83,40 +84,23 @@ function handleFileInput(e: Event) {
 async function openBrowse() {
 	// In Electron, use the native dialog to capture the absolute file path
 	if (window.electronAPI) {
-		const result = await window.electronAPI.openFile();
-		if (result?.name.toLowerCase().endsWith('.zip')) {
-			const blob = new Blob([result.buffer]);
-			const file = new File([blob], result.name, {
-				type: 'application/zip',
-			});
-			onFileSelected(file, result.path);
+		const result = await openElectronFile();
+		if (result?.file.name.toLowerCase().endsWith('.zip')) {
+			onFileSelected(result.file, result.path);
 		}
 		return;
 	}
 	// In Chrome/Edge, use showOpenFilePicker to capture a FileSystemFileHandle
 	// so the entry can be upgraded from 'reselect-required' to 'file-handle'
-	if ('showOpenFilePicker' in window) {
-		try {
-			const [handle] = await window.showOpenFilePicker({
-				types: [
-					{
-						description: 'WhatsApp ZIP files',
-						accept: { 'application/zip': ['.zip'] },
-					},
-				],
-				multiple: false,
-			});
-			if (handle) {
-				const file = await handle.getFile();
-				onFileSelected(file, undefined, handle);
-				return;
-			}
-		} catch {
-			// User cancelled — do nothing
-		}
+	const result = await openZipFilePicker(false);
+	if (result) {
+		const file = await result.handles![0].getFile();
+		onFileSelected(file, undefined, result.handles![0]);
 		return;
 	}
-	fileInputRef?.click();
+	if (!('showOpenFilePicker' in window)) {
+		fileInputRef?.click();
+	}
 }
 
 function handleDropZoneKeydown(e: KeyboardEvent) {

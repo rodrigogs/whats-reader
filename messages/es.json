@@ -254,19 +254,13 @@
   "persistence_message_count": "{count} mensajes",
   "persistence_reselect_title": "Por Favor, Selecciona el Archivo de Nuevo",
   "persistence_reselect_description": "Para restaurar \"{chatTitle}\", selecciona el archivo original:",
-  "persistence_reselect_expected_file": "Archivo esperado: {fileName}",
   "persistence_skip": "Omitir",
-  "persistence_validation_failed": "Este archivo no coincide con la conversación guardada",
-  "persistence_validation_confirm": "Este podría ser el archivo correcto, pero no pudimos verificarlo completamente. ¿Continuar de todos modos?",
-  "persistence_file_not_found": "El archivo original fue movido o eliminado",
-  "persistence_restoring": "Restaurando conversaciones...",
   "persistence_select_all": "Seleccionar Todo",
   "persistence_deselect_all": "Deseleccionar Todo",
   "persistence_drop_zip": "Suelta el archivo ZIP de WhatsApp aquí",
   "persistence_or_browse": "o haz clic abajo para buscar",
   "persistence_browse_files": "Buscar Archivos",
-  "persistence_reselect_hint": "Selecciona el archivo una vez más para habilitar la restauración automática en el futuro",
   "persistence_save_failed": "Error al guardar la conversación",
   "persistence_remove_failed": "Error al eliminar la conversación",
-  "persistence_close_notification": "Cerrar notificación"
+  "close_notification": "Cerrar notificación"
 }

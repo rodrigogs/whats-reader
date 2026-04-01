@@ -254,19 +254,13 @@
   "persistence_message_count": "{count} mensagens",
   "persistence_reselect_title": "Por Favor, Selecione o Arquivo Novamente",
   "persistence_reselect_description": "Para restaurar \"{chatTitle}\", selecione o arquivo original:",
-  "persistence_reselect_expected_file": "Arquivo esperado: {fileName}",
   "persistence_skip": "Pular",
-  "persistence_validation_failed": "Este arquivo não corresponde à conversa salva",
-  "persistence_validation_confirm": "Este pode ser o arquivo correto, mas não foi possível verificar completamente. Continuar mesmo assim?",
-  "persistence_file_not_found": "O arquivo original foi movido ou excluído",
-  "persistence_restoring": "Restaurando conversas...",
   "persistence_select_all": "Selecionar Tudo",
   "persistence_deselect_all": "Desmarcar Tudo",
   "persistence_drop_zip": "Solte o arquivo ZIP do WhatsApp aqui",
   "persistence_or_browse": "ou clique abaixo para procurar",
   "persistence_browse_files": "Procurar Arquivos",
-  "persistence_reselect_hint": "Selecione o arquivo mais uma vez para permitir a restauração automática no futuro",
   "persistence_save_failed": "Falha ao salvar conversa",
   "persistence_remove_failed": "Falha ao remover conversa",
-  "persistence_close_notification": "Fechar notificação"
+  "close_notification": "Fechar notificação"
 }
