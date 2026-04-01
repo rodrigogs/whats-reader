@@ -85,6 +85,10 @@ declare global {
 		): Promise<PermissionState>;
 	}
 
+	interface DataTransferItem {
+		getAsFileSystemHandle(): Promise<FileSystemHandle | null>;
+	}
+
 	interface Window {
 		electronAPI?: ElectronAPI;
 		showOpenFilePicker(

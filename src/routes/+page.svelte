@@ -46,10 +46,10 @@ import {
 	isElectronPathReference,
 	isFileSystemAccessSupported,
 	type PersistedChatMetadata,
-	promptForFileHandle,
 	removePersistedChat,
 	restoreChat,
 	savePersistedChat,
+	updatePersistedChat,
 	validateRestoredFile,
 } from '$lib/persistence.svelte';
 import { appState, type ChatData, type LoadingChat } from '$lib/state.svelte';
@@ -288,9 +288,13 @@ function makeProgressCallback(loadingId: string) {
 	};
 }
 
-async function handleFilesSelected(files: FileList) {
+async function handleFilesSelected(
+	files: FileList,
+	handles?: FileSystemFileHandle[],
+) {
 	appState.clearError();
 
+	let handleIndex = 0;
 	for (const file of files) {
 		if (!file.name.endsWith('.zip')) {
 			appState.setError(m.error_unsupported_file({ filename: file.name }));
@@ -343,9 +347,12 @@ async function handleFilesSelected(files: FileList) {
 					isElectron && 'path' in file
 						? (file as File & { path: string }).path
 						: undefined;
+				// Capture FileSystemFileHandle from drag-drop (Chrome 86+, no picker needed)
+				const droppedHandle = handles?.[handleIndex];
 				chatFileReferences.set(chatData.title, {
 					file,
 					filePath: droppedFilePath,
+					fileHandle: droppedHandle,
 				});
 
 				// Start background indexing
@@ -364,6 +371,7 @@ async function handleFilesSelected(files: FileList) {
 				);
 			}
 		})();
+		handleIndex++;
 	}
 }
 
@@ -574,10 +582,27 @@ async function handleRestoreChats(chatIds: string[]) {
 				if (file) {
 					const reselectedBuffer = await file.arrayBuffer();
 					await loadChatFromBuffer(reselectedBuffer, file.name, persistedChat);
+
+					// Capture file path (Electron) for future automatic restores
+					const reselectedPath =
+						isElectron && 'path' in file
+							? (file as File & { path: string }).path
+							: undefined;
 					chatFileReferences.set(persistedChat.chatTitle, {
 						file,
+						filePath: reselectedPath,
 						persistedId: persistedChat.id,
 					});
+
+					// Update persisted entry so future restores use the new path
+					if (reselectedPath) {
+						await updatePersistedChat(persistedChat.id, {
+							fileReference: {
+								type: 'electron-path',
+								filePath: reselectedPath,
+							},
+						});
+					}
 					addRemembered(persistedChat.chatTitle);
 				}
 				continue;
@@ -737,17 +762,8 @@ async function rememberChat(chatTitle: string) {
 
 	try {
 		const fileRef = chatFileReferences.get(chatTitle);
-		let fileHandle: FileSystemFileHandle | undefined;
-
-		// For web with File System Access API, request file handle now (with user gesture)
-		if (!isElectron && isFileSystemAccessSupported() && fileRef?.file) {
-			try {
-				showToast(m.persistence_reselect_hint(), 'info');
-				fileHandle = (await promptForFileHandle()) || undefined;
-			} catch (e) {
-				console.log('Could not get file handle:', e);
-			}
-		}
+		// Use handle captured during drag-drop (no file picker needed)
+		const fileHandle = fileRef?.fileHandle;
 
 		const bookmarks = bookmarksState.getBookmarksForChatAsExport(chatTitle);
 		const chatMessageIds = chat.messages.map((msg) => msg.id);

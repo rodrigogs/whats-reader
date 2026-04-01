@@ -3,7 +3,7 @@ import * as m from '$lib/paraglide/messages';
 import Icon from './Icon.svelte';
 
 interface Props {
-	onFilesSelected: (files: FileList) => void;
+	onFilesSelected: (files: FileList, handles?: FileSystemFileHandle[]) => void;
 	accept?: string;
 	isLoading?: boolean;
 	loadingProgress?: number;
@@ -29,12 +29,31 @@ function handleDragLeave(e: DragEvent) {
 	isDragOver = false;
 }
 
-function handleDrop(e: DragEvent) {
+async function handleDrop(e: DragEvent) {
 	e.preventDefault();
 	isDragOver = false;
 
 	if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-		onFilesSelected(e.dataTransfer.files);
+		// Try to capture FileSystemFileHandles for persistence (Chrome 86+)
+		let handles: FileSystemFileHandle[] | undefined;
+		if (
+			e.dataTransfer.items &&
+			'getAsFileSystemHandle' in DataTransferItem.prototype
+		) {
+			handles = [];
+			for (const item of e.dataTransfer.items) {
+				try {
+					const handle = await item.getAsFileSystemHandle();
+					if (handle?.kind === 'file') {
+						handles.push(handle as FileSystemFileHandle);
+					}
+				} catch {
+					// getAsFileSystemHandle not supported or failed
+				}
+			}
+			if (handles.length === 0) handles = undefined;
+		}
+		onFilesSelected(e.dataTransfer.files, handles);
 	}
 }
 
