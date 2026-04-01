@@ -98,8 +98,9 @@ async function getStoredFileHandle(
 }
 
 /**
- * Verify permission for a FileSystemFileHandle
- * Only checks permission status, does NOT request it (that requires user gesture)
+ * Verify permission for a FileSystemFileHandle.
+ * Queries current permission state; optionally requests permission if shouldRequest
+ * is true (requires an active user gesture).
  * @returns 'granted' | 'denied' | 'prompt'
  */
 async function verifyHandlePermission(

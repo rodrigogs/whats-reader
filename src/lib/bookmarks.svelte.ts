@@ -182,10 +182,12 @@ function createBookmarksState() {
 				throw new Error('Invalid bookmark export format');
 			}
 
-			// Merge: add new bookmarks, skip duplicates (by messageId)
-			const existingIds = new Set(bookmarks.map((b) => b.messageId));
+			// Merge: add new bookmarks, skip duplicates (by chatId+messageId to avoid cross-chat collisions)
+			const existingKeys = new Set(
+				bookmarks.map((b) => `${b.chatId}:${b.messageId}`),
+			);
 			const newBookmarks = data.bookmarks.filter(
-				(b) => !existingIds.has(b.messageId),
+				(b) => !existingKeys.has(`${b.chatId}:${b.messageId}`),
 			);
 			const skipped = data.bookmarks.length - newBookmarks.length;
 

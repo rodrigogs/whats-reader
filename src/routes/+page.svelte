@@ -530,6 +530,13 @@ $effect(() => {
 			const persisted = await getPersistedChats();
 			if (persisted.length === 0) return;
 
+			// Seed rememberedChats from IndexedDB so toggle state is correct
+			// even if user skips the restore modal or clicks "Start Fresh"
+			for (const chat of persisted) {
+				rememberedChats.add(chat.chatTitle);
+			}
+			rememberedChats = new Set(rememberedChats);
+
 			// Check if user wants to skip the modal
 			const dontShow = await getDontShowRestoreModal();
 			if (dontShow) return;
