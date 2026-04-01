@@ -18,6 +18,13 @@ let { message, type = 'success', duration = 3000, onClose }: Props = $props();
 
 let visible = $state(true);
 
+// Reset visibility and restart timer when message changes
+$effect(() => {
+	// Track message to re-run when it changes
+	void message;
+	visible = true;
+});
+
 // Auto-hide after duration, with cleanup on destroy
 $effect(() => {
 	if (!visible || duration <= 0) return;

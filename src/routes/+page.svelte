@@ -44,7 +44,6 @@ import {
 	getDontShowRestoreModal,
 	getPersistedChats,
 	isElectronPathReference,
-	isFileSystemAccessSupported,
 	type PersistedChatMetadata,
 	removePersistedChat,
 	restoreChat,

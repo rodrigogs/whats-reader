@@ -70,7 +70,31 @@ function handleFileSelect(e: Event) {
 	}
 }
 
-function openFilePicker() {
+async function openFilePicker() {
+	// Use File System Access API when available to capture FileSystemFileHandle
+	if ('showOpenFilePicker' in window) {
+		try {
+			const [handle] = await window.showOpenFilePicker({
+				types: [
+					{
+						description: 'WhatsApp ZIP files',
+						accept: { 'application/zip': ['.zip'] },
+					},
+				],
+				multiple: false,
+			});
+			if (handle) {
+				const file = await handle.getFile();
+				const dataTransfer = new DataTransfer();
+				dataTransfer.items.add(file);
+				onFilesSelected(dataTransfer.files, [handle]);
+				return;
+			}
+		} catch {
+			// User cancelled or API failed — fall back to regular input
+		}
+		return;
+	}
 	fileInput?.click();
 }
 
