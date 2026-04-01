@@ -181,6 +181,7 @@
   "update_never_tooltip": "アップデート通知を表示しない",
   "version_view_releases": "GitHubでリリースを見る",
   "close": "閉じる",
+  "close_modal": "モーダルを閉じる",
   "update_ready": "アップデート準備完了",
   "update_downloading": "アップデートをダウンロード中",
   "update_close": "更新通知を閉じる",

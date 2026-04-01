@@ -181,6 +181,7 @@
   "update_never_tooltip": "Nooit updatemeldingen tonen",
   "version_view_releases": "Bekijk releases op GitHub",
   "close": "Sluiten",
+  "close_modal": "Venster sluiten",
   "update_ready": "Update gereed",
   "update_downloading": "Update downloaden",
   "update_close": "Sluit de updatemelding",

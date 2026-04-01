@@ -181,6 +181,7 @@
   "update_never_tooltip": "Non mostrare mai notifiche di aggiornamento",
   "version_view_releases": "Visualizza le versioni su GitHub",
   "close": "Chiudi",
+  "close_modal": "Chiudi finestra modale",
   "update_ready": "Aggiornamento pronto",
   "update_downloading": "Download dell'aggiornamento",
   "update_close": "Chiudi notifica di aggiornamento",

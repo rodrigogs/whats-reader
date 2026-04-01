@@ -181,6 +181,7 @@
   "update_never_tooltip": "不再显示更新通知",
   "version_view_releases": "在 GitHub 上查看版本",
   "close": "关闭",
+  "close_modal": "关闭对话框",
   "update_ready": "更新准备就绪",
   "update_downloading": "正在下载更新",
   "update_close": "关闭更新通知",

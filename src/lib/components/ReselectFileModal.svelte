@@ -100,6 +100,7 @@ function handleFileInput(e: Event) {
 			<div
 				role="button"
 				tabindex="0"
+				aria-label={m.persistence_drop_zip()}
 				class="border-2 border-dashed rounded-lg sm:rounded-xl p-6 sm:p-10 text-center transition-all cursor-pointer
 					{isDragging
 						? 'border-[var(--color-whatsapp-teal)] bg-[var(--color-whatsapp-light-green)] dark:bg-[var(--color-whatsapp-dark-green)]/20 scale-[1.02]'

@@ -1,6 +1,7 @@
 <script lang="ts">
 import type { Snippet } from 'svelte';
 import { browser } from '$app/environment';
+import * as m from '$lib/paraglide/messages';
 
 interface Props {
 	/**
@@ -17,7 +18,6 @@ interface Props {
 	class?: string;
 	/**
 	 * Accessible label for the close backdrop button
-	 * @default 'Close modal'
 	 */
 	closeAriaLabel?: string;
 	/**
@@ -30,7 +30,7 @@ let {
 	open,
 	onClose,
 	class: className = '',
-	closeAriaLabel = 'Close modal',
+	closeAriaLabel = m.close_modal(),
 	children,
 }: Props = $props();
 
