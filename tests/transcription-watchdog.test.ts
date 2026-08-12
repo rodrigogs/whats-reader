@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { afterEach, describe, it, mock } from 'node:test';
 import {
+	postIfTranscriptionRequestAccepted,
 	TranscriptionRequestManager,
 	TranscriptionServiceError,
 } from '../src/lib/transcription-request-manager.ts';
@@ -10,6 +11,46 @@ afterEach(() => {
 });
 
 describe('TranscriptionRequestManager', () => {
+	it('rejects a concurrent duplicate without replacing the original request', async () => {
+		mock.timers.enable({ apis: ['setTimeout'] });
+		const manager = new TranscriptionRequestManager(100);
+		let workerPosts = 0;
+		let firstResolved = false;
+		const first = new Promise<string>((resolve, reject) => {
+			const accepted = manager.add(
+					'message-1',
+					(text) => {
+						firstResolved = true;
+						resolve(text);
+					},
+					reject,
+			);
+			assert.equal(accepted, true);
+			postIfTranscriptionRequestAccepted(accepted, () => {
+				workerPosts += 1;
+			});
+		});
+
+		mock.timers.tick(50);
+		const duplicate = new Promise<string>((resolve, reject) => {
+			const accepted = manager.add('message-1', resolve, reject);
+			assert.equal(accepted, false);
+			postIfTranscriptionRequestAccepted(accepted, () => {
+				workerPosts += 1;
+			});
+		});
+
+		await assert.rejects(duplicate, { code: 'TRANSCRIPTION_DUPLICATE_REQUEST' });
+		assert.equal(workerPosts, 1);
+		assert.equal(manager.size, 1);
+		assert.equal(firstResolved, false);
+
+		mock.timers.tick(50);
+		await assert.rejects(first, { code: 'TRANSCRIPTION_TIMEOUT' });
+		assert.equal(firstResolved, false);
+		assert.equal(manager.size, 0);
+	});
+
 	it('expires a silent request after the inactivity timeout and removes it', async () => {
 		mock.timers.enable({ apis: ['setTimeout'] });
 		let timedOut = false;

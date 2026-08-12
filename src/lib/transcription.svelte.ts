@@ -5,6 +5,7 @@
 
 import { browser } from '$app/environment';
 import {
+	postIfTranscriptionRequestAccepted,
 	TranscriptionRequestManager,
 	TranscriptionServiceError,
 } from './transcription-request-manager';
@@ -308,7 +309,7 @@ export async function transcribeAudio(
 
 		// Create promise for this transcription
 		return new Promise((resolve, reject) => {
-			pendingTranscriptions.add(
+			const accepted = pendingTranscriptions.add(
 				messageId,
 				resolve,
 				reject,
@@ -323,17 +324,18 @@ export async function transcribeAudio(
 					discardWorker();
 				},
 			);
-
 			// Send to worker - transfer the underlying buffer for performance
 			try {
-				w.postMessage(
-					{
-						type: 'transcribe',
-						audioData,
-						language: transcriptionLanguage,
-						messageId,
-					},
-					[audioData.buffer],
+				postIfTranscriptionRequestAccepted(accepted, () =>
+					w.postMessage(
+						{
+							type: 'transcribe',
+							audioData,
+							language: transcriptionLanguage,
+							messageId,
+						},
+						[audioData.buffer],
+					),
 				);
 			} catch (error) {
 				pendingTranscriptions.reject(

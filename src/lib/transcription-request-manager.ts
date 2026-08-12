@@ -1,7 +1,8 @@
 export type TranscriptionErrorCode =
 	| 'TRANSCRIPTION_TIMEOUT'
 	| 'TRANSCRIPTION_WORKER_ERROR'
-	| 'TRANSCRIPTION_MODEL_ERROR';
+	| 'TRANSCRIPTION_MODEL_ERROR'
+	| 'TRANSCRIPTION_DUPLICATE_REQUEST';
 
 export class TranscriptionServiceError extends Error {
 	constructor(
@@ -11,6 +12,13 @@ export class TranscriptionServiceError extends Error {
 		super(message);
 		this.name = 'TranscriptionServiceError';
 	}
+}
+
+export function postIfTranscriptionRequestAccepted(
+	accepted: boolean,
+	post: () => void,
+): void {
+	if (accepted) post();
 }
 
 interface PendingTranscription {
@@ -34,7 +42,17 @@ export class TranscriptionRequestManager {
 		resolve: (text: string) => void,
 		reject: (error: Error) => void,
 		onTimeout?: (messageId: string) => void,
-	): void {
+	): boolean {
+		if (this.pending.has(messageId)) {
+			reject(
+				new TranscriptionServiceError(
+					'TRANSCRIPTION_DUPLICATE_REQUEST',
+					'A transcription request is already pending for this message',
+				),
+			);
+			return false;
+		}
+
 		const onRequestTimeout = () => {
 			if (
 				this.reject(
@@ -56,6 +74,7 @@ export class TranscriptionRequestManager {
 			timeoutId,
 			onTimeout: onRequestTimeout,
 		});
+		return true;
 	}
 
 	renewAll(): void {
