@@ -215,15 +215,42 @@ function normalizeForMediaMatching(value: string): string {
  * Different locales use different formats
  *
  * IMPORTANT: The order matters! More specific patterns should come first.
- * US format (with AM/PM) is checked first, then European/Brazilian (24h).
+ * US format (with AM/PM) is checked first, then European/Brazilian (24h),
+ * then day-first 12h, then year-first formats.
+ *
+ * AM/PM tokens are matched tolerantly ([AP][\s.]*M\.?) so localized variants
+ * ("p. m.", "p.m.", "PM") and Unicode whitespace (U+00A0, U+202F) are
+ * recognized by the same pattern. Date parts are validated at parse time
+ * (see isValidDateTimeParts) so an invalid US interpretation falls through
+ * to the day-first pattern instead of rolling over.
  */
 const DATE_PATTERNS = [
 	// MM/DD/YY, HH:MM AM/PM - US format (12h) - MUST have AM/PM to be identified as US
 	{
 		regex:
-			/^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)\s*-\s*/i,
+			/^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP][\s.]*M\.?)\s*-\s*/i,
 		parse: (match: RegExpMatchArray) => {
 			const [, month, day, year, hours, minutes, seconds, ampm] = match;
+			return parseDateTime(
+				parseInt(day, 10),
+				parseInt(month, 10),
+				normalizeYear(parseInt(year, 10)),
+				parseInt(hours, 10),
+				parseInt(minutes, 10),
+				seconds ? parseInt(seconds, 10) : 0,
+				ampm,
+			);
+		},
+	},
+	// DD/MM/YY or DD.MM.YY, HH:MM AM/PM - day-first 12-hour format
+	// (Android Spanish "a. m."/"p. m.", German 12h). Checked after the US
+	// pattern so valid MM/DD dates keep US priority; invalid US month
+	// interpretations (day > 12) fall through here.
+	{
+		regex:
+			/^(\d{1,2})[/.](\d{1,2})[/.](\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP][\s.]*M\.?)\s*-\s*/i,
+		parse: (match: RegExpMatchArray) => {
+			const [, day, month, year, hours, minutes, seconds, ampm] = match;
 			return parseDateTime(
 				parseInt(day, 10),
 				parseInt(month, 10),
@@ -302,7 +329,7 @@ const DATE_PATTERNS = [
 	// YYYY/MM/DD, HH:MM AM/PM - Asian format with 12-hour time
 	{
 		regex:
-			/^(\d{4})\/(\d{1,2})\/(\d{1,2}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)\s*-\s*/i,
+			/^(\d{4})\/(\d{1,2})\/(\d{1,2}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP][\s.]*M\.?)\s*-\s*/i,
 		parse: (match: RegExpMatchArray) => {
 			const [, year, month, day, hours, minutes, seconds, ampm] = match;
 			return parseDateTime(
@@ -332,12 +359,13 @@ const DATE_PATTERNS = [
 			);
 		},
 	},
-	// [DD/MM/YYYY, HH:MM:SS AM/PM] - iOS bracketed format with 12-hour time
-	// Note: May contain Unicode whitespace characters (U+202F, U+00A0) before AM/PM
+	// [DD/MM/YYYY or DD.MM.YY, HH:MM:SS AM/PM] - iOS bracketed format with 12-hour time
+	// Note: May contain Unicode whitespace characters (U+202F, U+00A0) before AM/PM,
+	// which \s covers. German iOS exports use dot separators (dd.MM.yy).
 	// MUST be checked before non-AM/PM bracketed format
 	{
 		regex:
-			/^\[(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2}):(\d{2})[\s\u202F\u00A0]*([AP]M)\]\s*/i,
+			/^\[(\d{1,2})[/.](\d{1,2})[/.](\d{2,4}),?\s+(\d{1,2}):(\d{2}):(\d{2})\s*([AP][\s.]*M\.?)\]\s*/i,
 		parse: (match: RegExpMatchArray) => {
 			const [, day, month, year, hours, minutes, seconds, ampm] = match;
 			return parseDateTime(
@@ -351,10 +379,10 @@ const DATE_PATTERNS = [
 			);
 		},
 	},
-	// [DD/MM/YY, HH:MM:SS] - Bracketed format (24-hour)
+	// [DD/MM/YY or DD.MM.YY, HH:MM:SS] - Bracketed format (24-hour)
 	{
 		regex:
-			/^\[(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2}):(\d{2})\]\s*/,
+			/^\[(\d{1,2})[/.](\d{1,2})[/.](\d{2,4}),?\s+(\d{1,2}):(\d{2}):(\d{2})\]\s*/,
 		parse: (match: RegExpMatchArray) => {
 			const [, day, month, year, hours, minutes, seconds] = match;
 			return parseDateTime(
@@ -376,6 +404,67 @@ function normalizeYear(year: number): number {
 	return year;
 }
 
+/**
+ * Build the view of a line used only for timestamp recognition.
+ *
+ * - Strips invisible Unicode format characters (zero-width space, ZWNJ, ZWJ,
+ *   LTR/RTL marks, bidi controls, BOM) that some exports prepend before the
+ *   timestamp. They carry no semantics and would block the anchored regexes.
+ * - Replaces NBSP (U+00A0) and narrow NBSP (U+202F) with ASCII spaces (1:1
+ *   char mapping, so match offsets stay valid against the original line).
+ *
+ * The original line is never modified: rawLine and content keep the exact
+ * source bytes. Character-for-character this view differs from the original
+ * only by the stripped prefix, which parseLine accounts for via the length
+ * delta.
+ */
+export function normalizeTimestampView(line: string): string {
+	return line
+		.replace(/^[\u200B-\u200F\u202A-\u202E\uFEFF]+/, '')
+		.replace(/[\u00A0\u202F]/g, ' ');
+}
+
+/** Canonicalize a localized AM/PM token ("p. m.", "p.m.", "PM") to 'AM' | 'PM'. */
+function normalizeAmpmToken(token: string): 'AM' | 'PM' {
+	return token.replace(/[^a-zA-Z]/g, '').toUpperCase() === 'PM' ? 'PM' : 'AM';
+}
+
+function isLeapYear(year: number): boolean {
+	return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+}
+
+function daysInMonth(month: number, year: number): number {
+	if (month === 2) {
+		return isLeapYear(year) ? 29 : 28;
+	}
+	return [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
+}
+
+/**
+ * Reject impossible date/time parts instead of letting `new Date` roll them
+ * over (e.g. 32/13/99, Feb 29 in a non-leap year, April 31, hour 25).
+ * This is also what lets the US MM/DD pattern yield to day-first formats:
+ * a day > 12 makes the US month interpretation invalid, so the pattern is
+ * skipped and the day-first pattern is tried.
+ */
+function isValidDateTimeParts(
+	day: number,
+	month: number,
+	year: number,
+	hours: number,
+	minutes: number,
+	seconds: number,
+	ampm?: string,
+): boolean {
+	if (month < 1 || month > 12) return false;
+	if (day < 1 || day > daysInMonth(month, year)) return false;
+	if (hours < 0 || hours > 23) return false;
+	if (ampm && (hours < 1 || hours > 12)) return false;
+	if (minutes < 0 || minutes > 59) return false;
+	if (seconds < 0 || seconds > 59) return false;
+	return true;
+}
+
 function parseDateTime(
 	day: number,
 	month: number,
@@ -384,11 +473,15 @@ function parseDateTime(
 	minutes: number,
 	seconds: number = 0,
 	ampm?: string,
-): Date {
+): Date | null {
+	if (!isValidDateTimeParts(day, month, year, hours, minutes, seconds, ampm)) {
+		return null;
+	}
+
 	let adjustedHours = hours;
 
 	if (ampm) {
-		const isPM = ampm.toUpperCase() === 'PM';
+		const isPM = normalizeAmpmToken(ampm) === 'PM';
 		if (isPM && hours !== 12) {
 			adjustedHours = hours + 12;
 		} else if (!isPM && hours === 12) {
@@ -481,11 +574,21 @@ function parseLine(line: string): {
 	content: string;
 	pattern: RegExp;
 } | null {
+	// Recognize timestamps against a normalized view (invisible Unicode
+	// prefixes stripped, NBSP/NNBSP as ASCII spaces) while extracting the
+	// remainder from the original line so rawLine/content stay untouched.
+	const matchView = normalizeTimestampView(line);
+	const strippedPrefix = line.length - matchView.length;
+
 	for (const { regex, parse } of DATE_PATTERNS) {
-		const match = line.match(regex);
+		const match = matchView.match(regex);
 		if (match) {
 			const timestamp = parse(match);
-			const remainder = line.substring(match[0].length);
+			// Invalid date/time parts (e.g. 32/13/99) must not roll over:
+			// skip this pattern so a more specific one can win (US MM/DD
+			// yielding to day-first) or the line stays a continuation.
+			if (!timestamp) continue;
+			const remainder = line.substring(strippedPrefix + match[0].length);
 
 			// Try to extract sender and content
 			// Format is usually: "Sender Name: message content"

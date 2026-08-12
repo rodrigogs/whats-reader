@@ -81,25 +81,46 @@ The parser supports the following date patterns:
    - Example: `10-12-24, 14:30`
    - Alternative European format
 
-6. **Asian Format (24h)**: `YYYY/MM/DD, HH:MM`
+6. **Day-First 12h (localized AM/PM)**: `DD/MM/YY or DD.MM.YY, HH:MM AM/PM`
+   - Examples: `28/3/2025 9:29 p. m.`, `23/06/2018, 1:55 p.m.`
+   - Android Spanish exports use `a. m.`/`p. m.`; any spacing/dots variant
+     (`p. m.`, `p.m.`, `PM`) is accepted
+   - US `MM/DD` keeps priority when both readings are valid; dates where the
+     US month would be invalid (day > 12) fall back to day-first (GH-78)
+
+7. **Asian Format (24h)**: `YYYY/MM/DD, HH:MM`
    - Example: `2024/12/10, 14:30`
    - Year-first format (Japan, China, Korea)
 
-7. **Asian Format (12h)**: `YYYY/MM/DD, HH:MM AM/PM`
+8. **Asian Format (12h)**: `YYYY/MM/DD, HH:MM AM/PM`
    - Example: `2024/12/10, 2:30 PM`
    - Year-first format with 12-hour time
    - Resolves issue #69
 
-8. **Bracketed Format**: `[DD/MM/YY, HH:MM:SS]`
-   - Example: `[10/12/24, 14:30:45]`
-   - Some older WhatsApp versions
+9. **Bracketed Format**: `[DD/MM/YY or DD.MM.YY, HH:MM:SS]`
+   - Examples: `[10/12/24, 14:30:45]`, `[26.06.26, 15:30:00]`
+   - Some older WhatsApp versions; German iOS exports use dot separators
 
-8. **iOS Bracketed Format (12h)**: `[DD/MM/YYYY, HH:MM:SS AM/PM]`
-   - Example: `[13/11/2025, 12:25:55 PM]`
-   - iOS WhatsApp exports
-   - Uses 12-hour format with AM/PM
-   - May contain Unicode whitespace (U+202F) before AM/PM
-   - File typically named `_chat.txt` (with underscore prefix)
+10. **iOS Bracketed Format (12h)**: `[DD/MM/YYYY or DD.MM.YY, HH:MM:SS AM/PM]`
+    - Examples: `[13/11/2025, 12:25:55 PM]`, `[26.06.26, 3:00:00 PM]`
+    - iOS WhatsApp exports
+    - Uses 12-hour format with AM/PM
+    - May contain Unicode whitespace (U+202F, U+00A0) before AM/PM
+    - File typically named `_chat.txt` (with underscore prefix)
+
+## Unicode Handling and Date Validation
+
+- **Invisible prefixes**: zero-width characters and bidi marks (U+200B–U+200F,
+  U+202A–U+202E, U+FEFF) that some exports prepend before the timestamp are
+  stripped only from the matching view; `rawLine` and message content always
+  keep the original bytes.
+- **NBSP/NNBSP**: no-break space (U+00A0) and narrow no-break space (U+202F)
+  are treated as regular spaces for timestamp recognition.
+- **Date validation**: impossible dates (32/13/99, 29/02 in a non-leap year,
+  31/04, hour 25) are rejected instead of rolling over to a different day.
+- **Localized media markers**: iOS `<adjunto: ...>` (Spanish), `<Anhang: ...>`
+  (German) and 40+ other languages are detected as media, and attachment
+  filenames are matched to ZIP entries with NFC normalization.
 
 ## Test Files
 
@@ -117,6 +138,34 @@ The parser supports the following date patterns:
   - Unicode whitespace character (U+202F) between time and AM/PM
   - Underscore-prefixed filename (`_chat.txt`)
   - Right-to-left language support (Arabic text)
+
+### 7. `gh78-ios-german-dot-ampm-unicode-test.txt` (GH-78)
+- **Date Format**: `[DD.MM.YY, HH:MM:SS]` (24h) and `[DD.MM.YY, HH:MM:SS AM/PM]` (12h)
+- **Examples**: `[26.06.26, 15:30:00]`, `[26.06.26, 3:00:00 PM]`
+- **Locale**: iOS German (de-DE)
+- **Features Tested**:
+  - Bracketed German dates with dot separators (day-first `dd.MM.yy`)
+  - Narrow no-break space (U+202F) and no-break space (U+00A0) before AM/PM
+  - Invisible Unicode prefix (U+200E) before the timestamp — recognized for
+    parsing while `rawLine` keeps the original bytes
+
+### 8. `gh78-android-spanish-localized-ampm-test.txt` (GH-78)
+- **Date Format**: `DD/MM/YYYY, HH:MM a. m.` / `p. m.`
+- **Example**: `28/3/2025 9:29 p. m. - Sara: Hola, ¿cómo estás?`
+- **Locale**: Android Spanish (es-ES, es-MX)
+- **Features Tested**:
+  - Day-first dates with localized AM/PM tokens (`a. m.`, `p. m.`, `p.m.`)
+  - 12h rollover correctness: `12:30 p. m.` is noon, `12:05 a. m.` is midnight
+  - US vs day-first discrimination: `03/04/24 9:30 PM` stays US (March 4),
+    `28/3/2025 9:29 p. m.` is day-first (28 March)
+
+### 9. `gh78-ios-localized-attached-media-test.txt` (GH-78)
+- **Date Format**: `[DD/MM/YYYY, HH:MM:SS AM/PM]`
+- **Example**: `[26/06/2026, 3:00:00 PM] Alex: <adjunto: 00000004-AUDIO-2026-06-26-20-31-14.opus>`
+- **Locale**: iOS Spanish (es)
+- **Features Tested**:
+  - Localized iOS media marker `<adjunto: ...>` detected as audio
+  - OPUS attachment association against ZIP media files
 
 ## Media Indicators Supported
 

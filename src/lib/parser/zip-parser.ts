@@ -6,7 +6,12 @@
  */
 
 import JSZip from 'jszip';
-import { type ChatMessage, type ParsedChat, parseChat } from './chat-parser';
+import {
+	type ChatMessage,
+	normalizeTimestampView,
+	type ParsedChat,
+	parseChat,
+} from './chat-parser';
 import { type ContactInfo, parseVcf } from './vcf-parser';
 
 export interface MediaFile {
@@ -113,19 +118,22 @@ function looksLikeChatContent(content: string): boolean {
 	const lines = content.split(/\r?\n/).slice(0, 10); // Check first 10 lines
 
 	// Common timestamp patterns from WhatsApp exports
+	// (matched against the same normalized view used by the chat parser so
+	// invisible Unicode prefixes and NBSP/NNBSP don't block detection)
 	const timestampPatterns = [
 		/^\d{1,2}\/\d{1,2}\/\d{2,4},?\s+\d{1,2}:\d{2}/, // MM/DD/YY or DD/MM/YY
 		/^\d{4}[-/]\d{1,2}[-/]\d{1,2},?\s+\d{1,2}:\d{2}/, // YYYY-MM-DD or YYYY/MM/DD
 		/^\d{1,2}\.\d{1,2}\.\d{2,4},?\s+\d{1,2}:\d{2}/, // DD.MM.YY (German)
-		/^\[\d{1,2}\/\d{1,2}\/\d{2,4},?\s+\d{1,2}:\d{2}:\d{2}/, // [DD/MM/YY, HH:MM:SS] (iOS bracketed)
+		/^\[\d{1,2}[/.]\d{1,2}[/.]\d{2,4},?\s+\d{1,2}:\d{2}/, // [DD/MM/YY or DD.MM.YY ...] (iOS bracketed)
 	];
 
 	// Count lines that match timestamp patterns
 	let matchCount = 0;
 	for (const line of lines) {
+		const view = normalizeTimestampView(line);
 		if (
-			line.trim() &&
-			timestampPatterns.some((pattern) => pattern.test(line))
+			view.trim() &&
+			timestampPatterns.some((pattern) => pattern.test(view))
 		) {
 			matchCount++;
 		}
