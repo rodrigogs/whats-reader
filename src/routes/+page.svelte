@@ -31,6 +31,7 @@ import ModalHeader from '$lib/components/ModalHeader.svelte';
 import ReselectFileModal from '$lib/components/ReselectFileModal.svelte';
 import RestoreSessionModal from '$lib/components/RestoreSessionModal.svelte';
 import Toast from '$lib/components/Toast.svelte';
+import { createArchivePageState } from '$lib/global-search/archive-page-state.svelte';
 import {
 	getElectronFilePath,
 	openElectronFile,
@@ -45,7 +46,7 @@ import {
 import * as m from '$lib/paraglide/messages';
 import { parseZipFile, readFileAsArrayBuffer } from '$lib/parser';
 import {
-	findPersistedChatByTitle,
+	acceptValidatedRestore,
 	getDontShowRestoreModal,
 	getPersistedChats,
 	isElectronPathReference,
@@ -55,7 +56,6 @@ import {
 	savePersistedChat,
 	storeFileHandle,
 	updatePersistedChat,
-	validateRestoredFile,
 } from '$lib/persistence.svelte';
 import { appState, type ChatData, type LoadingChat } from '$lib/state.svelte';
 import {
@@ -168,27 +168,11 @@ $effect(() => {
 	}
 });
 
-// Store selected perspective per chat (chatTitle -> participant name or null for "None")
-let perspectiveByChat = $state<Map<string, string | null>>(new Map());
+// Per-archive runtime/UI state keyed by archiveId. Chat titles are non-unique,
+// so language, perspective, auto-load preference, remembered flag and file
+// reference all live behind a single factory consumed here and by tests.
+const pageState = createArchivePageState();
 
-// Store transcription language per chat (chatTitle -> language code)
-let languageByChat = $state<Map<string, string>>(new Map());
-
-// Store auto-load media preference per chat (chatTitle -> enabled)
-let autoLoadMediaByChat = $state<Map<string, boolean>>(new Map());
-
-// Persistence state
-let rememberedChats = $state<Set<string>>(new Set());
-
-function addRemembered(chatTitle: string) {
-	rememberedChats.add(chatTitle);
-	rememberedChats = new Set(rememberedChats);
-}
-
-function removeRemembered(chatTitle: string) {
-	rememberedChats.delete(chatTitle);
-	rememberedChats = new Set(rememberedChats);
-}
 let showRestoreSessionModal = $state(false);
 let showReselectFileModal = $state(false);
 let reselectChatMetadata = $state<PersistedChatMetadata | null>(null);
@@ -203,24 +187,10 @@ let reselectResolve:
 	| null = null;
 let persistedChatsToRestore = $state<PersistedChatMetadata[]>([]);
 
-// Track file references for persistence (chatTitle -> {file, filePath, fileHandle, persistedId})
-// Note: mutated via .set()/.delete() without reassignment — read imperatively, not in reactive contexts
-let chatFileReferences = $state<
-	Map<
-		string,
-		{
-			file: File | null;
-			filePath?: string;
-			fileHandle?: FileSystemFileHandle;
-			persistedId?: string;
-		}
-	>
->(new Map());
-
 // Get auto-load media setting for the current chat
 const autoLoadMediaForCurrentChat = $derived.by(() => {
 	if (!appState.selectedChat) return false;
-	return autoLoadMediaByChat.get(appState.selectedChat.title) || false;
+	return pageState.getAutoLoadMedia(appState.selectedChat.archiveId);
 });
 
 const STAGE_PROGRESS = {
@@ -386,7 +356,7 @@ async function handleFilesSelected(
 				appState.addChat(chatData);
 
 				// Store file reference for persistence
-				chatFileReferences.set(chatData.title, {
+				pageState.setFileReference(chatData.archiveId, {
 					file,
 					filePath: droppedFilePath,
 					fileHandle: droppedHandle,
@@ -417,7 +387,7 @@ function handleSelectChat(index: number) {
 	// Set the transcription language for this chat
 	const chat = appState.chats[index];
 	if (chat) {
-		const lang = languageByChat.get(chat.title) || 'portuguese';
+		const lang = pageState.getLanguage(chat.archiveId);
 		setTranscriptionLanguage(lang);
 	}
 	// On mobile, collapse sidebar after selecting a chat
@@ -428,30 +398,28 @@ function handleSelectChat(index: number) {
 
 function handleRemoveChat(index: number) {
 	const chat = appState.chats[index];
-	const chatTitle = chat?.title;
+	const archiveId = chat?.archiveId;
 
 	// Remove from current session only — persisted data stays in IndexedDB
 	// so the chat can be restored on next app launch.
 	// To remove from saved chats, user must toggle "Remember Conversation" off.
 	appState.removeChat(index);
 
-	if (chatTitle) {
-		chatFileReferences.delete(chatTitle);
+	if (archiveId) {
+		pageState.removeFileReference(archiveId);
 	}
 }
 
-function handleLanguageChange(chatTitle: string, language: string) {
-	languageByChat.set(chatTitle, language);
-	languageByChat = new Map(languageByChat); // trigger reactivity
+function handleLanguageChange(archiveId: string, language: string) {
+	pageState.setLanguage(archiveId, language);
 	// If this is the currently selected chat, update the transcription service
-	if (appState.selectedChat?.title === chatTitle) {
+	if (appState.selectedChat?.archiveId === archiveId) {
 		setTranscriptionLanguage(language);
 	}
 }
 
-function handleAutoLoadMediaChange(chatTitle: string, enabled: boolean) {
-	autoLoadMediaByChat.set(chatTitle, enabled);
-	autoLoadMediaByChat = new Map(autoLoadMediaByChat); // trigger reactivity
+function handleAutoLoadMediaChange(archiveId: string, enabled: boolean) {
+	pageState.setAutoLoadMedia(archiveId, enabled);
 }
 
 function handleSearchInput(value: string) {
@@ -519,10 +487,7 @@ async function handleNavigateToBookmark(messageId: string, chatId: string) {
 
 function selectPerspective(participant: string | null) {
 	if (appState.selectedChat) {
-		// Create a new Map to trigger reactivity
-		const newMap = new Map(perspectiveByChat);
-		newMap.set(appState.selectedChat.title, participant);
-		perspectiveByChat = newMap;
+		pageState.setPerspective(appState.selectedChat.archiveId, participant);
 	}
 	showPerspectiveDropdown = false;
 	showChatOptionsDropdown = false;
@@ -532,7 +497,7 @@ function selectPerspective(participant: string | null) {
 // Get current perspective for selected chat
 const currentPerspective = $derived.by(() => {
 	if (!appState.selectedChat) return null;
-	return perspectiveByChat.get(appState.selectedChat.title) ?? null;
+	return pageState.getPerspective(appState.selectedChat.archiveId);
 });
 
 // Filter participants based on search query
@@ -570,9 +535,8 @@ $effect(() => {
 			// Seed rememberedChats from IndexedDB so toggle state is correct
 			// even if user skips the restore modal or clicks "Start Fresh"
 			for (const chat of persisted) {
-				rememberedChats.add(chat.chatTitle);
+				pageState.addRemembered(chat.id);
 			}
-			rememberedChats = new Set(rememberedChats);
 
 			// Check if user wants to skip the modal
 			const dontShow = await getDontShowRestoreModal();
@@ -625,7 +589,7 @@ async function handleRestoreChats(chatIds: string[]) {
 					if (validationPassed) {
 						const reselectedPath =
 							reselected.path || getElectronFilePath(reselected.file);
-						chatFileReferences.set(persistedChat.chatTitle, {
+						pageState.setFileReference(persistedChat.id, {
 							file: reselected.file,
 							filePath: reselectedPath,
 							fileHandle: reselected.handle,
@@ -650,7 +614,7 @@ async function handleRestoreChats(chatIds: string[]) {
 								},
 							});
 						}
-						addRemembered(persistedChat.chatTitle);
+						pageState.addRemembered(persistedChat.id);
 					}
 				}
 				continue;
@@ -676,7 +640,7 @@ async function handleRestoreChats(chatIds: string[]) {
 			);
 
 			// Store file reference for subsequent toggle operations
-			chatFileReferences.set(persistedChat.chatTitle, {
+			pageState.setFileReference(persistedChat.id, {
 				file: null,
 				filePath: isElectronPathReference(result.data.metadata.fileReference)
 					? result.data.metadata.fileReference.filePath
@@ -684,7 +648,7 @@ async function handleRestoreChats(chatIds: string[]) {
 				persistedId: persistedChat.id,
 			});
 
-			addRemembered(persistedChat.chatTitle);
+			pageState.addRemembered(persistedChat.id);
 		} catch (e) {
 			console.error(`Error restoring chat ${persistedChat.chatTitle}:`, e);
 			showToast(m.persistence_restore_failed(), 'error');
@@ -744,68 +708,80 @@ async function loadChatFromBuffer(
 		const chatData: ChatData = await parseZipFile(
 			buffer,
 			makeProgressCallback(loadingId),
+			restoredMetadata?.id,
 		);
 
-		// If restoring, validate the file and only apply metadata if valid
-		let validationPassed = true;
+		// When restoring, every side effect is routed through the validation
+		// gate: a mismatched archive triggers none of them (no bookmarks,
+		// settings or transcription restoration, no chat added, no index
+		// worker started, and the placeholder is removed).
 		if (restoredMetadata) {
-			const validation = validateRestoredFile(chatData, restoredMetadata);
-			if (!validation.valid) {
-				console.warn('Restored file validation failed:', validation.reasons);
-				validationPassed = false;
-			} else {
-				// Restore bookmarks
-				if (restoredMetadata.bookmarks.length > 0) {
-					bookmarksState.importBookmarks({
-						version: 1,
-						exportedAt: restoredMetadata.savedAt,
-						bookmarks: restoredMetadata.bookmarks,
-					});
-				}
+			const validationPassed = acceptValidatedRestore(
+				chatData,
+				restoredMetadata,
+				{
+					applyBookmarks: (bookmarks, savedAt) => {
+						bookmarksState.importBookmarks({
+							version: 1,
+							exportedAt: savedAt,
+							bookmarks,
+						});
+					},
+					applyTranscriptions: (transcriptions) => {
+						setTranscriptionsForChat(transcriptions);
+					},
+					applySettings: (settings) => {
+						if (settings.language) {
+							pageState.setLanguage(chatData.archiveId, settings.language);
+						}
+						if (settings.autoLoadMedia !== undefined) {
+							pageState.setAutoLoadMedia(
+								chatData.archiveId,
+								settings.autoLoadMedia,
+							);
+						}
+						if (settings.perspective !== undefined) {
+							pageState.setPerspective(
+								chatData.archiveId,
+								settings.perspective,
+							);
+						}
+					},
+					addChat: (chat) => {
+						appState.addChat(chat);
+						if (filePath) {
+							pageState.setFileReference(chat.archiveId, {
+								file: null,
+								filePath,
+							});
+						}
+					},
+					startIndex: (chat) => startIndexWorker(chat),
+				},
+			);
 
-				// Restore transcriptions
-				if (Object.keys(restoredMetadata.transcriptions).length > 0) {
-					setTranscriptionsForChat(restoredMetadata.transcriptions);
-				}
+			loadingChats = loadingChats.filter((lc) => lc.id !== loadingId);
 
-				// Restore settings
-				if (restoredMetadata.settings.language) {
-					languageByChat.set(
-						chatData.title,
-						restoredMetadata.settings.language,
-					);
-					languageByChat = new Map(languageByChat);
-				}
-				if (restoredMetadata.settings.autoLoadMedia !== undefined) {
-					autoLoadMediaByChat.set(
-						chatData.title,
-						restoredMetadata.settings.autoLoadMedia,
-					);
-					autoLoadMediaByChat = new Map(autoLoadMediaByChat);
-				}
-				if (restoredMetadata.settings.perspective !== undefined) {
-					perspectiveByChat.set(
-						chatData.title,
-						restoredMetadata.settings.perspective,
-					);
-					perspectiveByChat = new Map(perspectiveByChat);
-				}
+			if (!validationPassed) {
+				console.warn('Restored file validation failed');
+				return { validationPassed: false };
 			}
+			return { validationPassed: true };
 		}
 
-		// Remove loading placeholder and add actual chat
+		// Fresh import path (no persisted identity to validate)
 		loadingChats = loadingChats.filter((lc) => lc.id !== loadingId);
 		appState.addChat(chatData);
 
 		// Store file reference for persistence
 		if (filePath) {
-			chatFileReferences.set(chatData.title, { file: null, filePath });
+			pageState.setFileReference(chatData.archiveId, { file: null, filePath });
 		}
 
 		// Start background indexing
 		startIndexWorker(chatData);
 
-		return { validationPassed };
+		return { validationPassed: true };
 	} catch (error) {
 		console.error('Error parsing file:', error);
 		// Remove loading placeholder on error
@@ -814,16 +790,16 @@ async function loadChatFromBuffer(
 	}
 }
 
-async function rememberChat(chatTitle: string) {
-	const chat = appState.chats.find((c) => c.title === chatTitle);
+async function rememberChat(archiveId: string) {
+	const chat = appState.chats.find((c) => c.archiveId === archiveId);
 	if (!chat) return;
 
 	try {
-		const fileRef = chatFileReferences.get(chatTitle);
+		const fileRef = pageState.getFileReference(archiveId);
 		// Use handle captured during drag-drop (no file picker needed)
 		const fileHandle = fileRef?.fileHandle;
 
-		const bookmarks = bookmarksState.getBookmarksForChat(chatTitle);
+		const bookmarks = bookmarksState.getBookmarksForChat(chat.title);
 		const chatMessageIds = chat.messages.map((msg) => msg.id);
 		const transcriptions = getTranscriptionsForChat(chatMessageIds);
 
@@ -833,23 +809,23 @@ async function rememberChat(chatTitle: string) {
 			bookmarks,
 			transcriptions,
 			{
-				language: languageByChat.get(chatTitle) || 'portuguese',
-				autoLoadMedia: autoLoadMediaByChat.get(chatTitle) || false,
-				perspective: perspectiveByChat.get(chatTitle) || null,
+				language: pageState.getLanguage(archiveId),
+				autoLoadMedia: pageState.getAutoLoadMedia(archiveId),
+				perspective: pageState.getPerspective(archiveId),
 			},
 			fileRef?.filePath,
 			fileHandle,
 		);
 
 		if (fileRef) {
-			chatFileReferences.set(chatTitle, {
+			pageState.setFileReference(archiveId, {
 				...fileRef,
 				fileHandle,
 				persistedId,
 			});
 		}
 
-		addRemembered(chatTitle);
+		pageState.addRemembered(archiveId);
 		showToast(m.persistence_conversation_saved(), 'success');
 	} catch (e) {
 		console.error('Failed to save conversation:', e);
@@ -857,13 +833,10 @@ async function rememberChat(chatTitle: string) {
 	}
 }
 
-async function forgetChat(chatTitle: string) {
+async function forgetChat(archiveId: string) {
 	try {
-		const persistedChat = await findPersistedChatByTitle(chatTitle);
-		if (persistedChat) {
-			await removePersistedChat(persistedChat.id);
-		}
-		removeRemembered(chatTitle);
+		await removePersistedChat(archiveId);
+		pageState.removeRemembered(archiveId);
 		showToast(m.persistence_conversation_removed(), 'success');
 	} catch (e) {
 		console.error('Failed to remove conversation:', e);
@@ -871,11 +844,11 @@ async function forgetChat(chatTitle: string) {
 	}
 }
 
-function handleToggleRemember(chatTitle: string, enabled: boolean) {
+function handleToggleRemember(archiveId: string, enabled: boolean) {
 	if (enabled) {
-		rememberChat(chatTitle);
+		rememberChat(archiveId);
 	} else {
-		forgetChat(chatTitle);
+		forgetChat(archiveId);
 	}
 }
 </script>
@@ -1275,12 +1248,12 @@ function handleToggleRemember(chatTitle: string, enabled: boolean) {
 						selectedIndex={appState.selectedChatIndex}
 						onSelect={handleSelectChat}
 						onRemove={handleRemoveChat}
-						{languageByChat}
+						languageByChat={pageState.languageByArchive}
 						onLanguageChange={handleLanguageChange}
-						{autoLoadMediaByChat}
+						autoLoadMediaByChat={pageState.autoLoadMediaByArchive}
 						onAutoLoadMediaChange={handleAutoLoadMediaChange}
 						{loadingChats}
-						{rememberedChats}
+						rememberedChats={pageState.rememberedArchiveIds}
 						onToggleRemember={handleToggleRemember}
 					/>
 				</div>

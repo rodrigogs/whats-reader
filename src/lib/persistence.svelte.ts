@@ -23,7 +23,8 @@ import type { Bookmark } from './bookmarks.svelte';
 import type { ChatData } from './state.svelte';
 
 export interface PersistedChatMetadata {
-	id: string; // Unique ID (crypto.randomUUID)
+	// Canonical archive identity; also used as the storage key.
+	id: string;
 	fileName: string; // Original filename
 	chatTitle: string; // Parsed chat title (for display)
 	messageCount: number; // For validation
@@ -165,14 +166,12 @@ export async function savePersistedChat(
 ): Promise<string> {
 	if (!browser) throw new Error('Persistence only available in browser');
 
-	// Remove any existing entry for this chat to prevent duplicates
-	const existing = await findPersistedChatByTitle(chat.title);
-	if (existing) {
-		await removePersistedChat(existing.id);
-	}
-
-	// Generate unique ID
-	const id = crypto.randomUUID();
+	// A chat title is user-facing and non-unique. Persist exactly one record per
+	// archive identity, leaving same-titled archives independent.
+	const id = chat.archiveId;
+	const existing = await get<PersistedChatMetadata>(
+		`${PERSISTENCE_PREFIX}${id}`,
+	);
 
 	// Extract first message IDs for validation
 	const firstMessageIds = chat.messages
@@ -195,8 +194,10 @@ export async function savePersistedChat(
 		await storeFileHandle(handleId, fileHandle);
 		fileReference = { type: 'file-handle', handleId };
 	} else {
-		// No handle/path available: require reselect (Firefox/Safari, or no file)
-		fileReference = { type: 'reselect-required' };
+		// Keep the existing reference when re-saving a restored archive without a
+		// newly selected file. A title-independent metadata write must not discard
+		// its only route back to the source archive.
+		fileReference = existing?.fileReference ?? { type: 'reselect-required' };
 	}
 
 	const metadata: PersistedChatMetadata = {
@@ -218,8 +219,17 @@ export async function savePersistedChat(
 		settings,
 	};
 
-	// Save metadata
+	// Write replacement metadata before deleting any previous handle. If this
+	// write fails, the existing metadata and its handle remain usable.
 	await set(`${PERSISTENCE_PREFIX}${id}`, metadata);
+
+	if (
+		existing?.fileReference.type === 'file-handle' &&
+		(fileReference.type !== 'file-handle' ||
+			fileReference.handleId !== existing.fileReference.handleId)
+	) {
+		await del(`${HANDLE_PREFIX}${existing.fileReference.handleId}`);
+	}
 
 	// Request persistent storage
 	await requestPersistentStorage();
@@ -374,6 +384,63 @@ export function validateRestoredFile(
 		confidence,
 		reasons,
 	};
+}
+
+/**
+ * A restored archive may only enter runtime state after its persisted metadata
+ * validates it. This keeps a wrong reselected ZIP from claiming the saved ID.
+ */
+export function shouldLoadRestoredChat(
+	parsed: ChatData,
+	saved: PersistedChatMetadata,
+): boolean {
+	return validateRestoredFile(parsed, saved).valid;
+}
+
+/**
+ * Side effects a validated restore is allowed to trigger. Each is a callback so
+ * the restore decision is testable without a component.
+ */
+export interface ValidatedRestoreCallbacks {
+	applyBookmarks: (bookmarks: Bookmark[], savedAt: string) => void;
+	applyTranscriptions: (transcriptions: Record<string, string>) => void;
+	applySettings: (settings: PersistedChatMetadata['settings']) => void;
+	addChat: (chat: ChatData) => void;
+	startIndex: (chat: ChatData) => void;
+}
+
+/**
+ * Gate restoration side effects behind archive validation.
+ *
+ * A reselected ZIP that fails validation must not import bookmarks,
+ * transcriptions, or settings, and must not enter the runtime chat list or
+ * start indexing — otherwise a wrong archive would claim the persisted
+ * archiveId. On mismatch this returns false and invokes none of the callbacks;
+ * on match it applies metadata, adds the chat, and starts indexing, then
+ * returns true.
+ */
+export function acceptValidatedRestore(
+	chat: ChatData,
+	restoredMetadata: PersistedChatMetadata,
+	callbacks: ValidatedRestoreCallbacks,
+): boolean {
+	if (!shouldLoadRestoredChat(chat, restoredMetadata)) {
+		return false;
+	}
+
+	if (restoredMetadata.bookmarks.length > 0) {
+		callbacks.applyBookmarks(
+			restoredMetadata.bookmarks,
+			restoredMetadata.savedAt,
+		);
+	}
+	if (Object.keys(restoredMetadata.transcriptions).length > 0) {
+		callbacks.applyTranscriptions(restoredMetadata.transcriptions);
+	}
+	callbacks.applySettings(restoredMetadata.settings);
+	callbacks.addChat(chat);
+	callbacks.startIndex(chat);
+	return true;
 }
 
 /**
@@ -542,21 +609,4 @@ export function isElectronPathReference(
 	ref: PersistedChatMetadata['fileReference'],
 ): ref is { type: 'electron-path'; filePath: string } {
 	return ref.type === 'electron-path';
-}
-
-/**
- * Find persisted chat by chat title
- */
-export async function findPersistedChatByTitle(
-	chatTitle: string,
-): Promise<PersistedChatMetadata | null> {
-	if (!browser) return null;
-
-	try {
-		const chats = await getPersistedChats();
-		return chats.find((chat) => chat.chatTitle === chatTitle) || null;
-	} catch (e) {
-		console.error('Failed to find persisted chat:', e);
-		return null;
-	}
 }

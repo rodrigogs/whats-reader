@@ -16,12 +16,12 @@ interface Props {
 	onSelect: (index: number) => void;
 	onRemove: (index: number) => void;
 	languageByChat?: Map<string, string>;
-	onLanguageChange?: (chatTitle: string, language: string) => void;
+	onLanguageChange?: (archiveId: string, language: string) => void;
 	autoLoadMediaByChat?: Map<string, boolean>;
-	onAutoLoadMediaChange?: (chatTitle: string, enabled: boolean) => void;
+	onAutoLoadMediaChange?: (archiveId: string, enabled: boolean) => void;
 	loadingChats?: LoadingChat[];
 	rememberedChats?: Set<string>;
-	onToggleRemember?: (chatTitle: string, enabled: boolean) => void;
+	onToggleRemember?: (archiveId: string, enabled: boolean) => void;
 }
 
 let {
@@ -75,7 +75,7 @@ function closeContextMenu() {
 function handleLanguageSelect(language: string) {
 	if (contextMenuIndex !== null && onLanguageChange) {
 		const chat = chats[contextMenuIndex];
-		onLanguageChange(chat.title, language);
+		onLanguageChange(chat.archiveId, language);
 	}
 	closeContextMenu();
 }
@@ -101,36 +101,36 @@ function cancelHideSubmenu() {
 	}
 }
 
-function getLanguageForChat(chatTitle: string): string {
-	return languageByChat.get(chatTitle) || 'portuguese';
+function getLanguageForChat(archiveId: string): string {
+	return languageByChat.get(archiveId) || 'portuguese';
 }
 
 function getLanguageName(code: string): string {
 	return availableLanguages.find((l) => l.code === code)?.name || code;
 }
 
-function isAutoLoadEnabled(chatTitle: string): boolean {
-	return autoLoadMediaByChat.get(chatTitle) || false;
+function isAutoLoadEnabled(archiveId: string): boolean {
+	return autoLoadMediaByChat.get(archiveId) || false;
 }
 
 function handleAutoLoadToggle() {
 	if (contextMenuIndex !== null && onAutoLoadMediaChange) {
 		const chat = chats[contextMenuIndex];
-		const currentEnabled = isAutoLoadEnabled(chat.title);
-		onAutoLoadMediaChange(chat.title, !currentEnabled);
+		const currentEnabled = isAutoLoadEnabled(chat.archiveId);
+		onAutoLoadMediaChange(chat.archiveId, !currentEnabled);
 	}
 	closeContextMenu();
 }
 
-function isRemembered(chatTitle: string): boolean {
-	return rememberedChats.has(chatTitle);
+function isRemembered(archiveId: string): boolean {
+	return rememberedChats.has(archiveId);
 }
 
 function handleToggleRemember() {
 	if (contextMenuIndex !== null && onToggleRemember) {
 		const chat = chats[contextMenuIndex];
-		const currentRemembered = isRemembered(chat.title);
-		onToggleRemember(chat.title, !currentRemembered);
+		const currentRemembered = isRemembered(chat.archiveId);
+		onToggleRemember(chat.archiveId, !currentRemembered);
 	}
 	closeContextMenu();
 }
@@ -296,7 +296,7 @@ function getLastMessage(chat: ChatData): string {
 					<Icon name="image" size="sm" />
 						{m.auto_load_media()}
 					</span>
-					{#if isAutoLoadEnabled(chats[contextMenuIndex]?.title || '')}
+					{#if isAutoLoadEnabled(chats[contextMenuIndex]?.archiveId || '')}
 						<Icon name="check" size="sm" class="text-[var(--color-whatsapp-teal)]" />
 					{/if}
 				</ListItemButton>
@@ -308,7 +308,7 @@ function getLastMessage(chat: ChatData): string {
 					<Icon name="bookmark" size="sm" />
 					{m.persistence_remember_conversation()}
 				</span>
-				{#if isRemembered(chats[contextMenuIndex]?.title || '')}
+				{#if isRemembered(chats[contextMenuIndex]?.archiveId || '')}
 					<Icon name="check" size="sm" class="text-[var(--color-whatsapp-teal)]" />
 				{/if}
 			</ListItemButton>
@@ -348,7 +348,7 @@ function getLastMessage(chat: ChatData): string {
 							<span class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{m.transcription_select_language()}</span>
 						</div>
 						{#each availableLanguages as lang}
-							{@const currentLang = getLanguageForChat(chats[contextMenuIndex]?.title || '')}
+							{@const currentLang = getLanguageForChat(chats[contextMenuIndex]?.archiveId || '')}
 							<ListItemButton
 								active={currentLang === lang.code}
 								onclick={() => handleLanguageSelect(lang.code)}
