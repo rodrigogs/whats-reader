@@ -27,7 +27,7 @@ interface SerializedMessage {
 
 interface IndexWorkerInput {
 	messages: SerializedMessage[];
-	chatTitle: string;
+	archiveId: string;
 }
 
 /**
@@ -48,7 +48,7 @@ interface MessageItem {
 type FlatItem = DateItem | MessageItem;
 
 interface IndexWorkerOutput {
-	chatTitle: string;
+	archiveId: string;
 	indexEntries: [string, number][];
 	flatItems: FlatItem[];
 	// Pre-serialized messages for search worker (avoids re-serialization on every search)
@@ -63,7 +63,7 @@ function toLocalDateKey(date: Date): string {
 }
 
 self.onmessage = (event: MessageEvent<IndexWorkerInput>) => {
-	const { messages, chatTitle } = event.data;
+	const { messages, archiveId } = event.data;
 
 	// Group messages by date (same logic as groupMessagesByDate in chat-parser.ts)
 	const groups = new Map<string, SerializedMessage[]>();
@@ -96,7 +96,7 @@ self.onmessage = (event: MessageEvent<IndexWorkerInput>) => {
 	// Pre-serialize messages for search worker (avoids re-serialization on every search)
 	// Note: messages are already in SerializedMessage format, so we just pass them through
 	const output: IndexWorkerOutput = {
-		chatTitle,
+		archiveId,
 		indexEntries,
 		flatItems,
 		serializedMessages: messages,

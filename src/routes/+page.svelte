@@ -237,7 +237,7 @@ function startIndexWorker(chatData: ChatData) {
 
 	indexWorker.onmessage = (
 		event: MessageEvent<{
-			chatTitle: string;
+			archiveId: string;
 			indexEntries: [string, number][];
 			flatItems: Array<
 				| { type: 'date'; dateKey: string }
@@ -255,12 +255,12 @@ function startIndexWorker(chatData: ChatData) {
 			}>;
 		}>,
 	) => {
-		const { chatTitle, indexEntries, flatItems, serializedMessages } =
+		const { archiveId, indexEntries, flatItems, serializedMessages } =
 			event.data;
 		const messageIndex = new Map(indexEntries);
-		appState.updateChatMessageIndex(chatTitle, messageIndex);
-		appState.updateChatFlatItems(chatTitle, flatItems);
-		appState.updateChatSerializedMessages(chatTitle, serializedMessages);
+		appState.updateChatMessageIndex(archiveId, messageIndex);
+		appState.updateChatFlatItems(archiveId, flatItems);
+		appState.updateChatSerializedMessages(archiveId, serializedMessages);
 		indexWorker.terminate();
 	};
 
@@ -280,7 +280,7 @@ function startIndexWorker(chatData: ChatData) {
 			mediaType: m.mediaType,
 			rawLine: m.rawLine,
 		})),
-		chatTitle: chatData.title,
+		archiveId: chatData.archiveId,
 	});
 }
 

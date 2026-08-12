@@ -41,8 +41,8 @@ export function createAppState() {
 	let loadingProgress = $state(0); // 0-100 for file processing
 	let error = $state<string | null>(null);
 
-	// Track which chats have been indexed for bookmark navigation
-	let indexedChatTitles = $state<Set<string>>(new Set());
+	// Track which loaded archive instances have been indexed for navigation.
+	let indexedArchiveIds = $state<Set<string>>(new Set());
 
 	// Search state - VS Code style (navigate through results, don't filter)
 	let isSearching = $state(false);
@@ -58,7 +58,7 @@ export function createAppState() {
 
 	let searchWorker: Worker | null = null;
 	let searchWorkerReady = false;
-	let searchWorkerChatTitle: string | null = null; // Track which chat the worker is loaded for
+	let searchWorkerArchiveId: string | null = null; // Track which archive the worker is loaded for
 	let currentSearchId = 0; // For tracking/cancelling searches
 	let searchDebounceId: ReturnType<typeof setTimeout> | null = null;
 	let workerTimeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -106,7 +106,7 @@ export function createAppState() {
 			searchWorker.terminate();
 			searchWorker = null;
 			searchWorkerReady = false;
-			searchWorkerChatTitle = null;
+			searchWorkerArchiveId = null;
 		}
 	}
 
@@ -119,7 +119,7 @@ export function createAppState() {
 			if (
 				searchWorker &&
 				searchWorkerReady &&
-				searchWorkerChatTitle === chat.title
+				searchWorkerArchiveId === chat.archiveId
 			) {
 				resolve();
 				return;
@@ -131,7 +131,7 @@ export function createAppState() {
 			}
 
 			searchWorkerReady = false;
-			searchWorkerChatTitle = chat.title;
+			searchWorkerArchiveId = chat.archiveId;
 
 			// Set timeout to reject if worker doesn't respond within 5 seconds
 			workerTimeoutId = setTimeout(() => {
@@ -145,7 +145,7 @@ export function createAppState() {
 				}
 
 				searchWorkerReady = false;
-				searchWorkerChatTitle = null;
+				searchWorkerArchiveId = null;
 				workerTimeoutId = null;
 
 				reject(
@@ -342,8 +342,17 @@ export function createAppState() {
 		// O(1) match lookup function - replaces searchResultSet
 		// This is much faster than creating/updating a Set with thousands of IDs
 		isSearchMatch,
+		get indexedArchiveIds() {
+			return indexedArchiveIds;
+		},
+		// Compatibility projection for the legacy bookmark presentation only.
+		// Archive IDs remain the canonical indexed-state key.
 		get indexedChatTitles() {
-			return indexedChatTitles;
+			return new Set(
+				chats
+					.filter((chat) => indexedArchiveIds.has(chat.archiveId))
+					.map((chat) => chat.title),
+			);
 		},
 
 		// Derived getters
@@ -374,9 +383,9 @@ export function createAppState() {
 			}
 			// Remove from indexed set if present
 			if (removedChat) {
-				const newSet = new Set(indexedChatTitles);
-				newSet.delete(removedChat.title);
-				indexedChatTitles = newSet;
+				const newSet = new Set(indexedArchiveIds);
+				newSet.delete(removedChat.archiveId);
+				indexedArchiveIds = newSet;
 			}
 		},
 
@@ -384,16 +393,16 @@ export function createAppState() {
 		 * Update a chat's message index after worker completes indexing
 		 */
 		updateChatMessageIndex(
-			chatTitle: string,
+			archiveId: string,
 			messageIndex: Map<string, number>,
 		) {
-			const chatIndex = chats.findIndex((c) => c.title === chatTitle);
+			const chatIndex = chats.findIndex((c) => c.archiveId === archiveId);
 			if (chatIndex !== -1) {
 				// Create a new chat object with the messageIndex to trigger reactivity
 				const updatedChat = { ...chats[chatIndex], messageIndex };
 				chats = chats.map((c, i) => (i === chatIndex ? updatedChat : c));
 				// Mark as indexed
-				indexedChatTitles = new Set([...indexedChatTitles, chatTitle]);
+				indexedArchiveIds = new Set([...indexedArchiveIds, archiveId]);
 			}
 		},
 
@@ -402,10 +411,10 @@ export function createAppState() {
 		 * Also builds messagesById map for O(1) lookups
 		 */
 		updateChatFlatItems(
-			chatTitle: string,
+			archiveId: string,
 			flatItems: import('./parser/zip-parser').FlatItem[],
 		) {
-			const chatIndex = chats.findIndex((c) => c.title === chatTitle);
+			const chatIndex = chats.findIndex((c) => c.archiveId === archiveId);
 			if (chatIndex !== -1) {
 				const chat = chats[chatIndex];
 				// Build messagesById map from messages array
@@ -427,10 +436,10 @@ export function createAppState() {
 		 * These are used by the search worker to avoid re-serializing on every search
 		 */
 		updateChatSerializedMessages(
-			chatTitle: string,
+			archiveId: string,
 			serializedMessages: SerializedSearchMessage[],
 		) {
-			const chatIndex = chats.findIndex((c) => c.title === chatTitle);
+			const chatIndex = chats.findIndex((c) => c.archiveId === archiveId);
 			if (chatIndex !== -1) {
 				const chat = chats[chatIndex];
 				// Create a new chat object with serialized messages to trigger reactivity
@@ -541,7 +550,7 @@ export function createAppState() {
 			currentSearchIndex = 0;
 			isSearching = false;
 			searchProgress = 0;
-			indexedChatTitles = new Set();
+			indexedArchiveIds = new Set();
 		},
 	};
 }

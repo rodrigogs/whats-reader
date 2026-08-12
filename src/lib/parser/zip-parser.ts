@@ -7,6 +7,10 @@
 
 import JSZip from 'jszip';
 import {
+	type ArchiveId,
+	createSessionArchiveId,
+} from '../global-search/archive-identity';
+import {
 	type ChatMessage,
 	normalizeTimestampView,
 	type ParsedChat,
@@ -56,6 +60,7 @@ export interface SerializedSearchMessage {
 }
 
 export interface ParsedZipChat extends ParsedChat {
+	archiveId: ArchiveId;
 	mediaFiles: MediaFile[];
 	hasMedia: boolean;
 	// Contact information extracted from VCF files
@@ -150,6 +155,7 @@ function looksLikeChatContent(content: string): boolean {
 export async function parseZipFile(
 	file: File | ArrayBuffer,
 	onProgress?: (progress: ParseProgress) => void,
+	archiveId?: ArchiveId,
 ): Promise<ParsedZipChat> {
 	const zip = new JSZip();
 
@@ -205,19 +211,14 @@ export async function parseZipFile(
 			chatContent = await zipEntry.async('string');
 			chatFilename = cleanFilename;
 			chatEntryPath = path;
-			console.log(`Found chat file: ${cleanFilename} (${path})`);
 		} else if (isChatLikeFile && isNotHidden && !chatContent) {
 			// Try loading files that might be chat files even without .txt extension
-			console.log(`Trying potential chat file: ${cleanFilename} (${path})`);
 			const content = await zipEntry.async('string');
 			// Check if it looks like a chat file (contains timestamp patterns)
 			if (looksLikeChatContent(content)) {
 				chatContent = content;
 				chatFilename = cleanFilename;
 				chatEntryPath = path;
-				console.log(
-					`Detected chat file without .txt extension: ${cleanFilename}`,
-				);
 			}
 		} else if (lowerFilename.endsWith('.vcf')) {
 			// This is a vCard file - save for parsing
@@ -235,18 +236,8 @@ export async function parseZipFile(
 					if (zipData && typeof zipData.uncompressedSize === 'number') {
 						size = zipData.uncompressedSize;
 					}
-				} catch (err) {
-					// Fallback to 0 if _data is not available or errors
-					const errorMessage = err instanceof Error ? err.message : String(err);
-					const errorStack = err instanceof Error ? err.stack : undefined;
-					console.warn(
-						`Could not read size for ${cleanFilename}: ${errorMessage}`,
-						{
-							error: err,
-							stack: errorStack,
-							path,
-						},
-					);
+				} catch {
+					// Fall back to zero when JSZip's internal size is unavailable.
 				}
 
 				mediaFiles.push({
@@ -276,9 +267,8 @@ export async function parseZipFile(
 				// Store by lowercase name for case-insensitive lookup
 				contacts.set(contactInfo.name.toLowerCase(), contactInfo);
 			}
-		} catch (e) {
-			// Ignore VCF parsing errors - file might be corrupted
-			console.warn(`Failed to parse VCF file: ${entry.name}`, e);
+		} catch {
+			// Ignore VCF parsing errors - file might be corrupted.
 		}
 		// Report progress: 70-80% for VCF parsing
 		const vcfProgress = 70 + ((i + 1) / vcfEntries.length) * 10;
@@ -286,13 +276,6 @@ export async function parseZipFile(
 	}
 
 	if (!chatContent) {
-		// Provide detailed error message with debugging information
-		console.error('No chat file found in ZIP archive');
-		console.error('Files found in ZIP:');
-		for (const file of allFiles) {
-			console.error(`  - ${file.path} (${file.name})`);
-		}
-
 		// Create a user-friendly error message
 		const fileList = allFiles.map((f) => `  • ${f.name}`).join('\n');
 
@@ -311,18 +294,6 @@ export async function parseZipFile(
 	}
 
 	onProgress?.({ stage: 'parsing', progress: 0 });
-
-	// Log the first few lines of the chat file for debugging
-	const firstLines = chatContent.split(/\r?\n/).slice(0, 5);
-	console.log(`Parsing chat file: ${chatFilename}`);
-	console.log('First 5 lines of chat file (for format debugging):');
-	for (let i = 0; i < firstLines.length; i++) {
-		// Only show first 80 chars to minimize exposure of sensitive content
-		const preview = firstLines[i].substring(0, 80);
-		console.log(
-			`  ${i + 1}: ${preview}${firstLines[i].length > 80 ? '...' : ''}`,
-		);
-	}
 
 	// Check if the content is potentially parseable
 	if (!chatContent.trim()) {
@@ -410,45 +381,27 @@ export async function parseZipFile(
 				// Fallback: use a generic but clear name instead of "_chat"
 				titleHint = 'iOS Chat Export';
 			}
-
-			console.log(
-				`iOS export detected. Original: "${chatFilename}", Derived title: "${titleHint}"`,
-			);
 		}
 
 		parsedChat = parseChat(chatContent, titleHint);
-	} catch (error) {
-		console.error('Failed to parse chat file:', error);
+	} catch {
 		throw new Error(
 			`Failed to parse chat file: ${chatFilename}\n\n` +
-				`Error: ${error instanceof Error ? error.message : String(error)}\n\n` +
 				`The file format may not be supported or the file may be corrupted.`,
 		);
 	}
 
 	// Validate that we got at least some messages
 	if (parsedChat.messages.length === 0) {
-		console.warn(
-			'No messages were parsed from the chat file. First few lines:',
-		);
-		for (let i = 0; i < Math.min(10, firstLines.length); i++) {
-			console.warn(`  Line ${i + 1}: ${firstLines[i]}`);
-		}
-
 		throw new Error(
 			`No messages found in chat file: ${chatFilename}\n\n` +
 				`The file was loaded but no messages could be parsed. This may indicate:\n` +
 				`1. The date format is not recognized\n` +
 				`2. The file structure is different from expected\n` +
 				`3. The file may be corrupted\n\n` +
-				`First line of file: "${firstLines[0]}"\n\n` +
 				`Please report this issue with information about your WhatsApp version and phone model.`,
 		);
 	}
-
-	console.log(
-		`Successfully parsed ${parsedChat.messages.length} messages from ${chatFilename}`,
-	);
 
 	onProgress?.({ stage: 'parsing', progress: 50 });
 
@@ -462,6 +415,7 @@ export async function parseZipFile(
 
 	return {
 		...parsedChat,
+		archiveId: archiveId ?? createSessionArchiveId(),
 		messages: enhancedMessages,
 		mediaFiles,
 		hasMedia: mediaFiles.length > 0,
@@ -486,20 +440,8 @@ function matchMediaToMessages(
 	// Create a map of media files by cleaned name for quick lookup
 	// Strip invisible characters once during map building for efficiency
 	const mediaMap = new Map<string, MediaFile>();
-	// Track duplicate filenames to help with debugging
-	const duplicateNames = new Map<string, number>();
-
 	for (const media of mediaFiles) {
 		const lowerName = normalizeMediaKey(media.name);
-
-		// Track duplicates for logging and potential future handling
-		if (mediaMap.has(lowerName)) {
-			const count = duplicateNames.get(lowerName) || 1;
-			duplicateNames.set(lowerName, count + 1);
-			// Note: Last file with duplicate name will overwrite earlier ones in the map
-			// This is a known limitation - only the last duplicate will be matchable
-			// Messages referencing earlier files with same name will be incorrectly matched to the last file
-		}
 
 		mediaMap.set(lowerName, media);
 
@@ -510,17 +452,6 @@ function matchMediaToMessages(
 		if (nameWithoutExt.length >= 8) {
 			mediaMap.set(nameWithoutExt, media);
 		}
-	}
-
-	// Log consolidated warning for all duplicates found
-	if (duplicateNames.size > 0) {
-		console.warn(
-			`Found ${duplicateNames.size} duplicate filename(s). Only the last file with each duplicate name will be linkable to messages. ` +
-				`This may cause messages to be linked to the wrong media file. Duplicates:`,
-			Array.from(duplicateNames.entries()).map(
-				([name, count]) => `"${name}" (${count} occurrences)`,
-			),
-		);
 	}
 
 	const result = messages.map((message) => {

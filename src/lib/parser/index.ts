@@ -1,5 +1,13 @@
 // Parser exports
 
+export type {
+	ArchiveId,
+	ArchiveMessageKey,
+} from '../global-search/archive-identity';
+export {
+	createArchiveMessageKey,
+	createSessionArchiveId,
+} from '../global-search/archive-identity';
 export type { ChatMessage, ParsedChat } from './chat-parser';
 export {
 	formatTime,
