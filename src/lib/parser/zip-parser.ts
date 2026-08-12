@@ -472,6 +472,8 @@ function matchMediaToMessages(
 	// Regex to strip zero-width and invisible Unicode characters
 	// U+200E (LTR mark), U+200F (RTL mark), U+200B (zero-width space), U+FEFF (BOM), etc.
 	const invisibleCharsRegex = /[\u200B-\u200F\u2028-\u202F\uFEFF]/g;
+	const normalizeMediaKey = (value: string) =>
+		value.normalize('NFC').toLowerCase().replace(invisibleCharsRegex, '');
 
 	// Create a map of media files by cleaned name for quick lookup
 	// Strip invisible characters once during map building for efficiency
@@ -480,7 +482,7 @@ function matchMediaToMessages(
 	const duplicateNames = new Map<string, number>();
 
 	for (const media of mediaFiles) {
-		const lowerName = media.name.toLowerCase().replace(invisibleCharsRegex, '');
+		const lowerName = normalizeMediaKey(media.name);
 
 		// Track duplicates for logging and potential future handling
 		if (mediaMap.has(lowerName)) {
@@ -516,10 +518,8 @@ function matchMediaToMessages(
 	const result = messages.map((message) => {
 		if (!message.isMediaMessage) return message;
 
-		// Strip invisible Unicode chars from message content once
-		const content = message.content
-			.toLowerCase()
-			.replace(invisibleCharsRegex, '');
+		// Strip invisible Unicode chars and normalize from message content once
+		const content = normalizeMediaKey(message.content);
 
 		// Try to find a matching media file
 		// Keys in mediaMap are already cleaned, so no need to clean again

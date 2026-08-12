@@ -206,6 +206,10 @@ const SYSTEM_INDICATORS = [
 	'Berichten en oproepen zijn end-to-end versleuteld',
 ];
 
+function normalizeForMediaMatching(value: string): string {
+	return value.normalize('NFC').toLowerCase();
+}
+
 /**
  * Date format patterns for WhatsApp exports
  * Different locales use different formats
@@ -406,7 +410,7 @@ function detectMediaType(
 	| 'contact'
 	| 'location'
 	| undefined {
-	const lower = content.toLowerCase();
+	const lower = normalizeForMediaMatching(content);
 
 	if (
 		lower.includes('.jpg') ||
@@ -458,9 +462,9 @@ function detectMediaType(
 }
 
 function isMediaMessage(content: string): boolean {
-	const lower = content.toLowerCase();
+	const lower = normalizeForMediaMatching(content);
 	return MEDIA_INDICATORS.some((indicator) =>
-		lower.includes(indicator.toLowerCase()),
+		lower.includes(normalizeForMediaMatching(indicator)),
 	);
 }
 
