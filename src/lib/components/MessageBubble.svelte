@@ -350,8 +350,7 @@ async function transcribeVoiceMessage() {
 		transcription = text || '(No speech detected)';
 		showTranscription = true;
 	} catch (e) {
-		transcriptionError =
-			e instanceof Error ? e.message : 'Transcription failed';
+		transcriptionError = m.error_generic();
 	} finally {
 		transcriptionLoading = false;
 	}

@@ -1,0 +1,131 @@
+import assert from 'node:assert/strict';
+import { afterEach, describe, it, mock } from 'node:test';
+import {
+	TranscriptionRequestManager,
+	TranscriptionServiceError,
+} from '../src/lib/transcription-request-manager.ts';
+
+afterEach(() => {
+	mock.timers.reset();
+});
+
+describe('TranscriptionRequestManager', () => {
+	it('expires a silent request after the inactivity timeout and removes it', async () => {
+		mock.timers.enable({ apis: ['setTimeout'] });
+		let timedOut = false;
+		const manager = new TranscriptionRequestManager(90_000);
+		const rejection = new Promise<unknown>((_resolve, reject) => {
+			manager.add('message-1', () => undefined, reject, () => {
+				timedOut = true;
+			});
+		});
+
+		mock.timers.tick(90_000);
+
+		await assert.rejects(rejection, (error: unknown) => {
+			assert.ok(error instanceof TranscriptionServiceError);
+			assert.equal(error.code, 'TRANSCRIPTION_TIMEOUT');
+			return true;
+		});
+		assert.equal(manager.size, 0);
+		assert.equal(timedOut, true);
+	});
+
+	it('renews pending watchdogs when the worker reports progress', async () => {
+		mock.timers.enable({ apis: ['setTimeout'] });
+		const manager = new TranscriptionRequestManager(90_000);
+		const rejection = new Promise<unknown>((_resolve, reject) => {
+			manager.add('message-1', () => undefined, reject, () => undefined);
+		});
+
+		mock.timers.tick(89_000);
+		manager.renewAll();
+		mock.timers.tick(89_000);
+		assert.equal(manager.size, 1);
+		mock.timers.tick(1_000);
+
+		await assert.rejects(rejection, { code: 'TRANSCRIPTION_TIMEOUT' });
+	});
+
+	it('rejects every pending request for a model error', async () => {
+		const manager = new TranscriptionRequestManager(90_000);
+		const first = new Promise<unknown>((_resolve, reject) =>
+			manager.add('first', () => undefined, reject, () => undefined),
+		);
+		const second = new Promise<unknown>((_resolve, reject) =>
+			manager.add('second', () => undefined, reject, () => undefined),
+		);
+
+		manager.rejectAll(
+			new TranscriptionServiceError('TRANSCRIPTION_MODEL_ERROR', 'Model failed'),
+		);
+
+		await Promise.all([
+			assert.rejects(first, { code: 'TRANSCRIPTION_MODEL_ERROR' }),
+			assert.rejects(second, { code: 'TRANSCRIPTION_MODEL_ERROR' }),
+		]);
+		assert.equal(manager.size, 0);
+	});
+
+	it('rejects every pending request for a worker error', async () => {
+		const manager = new TranscriptionRequestManager(90_000);
+		const rejection = new Promise<unknown>((_resolve, reject) =>
+			manager.add('message-1', () => undefined, reject, () => undefined),
+		);
+
+		manager.rejectAll(
+			new TranscriptionServiceError('TRANSCRIPTION_WORKER_ERROR', 'Worker failed'),
+		);
+
+		await assert.rejects(rejection, { code: 'TRANSCRIPTION_WORKER_ERROR' });
+		assert.equal(manager.size, 0);
+	});
+
+	it('ignores a late callback after a request was rejected', async () => {
+		const manager = new TranscriptionRequestManager(90_000);
+		let resolved = 0;
+		let rejected = 0;
+		manager.add(
+			'message-1',
+			() => {
+				resolved += 1;
+			},
+			() => {
+				rejected += 1;
+			},
+			() => undefined,
+		);
+
+		manager.reject(
+			'message-1',
+			new TranscriptionServiceError('TRANSCRIPTION_MODEL_ERROR', 'Model failed'),
+		);
+
+		assert.equal(manager.resolve('message-1', 'late result'), false);
+		assert.equal(resolved, 0);
+		assert.equal(rejected, 1);
+	});
+
+	it('accepts a retry after a failed request was removed', () => {
+		const manager = new TranscriptionRequestManager(90_000);
+		manager.add('message-1', () => undefined, () => undefined, () => undefined);
+		manager.reject(
+			'message-1',
+			new TranscriptionServiceError('TRANSCRIPTION_WORKER_ERROR', 'Worker failed'),
+		);
+
+		let retryResolved = false;
+		manager.add(
+			'message-1',
+			() => {
+				retryResolved = true;
+			},
+			() => undefined,
+			() => undefined,
+		);
+		manager.resolve('message-1', 'retry result');
+
+		assert.equal(retryResolved, true);
+		assert.equal(manager.size, 0);
+	});
+});

@@ -4,6 +4,12 @@
  */
 
 import { browser } from '$app/environment';
+import {
+	TranscriptionRequestManager,
+	TranscriptionServiceError,
+} from './transcription-request-manager';
+
+const TRANSCRIPTION_INACTIVITY_TIMEOUT_MS = 90_000;
 
 // Default language for transcription (can be changed by user)
 let transcriptionLanguage = $state<string>('portuguese');
@@ -20,14 +26,22 @@ let isModelReady = $state(false);
 // Worker instance
 let worker: Worker | null = null;
 
-// Pending transcription callbacks
-const pendingTranscriptions = new Map<
-	string,
-	{
-		resolve: (text: string) => void;
-		reject: (error: Error) => void;
-	}
->();
+const pendingTranscriptions = new TranscriptionRequestManager(
+	TRANSCRIPTION_INACTIVITY_TIMEOUT_MS,
+);
+
+function discardWorker(): void {
+	if (worker) worker.terminate();
+	worker = null;
+	isModelReady = false;
+	isModelLoading = false;
+	modelLoadProgress = 0;
+}
+
+function failPendingTranscriptions(error: TranscriptionServiceError): void {
+	pendingTranscriptions.rejectAll(error);
+	discardWorker();
+}
 
 /**
  * Initialize the transcription worker
@@ -35,57 +49,74 @@ const pendingTranscriptions = new Map<
 function initWorker(): Worker {
 	if (worker) return worker;
 
-	worker = new Worker(
+	const createdWorker = new Worker(
 		new URL('./workers/transcription-worker.ts', import.meta.url),
 		{ type: 'module' },
 	);
+	worker = createdWorker;
 
-	worker.onmessage = (event) => {
+	createdWorker.onmessage = (event) => {
+		if (worker !== createdWorker) return;
 		const message = event.data;
 
 		switch (message.type) {
 			case 'progress':
 				modelLoadProgress = message.progress;
+				pendingTranscriptions.renewAll();
 				break;
 			case 'model-ready':
 				isModelReady = true;
 				isModelLoading = false;
 				modelLoadProgress = 100;
+				pendingTranscriptions.renewAll();
 				break;
 			case 'model-error':
 				modelError = message.error;
-				isModelLoading = false;
+				failPendingTranscriptions(
+					new TranscriptionServiceError(
+						'TRANSCRIPTION_MODEL_ERROR',
+						message.error,
+					),
+				);
 				break;
 			case 'transcription-result': {
-				const pending = pendingTranscriptions.get(message.messageId);
-				if (pending) {
+				if (
+					pendingTranscriptions.resolve(
+						message.messageId,
+						message.text || '(No speech detected)',
+					)
+				) {
 					// Store in reactive store
 					if (message.text) {
 						transcriptionStore.set(message.messageId, message.text);
 						transcriptionStore = new Map(transcriptionStore);
 					}
-					pending.resolve(message.text || '(No speech detected)');
-					pendingTranscriptions.delete(message.messageId);
 				}
 				break;
 			}
 			case 'transcription-error': {
-				const pendingErr = pendingTranscriptions.get(message.messageId);
-				if (pendingErr) {
-					pendingErr.reject(new Error(message.error));
-					pendingTranscriptions.delete(message.messageId);
-				}
+				pendingTranscriptions.reject(
+					message.messageId,
+					new Error(message.error),
+				);
 				break;
 			}
 		}
 	};
 
-	worker.onerror = (error) => {
+	createdWorker.onerror = (error) => {
+		if (worker !== createdWorker) return;
 		console.error('Transcription worker error:', error);
 		modelError = error.message;
+		failPendingTranscriptions(
+			new TranscriptionServiceError(
+				'TRANSCRIPTION_WORKER_ERROR',
+				error.message || 'Transcription worker failed',
+			),
+		);
 	};
 
-	return worker;
+	return createdWorker;
 }
 
 // Export reactive state
@@ -277,18 +308,45 @@ export async function transcribeAudio(
 
 		// Create promise for this transcription
 		return new Promise((resolve, reject) => {
-			pendingTranscriptions.set(messageId, { resolve, reject });
+			pendingTranscriptions.add(
+				messageId,
+				resolve,
+				reject,
+				(timedOutMessageId) => {
+					pendingTranscriptions.rejectAllExcept(
+						timedOutMessageId,
+						new TranscriptionServiceError(
+							'TRANSCRIPTION_WORKER_ERROR',
+							'Transcription worker was reset after an inactive request',
+						),
+					);
+					discardWorker();
+				},
+			);
 
 			// Send to worker - transfer the underlying buffer for performance
-			w.postMessage(
-				{
-					type: 'transcribe',
-					audioData,
-					language: transcriptionLanguage,
+			try {
+				w.postMessage(
+					{
+						type: 'transcribe',
+						audioData,
+						language: transcriptionLanguage,
+						messageId,
+					},
+					[audioData.buffer],
+				);
+			} catch (error) {
+				pendingTranscriptions.reject(
 					messageId,
-				},
-				[audioData.buffer],
-			);
+					new TranscriptionServiceError(
+						'TRANSCRIPTION_WORKER_ERROR',
+						error instanceof Error
+							? error.message
+							: 'Failed to contact transcription worker',
+					),
+				);
+				discardWorker();
+			}
 		});
 	} catch (e) {
 		console.error('Failed to decode audio:', e);
@@ -325,9 +383,11 @@ export function isTranscriptionSupported(): boolean {
  * Terminate the worker (cleanup)
  */
 export function terminateWorker(): void {
-	if (worker) {
-		worker.terminate();
-		worker = null;
-		isModelReady = false;
-	}
+	pendingTranscriptions.rejectAll(
+		new TranscriptionServiceError(
+			'TRANSCRIPTION_WORKER_ERROR',
+			'Transcription worker was terminated',
+		),
+	);
+	discardWorker();
 }
