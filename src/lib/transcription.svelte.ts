@@ -15,8 +15,13 @@ const TRANSCRIPTION_INACTIVITY_TIMEOUT_MS = 90_000;
 // Default language for transcription (can be changed by user)
 let transcriptionLanguage = $state<string>('portuguese');
 
-// Reactive transcription store - enables search integration
+// Reactive transcription store - enables search integration. Message IDs are
+// only unique inside their imported archive, so use an injective composite key.
 let transcriptionStore = $state<Map<string, string>>(new Map());
+
+function transcriptionKey(archiveId: string, messageId: string): string {
+	return JSON.stringify([archiveId, messageId]);
+}
 
 // State management
 let isModelLoading = $state(false);
@@ -171,24 +176,35 @@ export function getAvailableLanguages(): { code: string; name: string }[] {
 /**
  * Get transcription for a message ID (reactive)
  */
-export function getTranscription(messageId: string): string | undefined {
-	return transcriptionStore.get(messageId);
+export function getTranscription(
+	archiveId: string,
+	messageId: string,
+): string | undefined {
+	return transcriptionStore.get(transcriptionKey(archiveId, messageId));
 }
 
 /**
  * Check if a message has a transcription
  */
-export function hasTranscription(messageId: string): boolean {
-	return transcriptionStore.has(messageId);
+export function hasTranscription(
+	archiveId: string,
+	messageId: string,
+): boolean {
+	return transcriptionStore.has(transcriptionKey(archiveId, messageId));
 }
 
 /**
  * Get all transcriptions as a plain object (for search worker)
  */
-export function getAllTranscriptions(): Record<string, string> {
+export function getAllTranscriptions(
+	archiveId: string,
+): Record<string, string> {
 	const result: Record<string, string> = {};
 	for (const [key, value] of transcriptionStore) {
-		result[key] = value;
+		const [storedArchiveId, messageId] = JSON.parse(key) as [string, string];
+		if (storedArchiveId === archiveId) {
+			result[messageId] = value;
+		}
 	}
 	return result;
 }
@@ -198,13 +214,15 @@ export function getAllTranscriptions(): Record<string, string> {
  * Filters by provided message IDs to avoid cross-chat leakage.
  */
 export function getTranscriptionsForChat(
+	archiveId: string,
 	messageIds: string[],
 ): Record<string, string> {
 	const idSet = new Set(messageIds);
 	const result: Record<string, string> = {};
 	for (const [key, value] of transcriptionStore) {
-		if (idSet.has(key)) {
-			result[key] = value;
+		const [storedArchiveId, messageId] = JSON.parse(key) as [string, string];
+		if (storedArchiveId === archiveId && idSet.has(messageId)) {
+			result[messageId] = value;
 		}
 	}
 	return result;
@@ -215,10 +233,11 @@ export function getTranscriptionsForChat(
  * Merges into the runtime store keyed by bare messageId.
  */
 export function setTranscriptionsForChat(
+	archiveId: string,
 	transcriptions: Record<string, string>,
 ): void {
 	for (const [messageId, text] of Object.entries(transcriptions)) {
-		transcriptionStore.set(messageId, text);
+		transcriptionStore.set(transcriptionKey(archiveId, messageId), text);
 	}
 	transcriptionStore = new Map(transcriptionStore);
 }
@@ -281,6 +300,7 @@ async function fetchAndDecodeAudio(url: string): Promise<Float32Array> {
  */
 export async function transcribeAudio(
 	audioUrl: string,
+	archiveId: string,
 	messageId: string,
 ): Promise<string> {
 	if (!browser) {
@@ -288,8 +308,9 @@ export async function transcribeAudio(
 	}
 
 	// Check cache first
-	if (transcriptionStore.has(messageId)) {
-		return transcriptionStore.get(messageId)!;
+	const key = transcriptionKey(archiveId, messageId);
+	if (transcriptionStore.has(key)) {
+		return transcriptionStore.get(key)!;
 	}
 
 	// Initialize worker if needed
@@ -310,7 +331,7 @@ export async function transcribeAudio(
 		// Create promise for this transcription
 		return new Promise((resolve, reject) => {
 			const accepted = pendingTranscriptions.add(
-				messageId,
+				key,
 				resolve,
 				reject,
 				(timedOutMessageId) => {
@@ -332,14 +353,14 @@ export async function transcribeAudio(
 							type: 'transcribe',
 							audioData,
 							language: transcriptionLanguage,
-							messageId,
+							messageId: key,
 						},
 						[audioData.buffer],
 					),
 				);
 			} catch (error) {
 				pendingTranscriptions.reject(
-					messageId,
+					key,
 					new TranscriptionServiceError(
 						'TRANSCRIPTION_WORKER_ERROR',
 						error instanceof Error
@@ -359,8 +380,11 @@ export async function transcribeAudio(
 /**
  * Get cached transcription if available
  */
-export function getCachedTranscription(messageId: string): string | null {
-	return transcriptionStore.get(messageId) || null;
+export function getCachedTranscription(
+	archiveId: string,
+	messageId: string,
+): string | null {
+	return transcriptionStore.get(transcriptionKey(archiveId, messageId)) || null;
 }
 
 /**

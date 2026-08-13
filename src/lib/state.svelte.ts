@@ -285,7 +285,7 @@ export function createAppState() {
 		currentSearchId++;
 
 		// Include transcriptions for audio message search
-		const transcriptions = getAllTranscriptions();
+		const transcriptions = getAllTranscriptions(chat.archiveId);
 
 		// Send lightweight search request (just query and transcriptions)
 		searchWorker?.postMessage({

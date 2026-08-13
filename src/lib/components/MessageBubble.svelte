@@ -177,7 +177,7 @@ const hasMediaFile = $derived(message.mediaFile?._zipEntry);
 // Check for cached transcription on mount
 $effect(() => {
 	if (message.isMediaMessage && message.mediaType === 'audio' && message.id) {
-		const cached = getCachedTranscription(message.id);
+		const cached = getCachedTranscription(archiveId, message.id);
 		if (cached) {
 			transcription = cached;
 			showTranscription = true;
@@ -348,7 +348,7 @@ async function transcribeVoiceMessage() {
 	transcriptionError = null;
 
 	try {
-		const text = await transcribeAudio(mediaUrl, message.id);
+		const text = await transcribeAudio(mediaUrl, archiveId, message.id);
 		transcription = text || '(No speech detected)';
 		showTranscription = true;
 	} catch (e) {

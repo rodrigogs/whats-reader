@@ -732,7 +732,7 @@ async function loadChatFromBuffer(
 						);
 					},
 					applyTranscriptions: (transcriptions) => {
-						setTranscriptionsForChat(transcriptions);
+						setTranscriptionsForChat(chatData.archiveId, transcriptions);
 					},
 					applySettings: (settings) => {
 						if (settings.language) {
@@ -805,7 +805,7 @@ async function rememberChat(archiveId: string) {
 
 		const bookmarks = bookmarksState.getBookmarksForArchive(archiveId);
 		const chatMessageIds = chat.messages.map((msg) => msg.id);
-		const transcriptions = getTranscriptionsForChat(chatMessageIds);
+		const transcriptions = getTranscriptionsForChat(archiveId, chatMessageIds);
 
 		const persistedId = await savePersistedChat(
 			chat,
