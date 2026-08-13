@@ -43,11 +43,6 @@ function truncateText(text: string, maxLength: number = 100): string {
 	return `${text.substring(0, maxLength).trim()}...`;
 }
 
-// Composite dedup key for a bookmark.
-function bookmarkKey(archiveId: ArchiveId, messageId: string): string {
-	return `${archiveId}:${messageId}`;
-}
-
 function isNonEmptyString(value: unknown): value is string {
 	return typeof value === 'string' && value.trim().length > 0;
 }
@@ -324,18 +319,29 @@ export function createBookmarksState() {
 			const incoming = normalizeExport(data, validatedArchiveId);
 
 			// Merge: add new bookmarks, skip malformed and duplicate identities.
-			const existingKeys = new Set(
-				bookmarks.map((b) => bookmarkKey(b.archiveId, b.messageId)),
-			);
+			// Keep identity structural: delimiters can appear in either value.
+			const messageIdsByArchive = new Map<string, Set<string>>();
+			for (const bookmark of bookmarks) {
+				let messageIds = messageIdsByArchive.get(bookmark.archiveId);
+				if (!messageIds) {
+					messageIds = new Set();
+					messageIdsByArchive.set(bookmark.archiveId, messageIds);
+				}
+				messageIds.add(bookmark.messageId);
+			}
 			const newBookmarks: Bookmark[] = [];
 			let skipped = incoming.skipped;
 			for (const bookmark of incoming.bookmarks) {
-				const key = bookmarkKey(bookmark.archiveId, bookmark.messageId);
-				if (existingKeys.has(key)) {
+				let messageIds = messageIdsByArchive.get(bookmark.archiveId);
+				if (!messageIds) {
+					messageIds = new Set();
+					messageIdsByArchive.set(bookmark.archiveId, messageIds);
+				}
+				if (messageIds.has(bookmark.messageId)) {
 					skipped += 1;
 					continue;
 				}
-				existingKeys.add(key);
+				messageIds.add(bookmark.messageId);
 				newBookmarks.push(bookmark);
 			}
 

@@ -122,6 +122,32 @@ describe('bookmark identity uses archiveId + messageId', () => {
 			],
 		});
 	});
+
+	it('keeps delimiter-colliding archive and message identities distinct on import', () => {
+		const result = bookmarksState.importBookmarks({
+			version: 2,
+			exportedAt: '2026-01-02T03:04:05.000Z',
+			bookmarks: [
+				{
+					...legacyBookmark(),
+					archiveId: 'archive',
+					messageId: 'a:b',
+					chatTitle: sharedMessage.chatTitle,
+				},
+				{
+					...legacyBookmark(),
+					id: 'bookmark-delimiter-collision',
+					archiveId: 'archive:a',
+					messageId: 'b',
+					chatTitle: sharedMessage.chatTitle,
+				},
+			],
+		});
+
+		expect(result).toEqual({ imported: 2, skipped: 0 });
+		expect(bookmarksState.getBookmark('archive', 'a:b')).toBeDefined();
+		expect(bookmarksState.getBookmark('archive:a', 'b')).toBeDefined();
+	});
 });
 
 describe('legacy bookmark import fails closed without a validated archive', () => {
