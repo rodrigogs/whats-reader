@@ -9,8 +9,9 @@ import IconButton from './IconButton.svelte';
 
 // Data needed to create a new bookmark
 interface NewBookmarkData {
+	archiveId: string;
 	messageId: string;
-	chatId: string;
+	chatTitle: string;
 	messageContent: string;
 	sender: string;
 	messageTimestamp: Date;
@@ -48,7 +49,11 @@ function handleSave() {
 		});
 	} else if (bookmark) {
 		// Edit mode: update the comment
-		bookmarksState.updateBookmarkComment(bookmark.messageId, comment);
+		bookmarksState.updateBookmarkComment(
+			bookmark.archiveId,
+			bookmark.messageId,
+			comment,
+		);
 	}
 	onSave?.();
 	onClose();
@@ -56,7 +61,7 @@ function handleSave() {
 
 function handleDelete() {
 	if (bookmark) {
-		bookmarksState.removeBookmark(bookmark.messageId);
+		bookmarksState.removeBookmark(bookmark.archiveId, bookmark.messageId);
 	}
 	onClose();
 }

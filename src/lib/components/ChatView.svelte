@@ -23,7 +23,8 @@ function formatDateSeparator(dateKey: string): string {
 
 interface Props {
 	messages: ChatMessage[];
-	chatId: string;
+	archiveId: string;
+	chatTitle: string;
 	currentUser?: string;
 	searchQuery?: string;
 	// O(1) lookup function to check if a message matches search
@@ -41,7 +42,8 @@ const defaultIsSearchMatch = () => false;
 
 let {
 	messages,
-	chatId,
+	archiveId,
+	chatTitle,
 	currentUser,
 	searchQuery = '',
 	isSearchMatch = defaultIsSearchMatch,
@@ -69,7 +71,7 @@ const hasPrecomputedData = $derived(
 
 // Build a message lookup map - use precomputed if available, otherwise build lazily
 let cachedMessagesById: Map<string, ChatMessage> | null = null;
-let cachedMessagesChatId: string | null = null;
+let cachedMessagesArchiveId: string | null = null;
 let cacheBuiltFully = false;
 
 function getMessageById(id: string): ChatMessage | undefined {
@@ -79,9 +81,9 @@ function getMessageById(id: string): ChatMessage | undefined {
 	}
 
 	// Invalidate cache if chat changed
-	if (cachedMessagesChatId !== chatId) {
+	if (cachedMessagesArchiveId !== archiveId) {
 		cachedMessagesById = new Map();
-		cachedMessagesChatId = chatId;
+		cachedMessagesArchiveId = archiveId;
 		cacheBuiltFully = false;
 	}
 
@@ -209,8 +211,11 @@ const renderedItems = $derived.by(() => {
 	};
 });
 
-// Use the Map from bookmarksState directly - it's already reactive and stable
-const bookmarkedMessageIds = $derived(bookmarksState.bookmarksByMessageId);
+// Archive-scoped bookmark map (messageId -> Bookmark). Reactively rebuilt when
+// the bookmarksByArchive derived recomputes for this archive.
+const bookmarkedMessageIds = $derived(
+	bookmarksState.bookmarksByMessageIdForArchive(archiveId),
+);
 
 // Reference to message elements for scrolling
 let messageRefs = new Map<string, HTMLElement>();
@@ -286,19 +291,19 @@ function loadMoreMessages() {
 	});
 }
 
-// Track previous chatId to detect actual changes
-let previousChatId = $state<string | null>(null);
+// Track previous archiveId to detect actual changes
+let previousArchiveId = $state<string | null>(null);
 
 // Reset chunks when chat changes
 $effect(() => {
-	if (previousChatId !== null && previousChatId !== chatId) {
+	if (previousArchiveId !== null && previousArchiveId !== archiveId) {
 		loadedChunksFromEnd = INITIAL_CHUNKS;
 		hasScrolledToBottom = false;
 		// DON'T clear messageRefs here - let the destroy() callbacks handle cleanup
 		// and the new elements will register themselves
 		lastProcessedScrollId = null; // Reset so bookmarks work after chat switch
 	}
-	previousChatId = chatId;
+	previousArchiveId = archiveId;
 });
 
 // Scroll to bottom when messages first load
@@ -601,7 +606,8 @@ function handleScroll() {
 			>
 				<MessageBubble
 					{message}
-					{chatId}
+					{archiveId}
+					{chatTitle}
 					{bookmarkedMessageIds}
 					isOwn={currentUser !== undefined && message.sender === currentUser}
 					showSender={true}

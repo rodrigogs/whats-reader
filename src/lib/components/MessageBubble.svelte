@@ -25,7 +25,8 @@ interface MessageWithMedia extends ChatMessage {
 
 interface Props {
 	message: MessageWithMedia;
-	chatId: string;
+	archiveId: string;
+	chatTitle: string;
 	bookmarkedMessageIds?: Map<string, Bookmark>;
 	isOwn?: boolean;
 	showSender?: boolean;
@@ -39,7 +40,8 @@ interface Props {
 
 let {
 	message,
-	chatId,
+	archiveId,
+	chatTitle,
 	bookmarkedMessageIds = new Map(),
 	isOwn = false,
 	showSender = true,
@@ -626,8 +628,9 @@ async function transcribeVoiceMessage() {
 	<BookmarkModal
 		bookmark={currentBookmark}
 		newBookmarkData={currentBookmark ? undefined : {
+			archiveId,
 			messageId: message.id,
-			chatId,
+			chatTitle,
 			messageContent: message.content,
 			sender: message.sender,
 			messageTimestamp: message.timestamp

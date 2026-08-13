@@ -3,24 +3,11 @@ import * as m from '$lib/paraglide/messages';
 import Icon from './Icon.svelte';
 
 interface Props {
-	messageId: string;
-	chatId: string;
-	messageContent: string;
-	sender: string;
-	messageTimestamp: Date;
 	isBookmarked?: boolean;
 	onBookmarkClick?: (isBookmarked: boolean) => void;
 }
 
-let {
-	messageId,
-	chatId,
-	messageContent,
-	sender,
-	messageTimestamp,
-	isBookmarked = false,
-	onBookmarkClick,
-}: Props = $props();
+let { isBookmarked = false, onBookmarkClick }: Props = $props();
 
 function handleClick(e: MouseEvent) {
 	e.stopPropagation();

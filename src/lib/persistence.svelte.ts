@@ -19,7 +19,7 @@
 
 import { del, get, keys, set } from 'idb-keyval';
 import { browser } from '$app/environment';
-import type { Bookmark } from './bookmarks.svelte';
+import type { Bookmark, PersistedBookmark } from './bookmarks.svelte';
 import type { ChatData } from './state.svelte';
 
 export interface PersistedChatMetadata {
@@ -41,7 +41,7 @@ export interface PersistedChatMetadata {
 		| { type: 'reselect-required' };
 
 	// Persisted data (always stored - small)
-	bookmarks: Bookmark[];
+	bookmarks: PersistedBookmark[];
 	transcriptions: Record<string, string>;
 	settings: {
 		language: string;
@@ -402,7 +402,7 @@ export function shouldLoadRestoredChat(
  * the restore decision is testable without a component.
  */
 export interface ValidatedRestoreCallbacks {
-	applyBookmarks: (bookmarks: Bookmark[], savedAt: string) => void;
+	applyBookmarks: (bookmarks: PersistedBookmark[], savedAt: string) => void;
 	applyTranscriptions: (transcriptions: Record<string, string>) => void;
 	applySettings: (settings: PersistedChatMetadata['settings']) => void;
 	addChat: (chat: ChatData) => void;

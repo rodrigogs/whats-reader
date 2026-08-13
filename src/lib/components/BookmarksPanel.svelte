@@ -8,17 +8,17 @@ import Icon from './Icon.svelte';
 import IconButton from './IconButton.svelte';
 
 interface Props {
-	currentChatId?: string;
-	onNavigateToMessage: (messageId: string, chatId: string) => void;
+	currentArchiveId?: string;
+	onNavigateToMessage: (messageId: string, archiveId: string) => void;
 	onClose: () => void;
-	indexedChatTitles?: Set<string>;
+	indexedArchiveIds?: Set<string>;
 }
 
 let {
-	currentChatId,
+	currentArchiveId,
 	onNavigateToMessage,
 	onClose,
-	indexedChatTitles = new Set(),
+	indexedArchiveIds = new Set(),
 }: Props = $props();
 
 let filterMode = $state<'all' | 'current'>('all');
@@ -32,8 +32,8 @@ let importSuccess = $state<string | null>(null);
 const displayedBookmarks = $derived.by(() => {
 	const all = bookmarksState.bookmarks;
 	const filtered =
-		filterMode === 'current' && currentChatId
-			? all.filter((b) => b.chatId === currentChatId)
+		filterMode === 'current' && currentArchiveId
+			? all.filter((b) => b.archiveId === currentArchiveId)
 			: all;
 	// Sort by creation date, newest first
 	return filtered.toSorted(
@@ -41,15 +41,23 @@ const displayedBookmarks = $derived.by(() => {
 	);
 });
 
-// Group bookmarks by chat for display - computed from displayedBookmarks
+// Group bookmarks by archive for display - computed from displayedBookmarks.
+// Keyed by archiveId; carries the archive's display title (first seen).
 const groupedBookmarks = $derived.by(() => {
-	const groups = new Map<string, Bookmark[]>();
+	const groups = new Map<
+		string,
+		{ archiveId: string; chatTitle: string; bookmarks: Bookmark[] }
+	>();
 	for (const bookmark of displayedBookmarks) {
-		const existing = groups.get(bookmark.chatId);
+		const existing = groups.get(bookmark.archiveId);
 		if (existing) {
-			existing.push(bookmark);
+			existing.bookmarks.push(bookmark);
 		} else {
-			groups.set(bookmark.chatId, [bookmark]);
+			groups.set(bookmark.archiveId, {
+				archiveId: bookmark.archiveId,
+				chatTitle: bookmark.chatTitle || bookmark.archiveId,
+				bookmarks: [bookmark],
+			});
 		}
 	}
 	return groups;
@@ -77,7 +85,7 @@ function handleBookmarkClick(bookmark: Bookmark) {
 function handleNavigateClick(e: MouseEvent, bookmark: Bookmark) {
 	e.stopPropagation();
 	e.preventDefault();
-	onNavigateToMessage(bookmark.messageId, bookmark.chatId);
+	onNavigateToMessage(bookmark.messageId, bookmark.archiveId);
 }
 
 function handleEditClick(e: MouseEvent, bookmark: Bookmark) {
@@ -89,7 +97,7 @@ function handleEditClick(e: MouseEvent, bookmark: Bookmark) {
 function handleDeleteClick(e: MouseEvent, bookmark: Bookmark) {
 	e.stopPropagation();
 	e.preventDefault();
-	bookmarksState.removeBookmark(bookmark.messageId);
+	bookmarksState.removeBookmark(bookmark.archiveId, bookmark.messageId);
 	expandedBookmarkId = null;
 }
 
@@ -107,6 +115,8 @@ async function handleImport(e: Event) {
 	importSuccess = null;
 
 	try {
+		// Manual v1 files cannot prove which archive they belong to. Only v2
+		// exports are imported here; v1 backfill is reserved for validated restore.
 		const result = await bookmarksState.importFromFile(file);
 		// Build success message
 		const plural = result.imported !== 1 ? 's' : '';
@@ -168,7 +178,7 @@ function handleKeydown(e: KeyboardEvent) {
 	</div>
 
 	<!-- Filter tabs -->
-	{#if currentChatId}
+	{#if currentArchiveId}
 		<div class="flex px-4 py-2 gap-1 border-b border-gray-200 dark:border-gray-700">
 			<button
 				type="button"
@@ -212,18 +222,18 @@ function handleKeydown(e: KeyboardEvent) {
 				</p>
 			</div>
 		{:else}
-			<div class="divide-y divide-gray-100 dark:divide-gray-700/50">
-				{#each groupedBookmarks as [chatId, chatBookmarks]}
-					<div class="py-2">
-						<!-- Chat header -->
-						<div class="px-4 py-1">
-							<span class="text-xs font-medium text-gray-400 uppercase tracking-wider">
-								{chatId}
-							</span>
-						</div>
-						
-						<!-- Bookmarks in this chat -->
-						{#each chatBookmarks as bookmark (bookmark.id)}
+		<div class="divide-y divide-gray-100 dark:divide-gray-700/50">
+			{#each groupedBookmarks as [archiveId, group] (archiveId)}
+				<div class="py-2">
+					<!-- Chat header -->
+					<div class="px-4 py-1">
+						<span class="text-xs font-medium text-gray-400 uppercase tracking-wider">
+							{group.chatTitle}
+						</span>
+					</div>
+
+					<!-- Bookmarks in this chat -->
+					{#each group.bookmarks as bookmark (bookmark.id)}
 							{@const isExpanded = expandedBookmarkId === bookmark.id}
 							<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 							<div
@@ -249,10 +259,10 @@ function handleKeydown(e: KeyboardEvent) {
 												📝 {bookmark.comment}
 											</p>
 										{/if}
-										
+
 										<!-- Expanded actions -->
 										{#if isExpanded}
-											{@const isIndexed = indexedChatTitles.has(bookmark.chatId)}
+											{@const isIndexed = indexedArchiveIds.has(bookmark.archiveId)}
 											<div class="flex items-center gap-2 mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
 												<Button
 													variant="primary"

@@ -31,6 +31,7 @@ import ModalHeader from '$lib/components/ModalHeader.svelte';
 import ReselectFileModal from '$lib/components/ReselectFileModal.svelte';
 import RestoreSessionModal from '$lib/components/RestoreSessionModal.svelte';
 import Toast from '$lib/components/Toast.svelte';
+import { findArchiveIndex } from '$lib/global-search/archive-navigation';
 import { createArchivePageState } from '$lib/global-search/archive-page-state.svelte';
 import {
 	getElectronFilePath,
@@ -459,9 +460,9 @@ async function handleNavigateToMediaMessage(messageId: string) {
 	scrollToMessageId = messageId;
 }
 
-async function handleNavigateToBookmark(messageId: string, chatId: string) {
+async function handleNavigateToBookmark(messageId: string, archiveId: string) {
 	// Find and select the chat if different from current
-	const chatIndex = appState.chats.findIndex((c) => c.title === chatId);
+	const chatIndex = findArchiveIndex(appState.chats, archiveId);
 	const needsChatSwitch =
 		chatIndex !== -1 && chatIndex !== appState.selectedChatIndex;
 
@@ -721,11 +722,14 @@ async function loadChatFromBuffer(
 				restoredMetadata,
 				{
 					applyBookmarks: (bookmarks, savedAt) => {
-						bookmarksState.importBookmarks({
-							version: 1,
-							exportedAt: savedAt,
+						// Persistence predates archiveId on Bookmark. This callback runs only
+						// after metadata/file validation, so the parsed archive is the safe
+						// namespace for those legacy entries.
+						bookmarksState.importValidatedPersistedBookmarks(
 							bookmarks,
-						});
+							chatData.archiveId,
+							savedAt,
+						);
 					},
 					applyTranscriptions: (transcriptions) => {
 						setTranscriptionsForChat(transcriptions);
@@ -799,7 +803,7 @@ async function rememberChat(archiveId: string) {
 		// Use handle captured during drag-drop (no file picker needed)
 		const fileHandle = fileRef?.fileHandle;
 
-		const bookmarks = bookmarksState.getBookmarksForChat(chat.title);
+		const bookmarks = bookmarksState.getBookmarksForArchive(archiveId);
 		const chatMessageIds = chat.messages.map((msg) => msg.id);
 		const transcriptions = getTranscriptionsForChat(chatMessageIds);
 
@@ -1336,7 +1340,8 @@ function handleToggleRemember(archiveId: string, enabled: boolean) {
 					<!-- Chat view -->
 					<ChatView
 						messages={appState.displayMessages}
-						chatId={appState.selectedChat.title}
+						archiveId={appState.selectedChat.archiveId}
+						chatTitle={appState.selectedChat.title}
 						{currentUser}
 						searchQuery={appState.activeSearchQuery}
 						isSearchMatch={appState.isSearchMatch}
@@ -1370,10 +1375,10 @@ function handleToggleRemember(archiveId: string, enabled: boolean) {
 					<!-- Bookmarks content -->
 					<div class="flex-1 overflow-hidden">
 						<BookmarksPanel
-							currentChatId={appState.selectedChat.title}
+							currentArchiveId={appState.selectedChat.archiveId}
 							onNavigateToMessage={handleNavigateToBookmark}
 							onClose={() => showBookmarks = false}
-							indexedChatTitles={appState.indexedChatTitles}
+							indexedArchiveIds={appState.indexedArchiveIds}
 						/>
 					</div>
 				</div>

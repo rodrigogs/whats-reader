@@ -345,15 +345,6 @@ export function createAppState() {
 		get indexedArchiveIds() {
 			return indexedArchiveIds;
 		},
-		// Compatibility projection for the legacy bookmark presentation only.
-		// Archive IDs remain the canonical indexed-state key.
-		get indexedChatTitles() {
-			return new Set(
-				chats
-					.filter((chat) => indexedArchiveIds.has(chat.archiveId))
-					.map((chat) => chat.title),
-			);
-		},
 
 		// Derived getters
 		get selectedChat() {
