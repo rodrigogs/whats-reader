@@ -20,6 +20,7 @@ import {
 } from '$lib/components';
 import AutoUpdateToast from '$lib/components/AutoUpdateToast.svelte';
 import BookmarksPanel from '$lib/components/BookmarksPanel.svelte';
+import GlobalSearchPanel from '$lib/components/GlobalSearchPanel.svelte';
 import Icon from '$lib/components/Icon.svelte';
 import IconButton from '$lib/components/IconButton.svelte';
 import ListItemButton from '$lib/components/ListItemButton.svelte';
@@ -33,6 +34,10 @@ import RestoreSessionModal from '$lib/components/RestoreSessionModal.svelte';
 import Toast from '$lib/components/Toast.svelte';
 import { findArchiveIndex } from '$lib/global-search/archive-navigation';
 import { createArchivePageState } from '$lib/global-search/archive-page-state.svelte';
+import { createGlobalSearchState } from '$lib/global-search/global-search-state.svelte';
+import { createWorkerTransport } from '$lib/global-search/query-orchestrator';
+import type { GlobalSearchResult } from '$lib/global-search/query-worker';
+import { idbGlobalSearchStorage } from '$lib/global-search/storage';
 import {
 	getElectronFilePath,
 	openElectronFile,
@@ -173,6 +178,53 @@ $effect(() => {
 // so language, perspective, auto-load preference, remembered flag and file
 // reference all live behind a single factory consumed here and by tests.
 const pageState = createArchivePageState();
+
+// ── Global search (GH-67 §5/§7/§8) ──────────────────────────────────────
+// Wired against the real approved persistence + worker/controller contracts.
+// The build-time gate stays GLOBAL_SEARCH_V1_ENABLED (false): the surface is
+// fail-closed until the feature ships, and the flag is never used as a
+// substitute for the wired contract.
+const globalSearchState = createGlobalSearchState({
+	storage: idbGlobalSearchStorage,
+	workerFactory: createWorkerTransport,
+});
+let showGlobalSearch = $state(false);
+
+// Display-only titles for remembered (persisted) archives. Identity always
+// resolves through archiveId; titles here are purely for presentation.
+let persistedTitles = $state<Map<string, string>>(new Map());
+
+$effect(() => {
+	if (!browser) return;
+	(async () => {
+		const persisted = await getPersistedChats();
+		persistedTitles = new Map(
+			persisted.map((chat) => [chat.id, chat.chatTitle]),
+		);
+	})();
+});
+
+// Keep the global search surface in sync with the app's live archives.
+$effect(() => {
+	globalSearchState.setLoadedChats(appState.chats);
+	globalSearchState.setRememberedArchives(
+		[...pageState.rememberedArchiveIds].map((archiveId) => ({
+			archiveId,
+			chatTitle: persistedTitles.get(archiveId) ?? '',
+		})),
+	);
+});
+
+// Unique senders across loaded chats, for the sender filter.
+const globalSearchSenders = $derived.by(() => {
+	const senders = new Set<string>();
+	for (const chat of appState.chats) {
+		for (const message of chat.messages) {
+			if (message.sender) senders.add(message.sender);
+		}
+	}
+	return [...senders];
+});
 
 let showRestoreSessionModal = $state(false);
 let showReselectFileModal = $state(false);
@@ -855,6 +907,25 @@ function handleToggleRemember(archiveId: string, enabled: boolean) {
 		forgetChat(archiveId);
 	}
 }
+
+function toggleGlobalSearch() {
+	showGlobalSearch = !showGlobalSearch;
+	if (showGlobalSearch) {
+		void globalSearchState.initialize();
+	}
+}
+
+function handleGlobalSearchNavigate(result: GlobalSearchResult) {
+	// Resolves the canonical (archiveId, ordinal, messageId) tuple through the
+	// same validated navigation path used by bookmarks; never approximates.
+	void handleNavigateToBookmark(result.messageId, result.archiveId);
+}
+
+function handleGlobalSearchReselectSource(_archiveId: string) {
+	// The panel retains query + filters and requests reselection; the source
+	// file must be re-imported by the user. This is a request, not a guess.
+	showToast(m.global_search_source_missing(), 'info');
+}
 </script>
 
 <div class="h-screen flex flex-col bg-gray-100 dark:bg-gray-950">
@@ -1120,6 +1191,18 @@ function handleToggleRemember(archiveId: string, enabled: boolean) {
 
 						<!-- Large screens: Individual buttons -->
 						<div class="hidden md:flex items-center gap-2">
+							<!-- Global search -->
+							<IconButton
+								theme="dark"
+								size="md"
+								active={showGlobalSearch}
+								onclick={toggleGlobalSearch}
+								title={m.global_search_toggle()}
+								aria-label={m.global_search_toggle()}
+							>
+								<Icon name="search" size="md" />
+							</IconButton>
+
 							<!-- Perspective selector -->
 							<div class="relative">
 								<IconButton
@@ -1209,6 +1292,20 @@ function handleToggleRemember(archiveId: string, enabled: boolean) {
 							<Icon name="menu" size="md" />
 						{/if}
 					</IconButton>
+
+					<!-- Global search (available without a selected chat) -->
+					<div class="ml-auto">
+						<IconButton
+							theme="dark"
+							size="md"
+							active={showGlobalSearch}
+							onclick={toggleGlobalSearch}
+							title={m.global_search_toggle()}
+							aria-label={m.global_search_toggle()}
+						>
+							<Icon name="search" size="md" />
+						</IconButton>
+					</div>
 				</div>
 			{/if}
 
@@ -1458,6 +1555,19 @@ function handleToggleRemember(archiveId: string, enabled: boolean) {
 					</div>
 				</div>
 			{/if}
+
+			<!-- Global search panel (slide from right; works with no chat selected) -->
+			<div
+				class="global-search-slot flex-shrink-0 flex {showGlobalSearch ? 'global-search-open' : 'global-search-closed'}"
+			>
+				<GlobalSearchPanel
+					searchState={globalSearchState}
+					senders={globalSearchSenders}
+					onNavigate={handleGlobalSearchNavigate}
+					onReselectSource={handleGlobalSearchReselectSource}
+					onClose={() => (showGlobalSearch = false)}
+				/>
+			</div>
 		</div>
 	</div>
 {/if}

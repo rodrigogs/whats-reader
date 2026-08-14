@@ -102,3 +102,27 @@ export async function revokeConsent(
 
 /** Key this module uses — exported for the idb adapter and for enumeration. */
 export { consentKey };
+
+/**
+ * Build the idb-backed consent store from the shared `GlobalSearchStorage`
+ * adapter. Keeps the consent record behind the same namespace prefix and lets
+ * the rune state (and its tests) inject in-memory storage.
+ */
+export function createStorageConsentStore(
+	storage: import('./storage').GlobalSearchStorage,
+): GlobalSearchConsentStore {
+	return {
+		async get(archiveId) {
+			return (
+				(await storage.get<GlobalSearchConsent>(consentKey(archiveId))) ??
+				undefined
+			);
+		},
+		async set(consent) {
+			await storage.set(consentKey(consent.archiveId), consent);
+		},
+		async del(archiveId) {
+			await storage.del(consentKey(archiveId));
+		},
+	};
+}
