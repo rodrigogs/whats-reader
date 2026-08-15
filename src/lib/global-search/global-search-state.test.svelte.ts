@@ -275,10 +275,9 @@ describe('GH-67 global search state — consent and removal distinctions', () =>
 		expect(report.complete).toBe(true);
 		expect(state.isKeepingLocally('a1')).toBe(false);
 
-		// Still remembered → requires-file, not ready.
-		expect(state.coverage).toEqual([
-			{ archiveId: 'a1', chatTitle: 'Family', status: 'requires-file' },
-		]);
+		// §5: removal drops the archive from coverage entirely — no longer
+		// loaded, remembered, ready, stale or failed.
+		expect(state.coverage).toEqual([]);
 	});
 
 	it('delete-all-local-indices removes only the global-search namespace and acknowledges', async () => {

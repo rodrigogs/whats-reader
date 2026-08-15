@@ -36,6 +36,12 @@ import {
 	startupCleanup,
 } from './index-lifecycle';
 import {
+	createNoopPersistedChatRemovalStore,
+	type LibraryRemovalReadback,
+	type PersistedChatRemovalStore,
+	removeFromLibraryCascade,
+} from './library-removal';
+import {
 	GLOBAL_SEARCH_KEY_PREFIX,
 	GLOBAL_SEARCH_V1_ENABLED,
 	type GlobalSearchManifest,
@@ -57,7 +63,6 @@ import {
 import {
 	type DeleteAllReadback,
 	deleteAllIndices,
-	type RemovalReadback,
 	removeArchiveIndex,
 } from './removal';
 import { splitDocuments } from './shard';
@@ -95,6 +100,13 @@ export type GlobalSearchStateDeps = {
 	estimateProvider?: StorageEstimateProvider;
 	/** Transport factory. Tests inject a loopback; production uses the worker. */
 	workerFactory?: () => GlobalSearchTransport;
+	/**
+	 * Persisted-chat metadata/file-handle adapter for the unified §5 removal
+	 * cascade. Absent → a no-op store (session-only archives: removal is a
+	 * persistence no-op but still clears in-session state). Production wires
+	 * `idbPersistedChatRemovalStore`.
+	 */
+	persistedLibraryStore?: PersistedChatRemovalStore;
 };
 
 export type RememberedArchiveEntry = {
@@ -111,6 +123,8 @@ export function createGlobalSearchState(deps: GlobalSearchStateDeps = {}) {
 		deps.estimateProvider ?? createBrowserStorageEstimateProvider();
 	const workerFactory = deps.workerFactory ?? createWorkerTransport;
 	const consentStore = createStorageConsentStore(storage);
+	const persistedStore =
+		deps.persistedLibraryStore ?? createNoopPersistedChatRemovalStore();
 
 	// ── Reactive inputs ────────────────────────────────────────────────────
 	let loadedChats = $state<ChatData[]>([]);
@@ -547,9 +561,27 @@ export function createGlobalSearchState(deps: GlobalSearchStateDeps = {}) {
 	// ── Removal ────────────────────────────────────────────────────────────
 	async function removeFromLibrary(
 		archiveId: string,
-	): Promise<RemovalReadback> {
-		const report = await removeArchiveIndex(storage, archiveId, gate);
-		await deleteConsent(consentStore, archiveId);
+	): Promise<LibraryRemovalReadback> {
+		// ONE unified §5 cascade: persisted metadata + file-handle reference +
+		// every global-search key (shards/manifest/commit/consent), each half
+		// verified by readback and fail-closed on any survivor.
+		const report = await removeFromLibraryCascade(
+			archiveId,
+			persistedStore,
+			storage,
+			gate,
+		);
+
+		// In-session cleanup (spec §5: coverage drops the archive entirely,
+		// even when it was remembered or loaded).
+		loadedChats = loadedChats.filter((chat) => chat.archiveId !== archiveId);
+		const remembered = new Set(rememberedArchiveIds);
+		remembered.delete(archiveId);
+		rememberedArchiveIds = remembered;
+		const titles = new Map(rememberedTitles);
+		titles.delete(archiveId);
+		rememberedTitles = titles;
+
 		const consent = new Map(consentByArchive);
 		consent.delete(archiveId);
 		consentByArchive = consent;
@@ -557,6 +589,18 @@ export function createGlobalSearchState(deps: GlobalSearchStateDeps = {}) {
 		const ready = new Map(readyManifests);
 		ready.delete(archiveId);
 		readyManifests = ready;
+
+		const stale = new Set(staleArchiveIds);
+		stale.delete(archiveId);
+		staleArchiveIds = stale;
+
+		const failed = new Set(failedArchiveIds);
+		failed.delete(archiveId);
+		failedArchiveIds = failed;
+
+		const indexing = new Set(indexingArchiveIds);
+		indexing.delete(archiveId);
+		indexingArchiveIds = indexing;
 
 		client?.removeArchive(archiveId);
 		return report;

@@ -40,6 +40,8 @@ let showFilters = $state(false);
 // Confirmation state for destructive actions.
 let confirmingRemoveArchiveId = $state<string | null>(null);
 let confirmingDeleteAll = $state(false);
+// §5: a failed remove-from-library readback must be visible, not swallowed.
+let removalError = $state(false);
 
 const statusAnnouncement = $derived.by(() => {
 	switch (searchState.status) {
@@ -173,9 +175,12 @@ function consentChoice(
 	void searchState.setConsentChoice(archiveId, choice);
 }
 
-function removeFromLibrary(archiveId: string): void {
-	void searchState.removeFromLibrary(archiveId);
+async function removeFromLibrary(archiveId: string): Promise<void> {
 	confirmingRemoveArchiveId = null;
+	// §5: await the cascade and never discard a `complete:false` readback —
+	// a survivor is a real failure and must be surfaced visibly.
+	const report = await searchState.removeFromLibrary(archiveId);
+	removalError = !report.complete;
 }
 
 function deleteAllIndices(): void {
@@ -593,6 +598,11 @@ onDestroy(() => {
 				{m.global_search_delete_all_acknowledged()}
 			</p>
 		{/if}
+		{#if removalError}
+			<p role="alert" class="text-xs text-red-600 dark:text-red-400 text-center mt-1">
+				{m.persistence_remove_failed()}
+			</p>
+		{/if}
 	</div>
 </div>
 
@@ -602,11 +612,11 @@ onDestroy(() => {
 		class="fixed inset-0 bg-black/50 z-40 flex items-center justify-center"
 		role="dialog"
 		aria-modal="true"
-		aria-label={m.global_search_remove_confirm()}
+		aria-label={m.global_search_remove_from_library()}
 	>
 		<div class="bg-white dark:bg-gray-800 rounded-lg p-4 max-w-sm w-full mx-4">
 			<p class="text-sm text-gray-800 dark:text-gray-200 mb-4">
-				{m.global_search_remove_confirm()}
+				{m.remove_from_library_confirm_body()}
 			</p>
 			<div class="flex justify-end gap-2">
 				<button

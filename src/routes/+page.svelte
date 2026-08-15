@@ -20,6 +20,7 @@ import {
 } from '$lib/components';
 import AutoUpdateToast from '$lib/components/AutoUpdateToast.svelte';
 import BookmarksPanel from '$lib/components/BookmarksPanel.svelte';
+import Button from '$lib/components/Button.svelte';
 import GlobalSearchPanel from '$lib/components/GlobalSearchPanel.svelte';
 import Icon from '$lib/components/Icon.svelte';
 import IconButton from '$lib/components/IconButton.svelte';
@@ -35,6 +36,7 @@ import Toast from '$lib/components/Toast.svelte';
 import { findArchiveIndex } from '$lib/global-search/archive-navigation';
 import { createArchivePageState } from '$lib/global-search/archive-page-state.svelte';
 import { createGlobalSearchState } from '$lib/global-search/global-search-state.svelte';
+import { idbPersistedChatRemovalStore } from '$lib/global-search/persisted-chat-removal-store';
 import { createWorkerTransport } from '$lib/global-search/query-orchestrator';
 import type { GlobalSearchResult } from '$lib/global-search/query-worker';
 import { idbGlobalSearchStorage } from '$lib/global-search/storage';
@@ -57,7 +59,6 @@ import {
 	getPersistedChats,
 	isElectronPathReference,
 	type PersistedChatMetadata,
-	removePersistedChat,
 	restoreChat,
 	savePersistedChat,
 	storeFileHandle,
@@ -187,6 +188,7 @@ const pageState = createArchivePageState();
 const globalSearchState = createGlobalSearchState({
 	storage: idbGlobalSearchStorage,
 	workerFactory: createWorkerTransport,
+	persistedLibraryStore: idbPersistedChatRemovalStore,
 });
 let showGlobalSearch = $state(false);
 
@@ -889,9 +891,21 @@ async function rememberChat(archiveId: string) {
 	}
 }
 
+// Removal confirmation state for the sidebar forget surface (§5: destructive
+// removal must never execute without an explicit confirmation).
+let confirmingRemoveArchiveId = $state<string | null>(null);
+
 async function forgetChat(archiveId: string) {
 	try {
-		await removePersistedChat(archiveId);
+		// ONE unified §5 cascade shared with the global-search panel: persisted
+		// metadata + file-handle reference + global-search index/consent, each
+		// half read back and fail-closed. If the readback reports a survivor the
+		// removal is surfaced honestly as a failure, never silently swallowed.
+		const report = await globalSearchState.removeFromLibrary(archiveId);
+		if (!report.complete) {
+			showToast(m.persistence_remove_failed(), 'error');
+			return;
+		}
 		pageState.removeRemembered(archiveId);
 		showToast(m.persistence_conversation_removed(), 'success');
 	} catch (e) {
@@ -904,7 +918,19 @@ function handleToggleRemember(archiveId: string, enabled: boolean) {
 	if (enabled) {
 		rememberChat(archiveId);
 	} else {
-		forgetChat(archiveId);
+		confirmingRemoveArchiveId = archiveId;
+	}
+}
+
+function cancelForgetChat() {
+	confirmingRemoveArchiveId = null;
+}
+
+function confirmForgetChat() {
+	const archiveId = confirmingRemoveArchiveId;
+	confirmingRemoveArchiveId = null;
+	if (archiveId !== null) {
+		void forgetChat(archiveId);
 	}
 }
 
@@ -1596,6 +1622,29 @@ onSkip={handleSkipReselect}
 onClose={handleSkipReselect}
 />
 {/if}
+
+<!-- Remove-from-library confirmation (§5) -->
+<Modal open={confirmingRemoveArchiveId !== null} onClose={cancelForgetChat}>
+	<ModalHeader
+		icon="trash"
+		title={m.global_search_remove_from_library()}
+		onClose={cancelForgetChat}
+		closeLabel={m.global_search_cancel()}
+	/>
+	<ModalContent>
+		<p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+			{m.remove_from_library_confirm_body()}
+		</p>
+	</ModalContent>
+	<div class="flex justify-end gap-2 p-4 sm:px-6 border-t border-gray-200 dark:border-gray-700">
+		<Button variant="secondary" onclick={cancelForgetChat}>
+			{m.global_search_cancel()}
+		</Button>
+		<Button variant="danger" onclick={confirmForgetChat}>
+			{m.global_search_confirm()}
+		</Button>
+	</div>
+</Modal>
 
 <!-- Toast Notification -->
 {#if toastMessage}

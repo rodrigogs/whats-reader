@@ -302,6 +302,7 @@
   "global_search_consent_session_only": "Search only this session",
   "global_search_remove_from_library": "Remove from library",
   "global_search_remove_confirm": "Remove this conversation's search index and consent?",
+  "remove_from_library_confirm_body": "Remove this conversation from your library? Its saved data, file reference and search index will be deleted. This cannot be undone.",
   "global_search_delete_all_title": "Delete all local indices",
   "global_search_delete_all_confirm": "Delete every local search index? This cannot be undone.",
   "global_search_delete_all_acknowledged": "All local search indices deleted.",
