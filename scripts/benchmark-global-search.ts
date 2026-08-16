@@ -1,27 +1,33 @@
 #!/usr/bin/env tsx
 /**
- * GH-67 §9 — REAL web benchmark runner (D2a slice).
+ * GH-67 §9 — REAL web/Electron benchmark runner (D2a + D2b slices).
  *
- * This is the one production benchmark runner for the **web** target. It:
+ * This is the one production benchmark runner for the **web** and
+ * **Electron** targets. It:
  *
  *  1. builds the app with `VITE_GLOBAL_SEARCH_HARNESS=1` (the harness build;
  *     normal/distributed builds never include the synthetic hook),
- *  2. serves ONLY the local build output on a dedicated explicit free loopback
- *     port (never 5173) with `--strictPort` (no foreign server reuse),
- *  3. drives a real Chromium via Playwright, executes the REAL global-search
- *     UI/worker path against the deterministic `gh67-v1` corpus through the
- *     `window.__gh67GlobalSearchHarness` bridge (real dedicated worker
- *     messaging, never an in-process loopback/mock),
+ *  2. for web, serves ONLY the local build output on a dedicated explicit
+ *     free loopback port (never 5173) with `--strictPort` (no foreign server
+ *     reuse); for Electron, launches the local Electron binary (Playwright
+ *     `_electron.launch`) which loads the same harness build through the
+ *     app's own `app://` protocol — the real app worker path,
+ *  3. drives the REAL global-search UI/worker path against the deterministic
+ *     `gh67-v1` corpus through the `window.__gh67GlobalSearchHarness` bridge
+ *     (real dedicated worker messaging, never an in-process loopback/mock),
  *  4. measures 1 warmup + 10 samples (first-page p95, total-query p95,
  *     indexing p95, cancellation observation, main-thread long-task max,
  *     memory via `measureUserAgentSpecificMemory` when available),
- *  5. verifies offline/local-only traffic and that a real Worker was used,
+ *  5. verifies offline/local-only traffic and that a real Worker was used;
+ *     for Electron it records the OS/Electron/Chromium versions from the
+ *     actual main process,
  *  6. writes a versioned JSON report OUTSIDE the versioned tree
  *     (`artifacts/gh67/…`) and evaluates every §10.11 gate; `--assert` exits
  *     non-zero unless every gate passes with a genuinely executed scenario.
  *
- * The Electron target is D2b's scope: `--target=electron` reports
- * `scenario.status: 'unavailable'` honestly and never pretends success.
+ * If the host cannot run Electron, the runner PROVES it (launch attempt log
+ * with exit codes) and reports `scenario.status: 'unavailable'` honestly —
+ * `--assert` fails closed, it never pretends success.
  */
 
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
@@ -30,17 +36,27 @@ import { once } from 'node:events';
 import { dirname, resolve } from 'node:path';
 import { createServer } from 'node:net';
 import { cpus, release, totalmem } from 'node:os';
-import { chromium, type Browser, type Page } from '@playwright/test';
+import { createRequire } from 'node:module';
+import {
+	_electron,
+	chromium,
+	type Browser,
+	type ElectronApplication,
+	type Page,
+} from '@playwright/test';
 import {
 	createExecutedGlobalSearchBenchmarkReport,
 	createUnavailableGlobalSearchBenchmarkReport,
 	evaluateGlobalSearchBenchmarkGates,
 	parseGlobalSearchBenchmarkArgs,
+	type GlobalSearchBenchmarkAttempt,
 	type GlobalSearchBenchmarkEnvironment,
 	type GlobalSearchBenchmarkMeasurements,
 	type GlobalSearchBenchmarkOptions,
 	type GlobalSearchBenchmarkSample,
 } from '../src/lib/global-search/benchmark-contract';
+
+const require = createRequire(import.meta.url);
 
 /** Deterministic query: matches exactly one message (ordinal 12345). */
 const BENCHMARK_QUERY = '#12345';
@@ -48,6 +64,19 @@ const WARMUP_SAMPLES = 1;
 const MEASURED_SAMPLES = 10;
 const LOW_END_CPU_RATE = 4;
 const LOW_END_HEAP_CAP_BYTES = 512 * 1024 * 1024;
+
+/** Electron serves the built app from the custom `app://` scheme. */
+const ELECTRON_LOCAL_PREFIX = 'app://';
+
+class ElectronLaunchError extends Error {
+	constructor(
+		message: string,
+		readonly attempt: GlobalSearchBenchmarkAttempt,
+	) {
+		super(message);
+		this.name = 'ElectronLaunchError';
+	}
+}
 
 type HarnessWindow = {
 	__gh67GlobalSearchHarness: {
@@ -550,6 +579,278 @@ function printGateSummary(
 	}
 }
 
+/**
+ * Resolve the Electron executable from the installed `electron` package
+ * (the module's default export is the binary path string).
+ */
+function resolveElectronExecutable(): string {
+	const resolved = require('electron') as unknown;
+	if (typeof resolved !== 'string' || resolved.length === 0) {
+		throw new ElectronLaunchError(
+			'electron module did not resolve to an executable path',
+			{
+				command: ['node', '-e', 'require("electron")'],
+				exitCode: null,
+				log: `resolved to ${JSON.stringify(resolved)}`,
+			},
+		);
+	}
+	return resolved;
+}
+
+/** Pull a numeric exit code out of a Playwright launch error, if present. */
+function extractExitCode(message: string): number | null {
+	const match = /exit code (\d+)/.exec(message) ?? /code (\d+)/.exec(message);
+	return match ? Number(match[1]) : null;
+}
+
+async function runElectronBenchmark(
+	options: GlobalSearchBenchmarkOptions,
+	environment: GlobalSearchBenchmarkEnvironment,
+): Promise<{ reportPath: string; assertPasses: boolean }> {
+	console.info('GH-67 benchmark: building harness app (VITE_GLOBAL_SEARCH_HARNESS=1)…');
+	buildHarnessApp();
+
+	const executablePath = resolveElectronExecutable();
+	const isLowEnd = options.profile === 'low-end';
+
+	let electronApp: ElectronApplication | undefined;
+	try {
+		console.info(`GH-67 benchmark: launching Electron (${executablePath})…`);
+		electronApp = await _electron.launch({
+			executablePath,
+			args: [
+				'.',
+				...(isLowEnd
+					? [
+							`--js-flags=--max-old-space-size=${LOW_END_HEAP_CAP_BYTES / (1024 * 1024)}`,
+						]
+					: []),
+			],
+			cwd: process.cwd(),
+			// NODE_ENV=production pins the app://localhost/ production path —
+			// the dev path would load http://localhost:5173, which the spec
+			// forbids outright.
+			env: {
+				...process.env,
+				VITE_GLOBAL_SEARCH_HARNESS: '1',
+				NODE_ENV: 'production',
+			},
+		});
+	} catch (error) {
+		// Honest launch-attempt evidence: the command, the real exit code and
+		// the captured log — never a guessed reason.
+		const message = error instanceof Error ? error.message : String(error);
+		const attempt: GlobalSearchBenchmarkAttempt = {
+			command: [executablePath, '.'],
+			exitCode: extractExitCode(message),
+			log: message,
+		};
+		console.error(
+			`GH-67 benchmark: electron launch failed (exit ${attempt.exitCode ?? 'n/a'}): ${message}`,
+		);
+		throw new ElectronLaunchError(message, attempt);
+	}
+
+	try {
+		// Record OS/Electron/Chromium versions from the ACTUAL main process.
+		const versions = await electronApp.evaluate(async () => ({
+			electron: process.versions.electron,
+			chrome: process.versions.chrome,
+			node: process.versions.node,
+		}));
+		environment.electronVersion = versions.electron;
+		environment.browserVersion = versions.chrome;
+		console.info(
+			`GH-67 benchmark: Electron ${versions.electron} / Chromium ${versions.chrome} / Node ${versions.node}`,
+		);
+
+		const page = await electronApp.firstWindow();
+
+		// Attach the request/worker listeners BEFORE the harness settles: the
+		// real worker is created eagerly at harness construction, so a listener
+		// attached after waitForHarness would miss it. Requests made before the
+		// listener attaches are still recovered below from the Performance
+		// resource entries, so the offline gate sees the full app:// load.
+		const requests: string[] = [];
+		const workerUrls: string[] = [];
+		page.on('request', (request) => requests.push(request.url()));
+		page.on('worker', (worker) => workerUrls.push(worker.url()));
+		// Workers created before the listener attached are still on the page.
+		for (const worker of page.workers()) {
+			workerUrls.push(worker.url());
+		}
+
+		await waitForHarness(page);
+
+		// Real DevTools CPU throttle (4x) for the low-end profile. Electron
+		// pages are Chromium under the hood, so CDP works — but if the session
+		// is unavailable we record cpuRate 1 honestly rather than faking it.
+		let appliedCpuRate = 1;
+		if (isLowEnd) {
+			try {
+				const cdp = await page.context().newCDPSession(page);
+				await cdp.send('Emulation.setCPUThrottlingRate', {
+					rate: LOW_END_CPU_RATE,
+				});
+				appliedCpuRate = LOW_END_CPU_RATE;
+			} catch (error) {
+				console.warn(
+					'GH-67 benchmark: CDP CPU throttle unavailable for Electron low-end:',
+					error instanceof Error ? error.message : String(error),
+				);
+			}
+		}
+
+		const seed = await page.evaluate(() => {
+			const bridge = (
+				window as unknown as {
+					__gh67GlobalSearchHarness?: HarnessWindow['__gh67GlobalSearchHarness'];
+				}
+			).__gh67GlobalSearchHarness;
+			return bridge?.seed ?? null;
+		});
+		if (seed !== 'gh67-v1') {
+			throw new Error(`GH-67 benchmark: unexpected harness seed ${seed}`);
+		}
+
+		const corpus = await page.evaluate((size) => {
+			const bridge = (
+				window as unknown as {
+					__gh67GlobalSearchHarness?: HarnessWindow['__gh67GlobalSearchHarness'];
+				}
+			).__gh67GlobalSearchHarness;
+			if (!bridge) throw new Error('GH-67 benchmark: harness bridge missing');
+			return bridge.loadCorpus(size);
+		}, options.size);
+		console.info('GH-67 benchmark: corpus loaded', corpus);
+
+		await page.evaluate(() => {
+			(
+				window as unknown as {
+					__gh67GlobalSearchHarness?: HarnessWindow['__gh67GlobalSearchHarness'];
+				}
+			).__gh67GlobalSearchHarness?.resetLongTasks();
+		});
+
+		await openSearchPanel(page);
+
+		console.info('GH-67 benchmark: warmup run…');
+		await runUISample(page, BENCHMARK_QUERY, false);
+
+		const samples: GlobalSearchBenchmarkSample[] = [];
+		for (let index = 0; index < MEASURED_SAMPLES; index += 1) {
+			const cancelled = index === MEASURED_SAMPLES - 1;
+			let run = await runUISample(page, BENCHMARK_QUERY, cancelled);
+
+			if (cancelled && !run.cancelled) {
+				console.info(
+					'GH-67 benchmark: cancel landed after completion — dropping prepared sources for a cold cancellation window',
+				);
+				await page.evaluate(() => {
+					const bridge = (
+						window as unknown as {
+							__gh67GlobalSearchHarness?: HarnessWindow['__gh67GlobalSearchHarness'];
+						}
+					).__gh67GlobalSearchHarness;
+					bridge?.dropPreparedSources?.();
+				});
+				run = await runUISample(page, BENCHMARK_QUERY, true);
+				if (!run.cancelled) {
+					throw new Error(
+						'GH-67 benchmark: cancellation sample completed before the cancel landed even on the cold path',
+					);
+				}
+			}
+
+			samples.push({
+				index,
+				indexingMs: run.indexingMs,
+				firstPageMs: run.firstPageMs,
+				totalMs: run.totalMs,
+				cancelled: run.cancelled,
+				cancellationMs: run.cancellationMs,
+			});
+			console.info(
+				`GH-67 benchmark: sample ${index}${cancelled ? ' (cancelled)' : ''} indexing=${run.indexingMs.toFixed(0)}ms firstPage=${run.firstPageMs.toFixed(0)}ms total=${run.totalMs.toFixed(0)}ms${run.cancelled ? ` cancel=${run.cancellationMs?.toFixed(0)}ms` : ''}`,
+			);
+		}
+
+		const [longTasks, memory, workerUsed] = await page.evaluate(async () => {
+			const bridge = (
+				window as unknown as {
+					__gh67GlobalSearchHarness?: HarnessWindow['__gh67GlobalSearchHarness'];
+				}
+			).__gh67GlobalSearchHarness;
+			if (!bridge) throw new Error('GH-67 benchmark: harness bridge missing');
+			const [lt, mem] = await Promise.all([
+				Promise.resolve(bridge.getLongTasks()),
+				bridge.getMemory(),
+			]);
+			return [lt, mem, bridge.workerUsed] as const;
+		});
+
+		const cancelledSample = samples.find((sample) => sample.cancelled);
+		// Recover requests made before the listener attached (the app:// boot
+		// load, the worker script, fonts, …) from the Performance resource
+		// entries, so the offline gate covers the FULL page load, not only the
+		// requests observed after firstWindow resolved.
+		const resourceUrls = await page.evaluate(() =>
+			performance
+				.getEntriesByType('resource')
+				.map((entry) => entry.name)
+				.filter((name) => !name.startsWith('data:')),
+		);
+		const allRequestUrls = [...new Set([...requests, ...resourceUrls])];
+		const measurements: GlobalSearchBenchmarkMeasurements = {
+			query: BENCHMARK_QUERY,
+			warmupSamples: WARMUP_SAMPLES,
+			samples,
+			longTaskMaxMs: longTasks.maxMs,
+			longTasksObserved: longTasks.observed,
+			longTaskObserverAvailable: longTasks.available,
+			longTaskUnavailableReason: longTasks.reason,
+			cancellation: {
+				observed: cancelledSample !== undefined,
+				ms: cancelledSample?.cancellationMs ?? -1,
+			},
+			memory: {
+				available: memory.available,
+				measureUasBytes: memory.measureUasBytes,
+				jsHeapUsedBytes: memory.jsHeapUsedBytes,
+				reason: memory.reason,
+			},
+			network: {
+				requests: allRequestUrls.length,
+				nonLocalRequests: allRequestUrls.filter(
+					(url) => !url.startsWith(ELECTRON_LOCAL_PREFIX),
+				).length,
+			},
+			worker: {
+				used: workerUsed,
+				url: workerUrls[0] ?? null,
+			},
+			throttle: {
+				cpuRate: appliedCpuRate,
+				heapCapBytes: isLowEnd ? LOW_END_HEAP_CAP_BYTES : null,
+			},
+		};
+
+		const report = createExecutedGlobalSearchBenchmarkReport(
+			options,
+			environment,
+			measurements,
+			process.argv,
+		);
+		const reportPath = writeReport(options.report, report);
+		const { assertPasses, gates } = evaluateGlobalSearchBenchmarkGates(report);
+		printGateSummary(gates);
+		return { reportPath, assertPasses };
+	} finally {
+		await electronApp?.close();
+	}
+}
+
 function writeReport(reportPath: string, report: unknown): string {
 	const absolute = resolve(reportPath);
 	mkdirSync(dirname(absolute), { recursive: true });
@@ -570,18 +871,34 @@ async function main(): Promise<void> {
 
 	const environment = await collectEnvironment();
 
-	// Electron is D2b scope: report honestly unavailable, never pretend success.
 	if (options.target === 'electron') {
-		const report = createUnavailableGlobalSearchBenchmarkReport(
-			options,
-			environment,
-			process.argv,
-		);
-		writeReport(options.report, report);
-		console.error(
-			'GH-67 benchmark: electron target is D2b scope — scenario unavailable, not executed.',
-		);
-		if (options.assert) process.exitCode = 1;
+		try {
+			const { reportPath, assertPasses } = await runElectronBenchmark(
+				options,
+				environment,
+			);
+			console.info(
+				`GH-67 benchmark: ${assertPasses ? 'ALL GATES PASS' : 'GATE FAILURES'} → ${reportPath}`,
+			);
+			if (options.assert && !assertPasses) process.exitCode = 1;
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			console.error(`GH-67 benchmark failed: ${message}`);
+			// Fail closed with honest attempt evidence (command + exit code +
+			// log) when the host could not run Electron — never guessed.
+			const report = createUnavailableGlobalSearchBenchmarkReport(
+				options,
+				environment,
+				process.argv,
+				error instanceof ElectronLaunchError ? error.attempt : undefined,
+			);
+			report.scenario = {
+				status: 'unavailable',
+				reason: message,
+			};
+			writeReport(options.report, report);
+			process.exitCode = 1;
+		}
 		return;
 	}
 

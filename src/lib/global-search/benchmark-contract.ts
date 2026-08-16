@@ -89,6 +89,12 @@ export type GlobalSearchBenchmarkUnavailableReport = {
 		status: 'unavailable';
 		reason: string;
 	};
+	/** Honest launch-attempt evidence (electron); absent when never attempted. */
+	attempt?: {
+		command: string[];
+		exitCode: number | null;
+		log: string;
+	};
 	samples: [];
 	p95: 'unavailable';
 	longTasks: 'unavailable';
@@ -218,10 +224,28 @@ export function parseGlobalSearchBenchmarkArgs(
 	return options;
 }
 
+export type GlobalSearchBenchmarkAttempt = {
+	command: string[];
+	exitCode: number | null;
+	log: string;
+};
+
+/**
+ * A real Electron version is a semver-triple string (e.g. "39.8.6") recorded
+ * from the actual run. Anything else — undefined, "fake-version", "unknown" —
+ * is not a recorded version and must never pass the electronVersion gate.
+ */
+export function isGlobalSearchBenchmarkRealElectronVersion(
+	version: string | undefined,
+): boolean {
+	return typeof version === 'string' && /^\d+\.\d+\.\d+/.test(version);
+}
+
 export function createUnavailableGlobalSearchBenchmarkReport(
 	options: GlobalSearchBenchmarkOptions,
 	environment: GlobalSearchBenchmarkEnvironment,
 	command = process.argv,
+	attempt?: GlobalSearchBenchmarkAttempt,
 ): GlobalSearchBenchmarkUnavailableReport {
 	return {
 		version: 1,
@@ -237,6 +261,7 @@ export function createUnavailableGlobalSearchBenchmarkReport(
 			reason:
 				'GH-67 production global-search scenario is not implemented in this harness card.',
 		},
+		...(attempt ? { attempt } : {}),
 		samples: [],
 		p95: 'unavailable',
 		longTasks: 'unavailable',
@@ -360,7 +385,12 @@ export function evaluateGlobalSearchBenchmarkGates(
 	}
 
 	const executed = report as GlobalSearchBenchmarkExecutedReport;
-	const targets = GLOBAL_SEARCH_BENCHMARK_TARGETS[executed.profile];
+	// §10.11: the Electron profile uses the SAME desktop warm targets, with a
+	// separate report — the low-end row does not apply to the Electron target.
+	const targets =
+		executed.target === 'electron'
+			? GLOBAL_SEARCH_BENCHMARK_TARGETS.desktop
+			: GLOBAL_SEARCH_BENCHMARK_TARGETS[executed.profile];
 	const gate = (
 		passed: boolean,
 		reason: string,
@@ -428,6 +458,20 @@ export function evaluateGlobalSearchBenchmarkGates(
 			? 'Report is internally consistent.'
 			: `Report validation failed: ${validationErrors.join('; ')}`,
 	);
+
+	// The electronVersion gate exists ONLY for the electron target: an
+	// executed electron report without a real recorded Electron version
+	// (unavailable or fake) must fail --assert. Web reports keep the exact
+	// D2a gate set, byte-compatible.
+	if (executed.target === 'electron') {
+		const recorded = executed.environment.electronVersion;
+		gates.electronVersion = gate(
+			isGlobalSearchBenchmarkRealElectronVersion(recorded),
+			isGlobalSearchBenchmarkRealElectronVersion(recorded)
+				? `Electron ${recorded} recorded from the actual run.`
+				: `Electron version missing or not a real recorded version (${recorded ?? 'none'}) — unavailable-or-fake never passes.`,
+		);
+	}
 
 	const assertPasses = Object.values(gates).every((entry) => entry.passed);
 	return { assertPasses, gates };
@@ -505,6 +549,18 @@ export function validateGlobalSearchBenchmarkReport(
 		} else if (sample.cancellationMs !== null) {
 			errors.push(
 				`sample ${index} is not cancelled but carries a cancellationMs — fabricated`,
+			);
+		}
+	}
+
+	if (executed.target === 'electron') {
+		if (
+			!isGlobalSearchBenchmarkRealElectronVersion(
+				executed.environment.electronVersion,
+			)
+		) {
+			errors.push(
+				'electron target requires a real recorded electronVersion (unavailable-or-fake is rejected)',
 			);
 		}
 	}

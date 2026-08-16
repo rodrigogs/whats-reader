@@ -34,6 +34,24 @@ describe('GH-67 benchmark runner contract', () => {
 		);
 	});
 
+	it('accepts --target=electron as a first-class target', () => {
+		expect(
+			parseGlobalSearchBenchmarkArgs([
+				'--target=electron',
+				'--profile=low-end',
+				'--size=100000',
+				'--assert',
+				'--report=artifacts/gh67/electron-linux-100k.json',
+			]),
+		).toMatchObject({
+			target: 'electron',
+			profile: 'low-end',
+			size: 100_000,
+			assert: true,
+			report: 'artifacts/gh67/electron-linux-100k.json',
+		});
+	});
+
 	it('marks unavailable app scenarios explicitly without inventing measurements', () => {
 		const options = parseGlobalSearchBenchmarkArgs([
 			'--target=web',
@@ -54,5 +72,32 @@ describe('GH-67 benchmark runner contract', () => {
 		expect(report.samples).toEqual([]);
 		expect(report.gates.scenarioExecuted.passed).toBe(false);
 		expect(report.memory).toBe('unavailable');
+	});
+
+	it('records honest attempt evidence on an electron launch failure', () => {
+		const options = parseGlobalSearchBenchmarkArgs(['--target=electron']);
+		const report = createUnavailableGlobalSearchBenchmarkReport(
+			options,
+			{
+				commit: 'abc123',
+				nodeVersion: 'v24.0.0',
+				platform: 'linux',
+				logicalCpus: 8,
+				totalRamBytes: 16 * 1024 ** 3,
+			},
+			['node', 'benchmark', '--target=electron', '--assert'],
+			{
+				command: ['electron', '--version'],
+				exitCode: 1,
+				log: 'Error: missing X server or $DISPLAY',
+			},
+		);
+		expect(report.scenario.status).toBe('unavailable');
+		expect(report.attempt).toEqual({
+			command: ['electron', '--version'],
+			exitCode: 1,
+			log: 'Error: missing X server or $DISPLAY',
+		});
+		expect(report.gates.scenarioExecuted.passed).toBe(false);
 	});
 });

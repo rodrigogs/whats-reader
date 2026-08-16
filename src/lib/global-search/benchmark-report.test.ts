@@ -368,3 +368,156 @@ describe('GH-67 benchmark report validation (fabrication guard)', () => {
 		);
 	});
 });
+
+describe('GH-67 benchmark electron target (spec §10.11)', () => {
+	const ELECTRON_ENVIRONMENT: GlobalSearchBenchmarkEnvironment = {
+		...ENVIRONMENT,
+		osRelease: '6.18.33.2-microsoft-standard-WSL2',
+		browserVersion: '142.0.7444.265',
+		electronVersion: '39.8.6',
+	};
+
+	function electronOptions(
+		overrides: Partial<GlobalSearchBenchmarkOptions> = {},
+	): GlobalSearchBenchmarkOptions {
+		return { ...OPTIONS, target: 'electron', ...overrides };
+	}
+
+	function electronReport(
+		overrides: Partial<GlobalSearchBenchmarkExecutedReport> = {},
+	): GlobalSearchBenchmarkExecutedReport {
+		return {
+			...createExecutedGlobalSearchBenchmarkReport(
+				electronOptions(),
+				ELECTRON_ENVIRONMENT,
+				{
+					query: 'gh67-v1-query',
+					warmupSamples: 1,
+					samples: realSamples(),
+					longTaskMaxMs: 30,
+					longTasksObserved: true,
+					longTaskObserverAvailable: true,
+					longTaskUnavailableReason: null,
+					cancellation: { observed: true, ms: 120 },
+					memory: {
+						available: false,
+						measureUasBytes: null,
+						jsHeapUsedBytes: null,
+						reason:
+							'measureUserAgentSpecificMemory API absent — marked unavailable',
+					},
+					network: { requests: 42, nonLocalRequests: 0 },
+					worker: { used: true, url: 'global-search-worker.ts' },
+					throttle: { cpuRate: 1, heapCapBytes: null },
+				},
+			),
+			...overrides,
+		};
+	}
+
+	it('passes every gate for an electron report with a real recorded electron version', () => {
+		const report = electronReport();
+		const result = evaluateGlobalSearchBenchmarkGates(report);
+		expect(result.assertPasses).toBe(true);
+		for (const [name, gate] of Object.entries(result.gates)) {
+			expect(gate.passed, `${name} gate must pass: ${gate.reason}`).toBe(true);
+		}
+	});
+
+	it('fails --assert when the electron version was not recorded (unavailable-or-fake)', () => {
+		const missing = electronReport({
+			environment: {
+				...ELECTRON_ENVIRONMENT,
+				electronVersion: undefined,
+				throttle: { cpuRate: 1, heapCapBytes: null },
+			},
+		});
+		const result = evaluateGlobalSearchBenchmarkGates(missing);
+		expect(result.assertPasses).toBe(false);
+		expect(result.gates.electronVersion.passed).toBe(false);
+
+		const fake = electronReport({
+			environment: {
+				...ELECTRON_ENVIRONMENT,
+				electronVersion: 'fake-version',
+				throttle: { cpuRate: 1, heapCapBytes: null },
+			},
+		});
+		expect(evaluateGlobalSearchBenchmarkGates(fake).assertPasses).toBe(false);
+	});
+
+	it('applies the desktop targets to the electron target regardless of profile (spec §10.11)', () => {
+		// §10.11: Electron uses the SAME desktop warm targets, with a separate
+		// report — the low-end row does NOT apply to the Electron profile.
+		const samples = realSamples().map((sample) => ({
+			...sample,
+			totalMs: 400 + sample.index * 10, // > desktop 300ms, < low-end 800ms
+		}));
+		const lowEndElectron = electronReport({
+			profile: 'low-end',
+			samples,
+			p95: { firstPageMs: 48, totalMs: 490, indexingMs: 190 },
+		});
+		const result = evaluateGlobalSearchBenchmarkGates(lowEndElectron);
+		expect(result.gates.totalP95.passed).toBe(false);
+		expect(result.assertPasses).toBe(false);
+
+		// The same timings pass on the web low-end profile (they meet the
+		// relaxed 800ms row) — proving the desktop row is electron-specific.
+		const lowEndWeb = executedReport({
+			profile: 'low-end',
+			samples,
+			p95: { firstPageMs: 48, totalMs: 490, indexingMs: 190 },
+		});
+		expect(evaluateGlobalSearchBenchmarkGates(lowEndWeb).assertPasses).toBe(
+			true,
+		);
+	});
+
+	it('rejects an executed electron report without a recorded electron version (fabrication guard)', () => {
+		const missing = electronReport({
+			environment: {
+				...ELECTRON_ENVIRONMENT,
+				electronVersion: undefined,
+				throttle: { cpuRate: 1, heapCapBytes: null },
+			},
+		});
+		const errors = validateGlobalSearchBenchmarkReport(missing);
+		expect(
+			errors.some((error) => error.toLowerCase().includes('electron')),
+		).toBe(true);
+
+		const fake = electronReport({
+			environment: {
+				...ELECTRON_ENVIRONMENT,
+				electronVersion: 'fake',
+				throttle: { cpuRate: 1, heapCapBytes: null },
+			},
+		});
+		expect(
+			validateGlobalSearchBenchmarkReport(fake).some((error) =>
+				error.toLowerCase().includes('electron'),
+			),
+		).toBe(true);
+	});
+
+	it('keeps the web gate set byte-compatible (no electron-only gates leak into web reports)', () => {
+		const webReport = executedReport();
+		const gates = Object.keys(
+			evaluateGlobalSearchBenchmarkGates(webReport).gates,
+		);
+		expect(gates).toEqual([
+			'scenarioExecuted',
+			'sampleCount',
+			'firstPageP95',
+			'totalP95',
+			'indexingP95',
+			'longTasks',
+			'cancellation',
+			'memory',
+			'offline',
+			'realWorker',
+			'reportValid',
+		]);
+	});
+});
