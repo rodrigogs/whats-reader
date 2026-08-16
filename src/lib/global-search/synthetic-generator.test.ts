@@ -44,9 +44,13 @@ describe('GH-67 synthetic global-search generator contract', () => {
 		expect(
 			new Set(firstPass.map((message) => message.chatTitle)).size,
 		).toBeLessThan(firstPass.length);
-		expect(
-			new Set(firstPass.map((message) => message.messageId)).size,
-		).toBeLessThan(firstPass.length);
+		// messageIds are globally unique per ordinal: the corpus must never
+		// reproduce intra-chat id collisions (Svelte each_key_duplicate crash).
+		// Cross-chat id collisions stay covered by archive-identity.test.ts
+		// with fabricated data — the benchmark corpus does not need them.
+		expect(new Set(firstPass.map((message) => message.messageId)).size).toBe(
+			firstPass.length,
+		);
 	});
 
 	it('supports 1M-size random access without requiring routine tests to materialize every message', () => {

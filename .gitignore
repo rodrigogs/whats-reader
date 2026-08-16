@@ -33,3 +33,6 @@ examples/chats/*.zip
 
 # Local GitHub Actions secrets
 .act/secrets
+
+# GH-67 benchmark reports (release artifacts, never committed)
+/artifacts

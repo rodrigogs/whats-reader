@@ -26,6 +26,27 @@ function createLoopback() {
 	};
 }
 
+/**
+ * Recording transport: captures every posted input AND settles through the
+ * real controller, so the wire shape is inspectable while results still flow.
+ */
+function createRecordingLoopback() {
+	const posted: GlobalSearchWorkerInput[] = [];
+	const inner = createLoopback();
+	return {
+		transport: {
+			post(input: GlobalSearchWorkerInput) {
+				posted.push(input);
+				inner.transport.post(input);
+			},
+			onMessage(callback: (output: GlobalSearchWorkerOutput) => void) {
+				inner.transport.onMessage(callback);
+			},
+		},
+		posted,
+	};
+}
+
 function doc(
 	archiveId: string,
 	ordinal: number,
@@ -37,16 +58,29 @@ function doc(
 	return { archiveId, ordinal, messageId, timestamp, sender, content };
 }
 
+/** Pre-serialized wire payload: JSON string + exact UTF-8 byte length. */
+function payload(documents: readonly GlobalSearchDocument[]): {
+	documentsJson: string;
+	serialisedBytes: number;
+} {
+	const documentsJson = JSON.stringify(documents);
+	return {
+		documentsJson,
+		serialisedBytes: new TextEncoder().encode(documentsJson).length,
+	};
+}
+
 function source(
 	archiveId: string,
 	chatTitle: string,
 	documents: GlobalSearchDocument[],
 ) {
+	const { documentsJson, serialisedBytes } = payload(documents);
 	return {
 		archiveId,
 		chatTitle,
 		async *shards() {
-			yield documents;
+			yield { documentsJson, serialisedBytes };
 		},
 	};
 }
@@ -76,6 +110,30 @@ const beta = [
 ];
 
 describe('GH-67 streaming query client (real worker controller)', () => {
+	it('posts every shard as a pre-serialized JSON string with exact byte length', async () => {
+		const { transport, posted } = createRecordingLoopback();
+		const client = createGlobalSearchQueryClient(transport);
+		await client.run(request('needle', {}, { a1: 'Alpha' }), [
+			source('a1', 'Alpha', alpha),
+		]);
+
+		const shardInputs = posted.filter(
+			(input): input is Extract<GlobalSearchWorkerInput, { type: 'shard' }> =>
+				input.type === 'shard',
+		);
+		expect(shardInputs.length).toBe(1);
+		const wire = shardInputs[0];
+		expect(wire).toMatchObject({ type: 'shard', archiveId: 'a1' });
+		// The wire carries the pre-serialized string, never a raw object
+		// array: structuredClone of one string is far cheaper than 2,000
+		// objects, and the exact byte length validates the 1 MiB cap O(1).
+		expect(wire.documentsJson).toBe(JSON.stringify(alpha));
+		expect(wire.serialisedBytes).toBe(
+			new TextEncoder().encode(wire.documentsJson).length,
+		);
+		expect(JSON.parse(wire.documentsJson)).toEqual(alpha);
+	});
+
 	it('streams shards from multiple archives and returns ranked results', async () => {
 		const { transport } = createLoopback();
 		const client = createGlobalSearchQueryClient(transport);

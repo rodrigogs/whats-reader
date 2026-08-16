@@ -36,6 +36,12 @@ import Toast from '$lib/components/Toast.svelte';
 import { findArchiveIndex } from '$lib/global-search/archive-navigation';
 import { createArchivePageState } from '$lib/global-search/archive-page-state.svelte';
 import { createGlobalSearchState } from '$lib/global-search/global-search-state.svelte';
+import {
+	createGlobalSearchHarnessTransport,
+	GLOBAL_SEARCH_HARNESS_ENABLED,
+	installGlobalSearchHarnessWindowApi,
+} from '$lib/global-search/harness-entry';
+import { GLOBAL_SEARCH_V1_ENABLED } from '$lib/global-search/manifest';
 import { idbPersistedChatRemovalStore } from '$lib/global-search/persisted-chat-removal-store';
 import { createWorkerTransport } from '$lib/global-search/query-orchestrator';
 import type { GlobalSearchResult } from '$lib/global-search/query-worker';
@@ -185,9 +191,23 @@ const pageState = createArchivePageState();
 // The build-time gate stays GLOBAL_SEARCH_V1_ENABLED (false): the surface is
 // fail-closed until the feature ships, and the flag is never used as a
 // substitute for the wired contract.
+//
+// The GH-67 §9 benchmark harness (VITE_GLOBAL_SEARCH_HARNESS=1) wraps the
+// REAL dedicated worker transport with a timing tap and installs the
+// `window.__gh67GlobalSearchHarness` bridge. Normal and distributed builds
+// never enable it (the constant is a build-time false).
+const globalSearchHarness = GLOBAL_SEARCH_HARNESS_ENABLED
+	? createGlobalSearchHarnessTransport()
+	: null;
 const globalSearchState = createGlobalSearchState({
+	// The harness build (VITE_GLOBAL_SEARCH_HARNESS=1) enables the real
+	// search path so the benchmark executes the actual UI/worker flow;
+	// GLOBAL_SEARCH_V1_ENABLED itself stays false (fail-closed) and normal
+	// and distributed builds keep the gate off.
+	gate: GLOBAL_SEARCH_V1_ENABLED || GLOBAL_SEARCH_HARNESS_ENABLED,
 	storage: idbGlobalSearchStorage,
-	workerFactory: createWorkerTransport,
+	workerFactory: () =>
+		globalSearchHarness?.transport ?? createWorkerTransport(),
 	persistedLibraryStore: idbPersistedChatRemovalStore,
 });
 let showGlobalSearch = $state(false);
@@ -215,6 +235,21 @@ $effect(() => {
 			chatTitle: persistedTitles.get(archiveId) ?? '',
 		})),
 	);
+});
+
+// GH-67 §9 benchmark harness bridge: installed only in harness builds
+// (VITE_GLOBAL_SEARCH_HARNESS=1). It injects the deterministic synthetic
+// corpus through the real app state and taps the real worker transport.
+$effect(() => {
+	if (!browser || !GLOBAL_SEARCH_HARNESS_ENABLED || !globalSearchHarness)
+		return;
+	installGlobalSearchHarnessWindowApi({
+		state: globalSearchState,
+		harness: globalSearchHarness,
+		addChat: (chat) => appState.addChat(chat),
+		removeChatAt: (index) => appState.removeChat(index),
+		getChatCount: () => appState.chats.length,
+	});
 });
 
 // Unique senders across loaded chats, for the sender filter.

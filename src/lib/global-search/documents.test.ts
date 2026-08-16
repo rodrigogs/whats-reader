@@ -114,7 +114,7 @@ describe('GH-67 session documents are built from canonical fields only', () => {
 
 describe('GH-67 literal snippet with range highlight', () => {
 	it('anchors the snippet on the first match and reports the highlight range', () => {
-		const content = 'a'.repeat(30) + 'NEEDLE' + 'b'.repeat(30);
+		const content = `${'a'.repeat(30)}NEEDLE${'b'.repeat(30)}`;
 		const snippet = buildHighlightSnippet(content, 'needle', { maxLength: 20 });
 		expect(snippet.matched).toBe(true);
 		expect(snippet.text).toContain('NEEDLE');
@@ -126,7 +126,7 @@ describe('GH-67 literal snippet with range highlight', () => {
 	});
 
 	it('flags truncation on both sides of a centered match', () => {
-		const content = 'x'.repeat(100) + 'TARGET' + 'y'.repeat(100);
+		const content = `${'x'.repeat(100)}TARGET${'y'.repeat(100)}`;
 		const snippet = buildHighlightSnippet(content, 'target', { maxLength: 12 });
 		expect(snippet.matched).toBe(true);
 		expect(snippet.ellipsisStart).toBe(true);

@@ -20,7 +20,6 @@ import type {
 	GlobalSearchWorkerInput,
 	GlobalSearchWorkerOutput,
 } from '../workers/global-search-worker';
-import type { GlobalSearchDocument } from './manifest';
 import type {
 	GlobalSearchQueryProgress,
 	GlobalSearchQueryRequest,
@@ -30,13 +29,30 @@ import type {
 export type GlobalSearchTransport = {
 	post(input: GlobalSearchWorkerInput): void;
 	onMessage(handler: (output: GlobalSearchWorkerOutput) => void): void;
+	/**
+	 * Present only on the real dedicated-worker transport. The benchmark
+	 * harness uses it to prove a real Worker was used (a loopback/mock
+	 * transport never carries the marker, so the `realWorker` gate fails).
+	 */
+	readonly kind?: 'worker';
+};
+
+/**
+ * A shard as it crosses the worker boundary: ONE pre-serialized JSON string
+ * plus its exact UTF-8 byte length. Posting a string is far cheaper than
+ * structured-cloning 2,000 small objects, and the worker validates the 1 MiB
+ * cap on the declared length in O(1) — it never re-stringifies the shard.
+ */
+export type GlobalSearchShardPayload = {
+	documentsJson: string;
+	serialisedBytes: number;
 };
 
 export type GlobalSearchSource = {
 	archiveId: string;
 	chatTitle: string;
-	/** Yields shards (arrays of ≤2,000 docs / ≤1 MiB) one at a time. */
-	shards(): AsyncIterable<readonly GlobalSearchDocument[]>;
+	/** Yields pre-serialized shards (≤2,000 docs / ≤1 MiB) one at a time. */
+	shards(): AsyncIterable<GlobalSearchShardPayload>;
 };
 
 export type GlobalSearchRunProgress = (
@@ -148,21 +164,27 @@ export function createGlobalSearchQueryClient(
 ): GlobalSearchQueryClient {
 	const queue = createMessageQueue(transport);
 	let cancelled = false;
+	// A cancel() call is recorded even when it lands before the request has
+	// posted `start` (lazy corpus prep can suspend submitQuery before run);
+	// the matching run honors it instead of silently proceeding.
+	let pendingCancelRequestId: string | null = null;
 
 	return {
 		async run(request, sources, onProgress) {
-			cancelled = false;
+			cancelled = pendingCancelRequestId === request.requestId;
+			pendingCancelRequestId = null;
 			transport.post({ type: 'start', request });
 
 			feed: for (const source of sources) {
-				for await (const documents of source.shards()) {
+				for await (const shard of source.shards()) {
 					if (cancelled) break feed;
 
 					transport.post({
 						type: 'shard',
 						requestId: request.requestId,
 						archiveId: source.archiveId,
-						documents: documents as GlobalSearchDocument[],
+						documentsJson: shard.documentsJson,
+						serialisedBytes: shard.serialisedBytes,
 					});
 
 					const outcome = await queue.next(
@@ -196,11 +218,20 @@ export function createGlobalSearchQueryClient(
 			if (terminal.type !== 'complete') {
 				return cancelledQueryResult(request);
 			}
+			// A client-side cancel that arrived before the worker ever saw
+			// `start` is dropped by the controller (no running request), so
+			// the terminal may still be a normal `complete`; the client's own
+			// cancel flag must win in that window (lazy shard prep means
+			// `start` can be posted after the caller already cancelled).
+			if (cancelled) {
+				return cancelledQueryResult(request);
+			}
 			return terminal.result;
 		},
 
 		cancel(requestId: string) {
 			cancelled = true;
+			pendingCancelRequestId = requestId;
 			transport.post({ type: 'cancel', requestId });
 		},
 
@@ -221,6 +252,7 @@ export function createWorkerTransport(): GlobalSearchTransport {
 		{ type: 'module' },
 	);
 	return {
+		kind: 'worker',
 		post(input) {
 			worker.postMessage(input);
 		},

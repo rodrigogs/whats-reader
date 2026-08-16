@@ -86,7 +86,7 @@ export function getGlobalSearchSyntheticMessage(
 		archiveId: `${GLOBAL_SEARCH_SYNTHETIC_SEED}-archive-${chatIndex.toString().padStart(2, '0')}`,
 		chatTitle: CHAT_TITLES[chatIndex],
 		ordinal,
-		messageId: `${GLOBAL_SEARCH_SYNTHETIC_SEED}-message-id-${ordinal % 32}`,
+		messageId: `${GLOBAL_SEARCH_SYNTHETIC_SEED}-message-id-${ordinal}`,
 		timestamp:
 			ordinal % 17 === 0 ? null : Date.UTC(2020, 0, 1) + ordinal * 60_000,
 		sender: SENDERS[ordinal % SENDERS.length],

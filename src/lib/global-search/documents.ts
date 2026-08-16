@@ -21,14 +21,47 @@ import type { GlobalSearchDocument } from './manifest';
 const DEFAULT_SNIPPET_LENGTH = 160;
 
 export function buildSessionDocuments(chat: ChatData): GlobalSearchDocument[] {
-	return chat.messages.map((message: ChatMessage, ordinal: number) => ({
-		archiveId: chat.archiveId,
-		ordinal,
+	return buildSessionDocumentsFromMessages(chat.archiveId, chat.messages, 0);
+}
+
+/**
+ * Build documents for a slice of a chat's messages, preserving the absolute
+ * ordinals of the full chat (`ordinalOffset` is the position of the first
+ * message in the slice). Identical output to `buildSessionDocuments` for the
+ * same messages; the async shard generator uses it so it can build one
+ * bounded slice at a time without ever mapping a whole large chat in one
+ * synchronous step.
+ */
+export function buildSessionDocumentsFromMessages(
+	archiveId: string,
+	messages: readonly ChatMessage[],
+	ordinalOffset: number,
+): GlobalSearchDocument[] {
+	return messages.map((message, index) => ({
+		archiveId,
+		ordinal: ordinalOffset + index,
 		messageId: message.id,
 		timestamp: message.timestamp ? message.timestamp.getTime() : null,
 		sender: message.sender,
 		content: message.content,
 	}));
+}
+
+/**
+ * UTF-8 byte length of the searchable fields of raw chat messages (`sender`
+ * NUL `content`), matching `searchableUtf8Bytes` over the same messages
+ * converted to documents. Used to compute the query envelope without a second
+ * full document-build pass on the submit path.
+ */
+export function searchableUtf8BytesOfMessages(
+	messages: readonly ChatMessage[],
+): number {
+	let total = 0;
+	const encoder = new TextEncoder();
+	for (const message of messages) {
+		total += encoder.encode(`${message.sender}\u0000${message.content}`).length;
+	}
+	return total;
 }
 
 /**

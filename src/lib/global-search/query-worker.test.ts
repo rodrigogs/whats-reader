@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { GlobalSearchDocument } from './manifest';
 import {
 	createGlobalSearchQueryRunner,
@@ -9,7 +9,30 @@ import {
 	GLOBAL_SEARCH_STREAMING_MESSAGE_THRESHOLD,
 	type GlobalSearchQueryRequest,
 } from './query-worker';
+import * as shardModule from './shard';
 import { SHARD_MAX_BYTES, SHARD_MAX_DOCUMENTS } from './shard';
+
+/** Pre-serialized wire payload: JSON string + exact UTF-8 byte length. */
+function payload(documents: readonly GlobalSearchDocument[]): {
+	documentsJson: string;
+	serialisedBytes: number;
+} {
+	const documentsJson = JSON.stringify(documents);
+	return {
+		documentsJson,
+		serialisedBytes: new TextEncoder().encode(documentsJson).length,
+	};
+}
+
+/** Controller-level shard args from a plain document array. */
+function shardArgs(
+	requestId: string,
+	archiveId: string,
+	documents: readonly GlobalSearchDocument[],
+): [string, string, string, number] {
+	const { documentsJson, serialisedBytes } = payload(documents);
+	return [requestId, archiveId, documentsJson, serialisedBytes];
+}
 
 function document(
 	archiveId: string,
@@ -53,6 +76,100 @@ function needleShard(
 		document(archiveId, startOrdinal + index, { content: 'needle' }),
 	);
 }
+
+describe('GH-67 — pre-serialized shard payloads (lever 2 wire protocol)', () => {
+	it('controller accepts a pre-serialized shard payload and scans it', async () => {
+		const { createGlobalSearchWorkerController } = await import(
+			'../workers/global-search-worker'
+		);
+		const progress: number[] = [];
+		const controller = createGlobalSearchWorkerController((message) => {
+			if (message.type === 'progress') {
+				progress.push(message.progress.scannedDocuments);
+			}
+		});
+		controller.start(request({ requestId: 'r1' }));
+		const { documentsJson, serialisedBytes } = payload(needleShard('a1', 3));
+		const outcome = await controller.consumeShard(
+			'r1',
+			'a1',
+			documentsJson,
+			serialisedBytes,
+		);
+		expect(outcome).toBe('accepted');
+		expect(progress.at(-1)).toBe(3);
+	});
+
+	it('controller rejects a pre-serialized shard whose declared byte length exceeds 1 MiB before parsing (O(1))', async () => {
+		const { createGlobalSearchWorkerController } = await import(
+			'../workers/global-search-worker'
+		);
+		const posts: string[] = [];
+		const controller = createGlobalSearchWorkerController((message) => {
+			posts.push(message.type);
+		});
+		controller.start(request({ requestId: 'r1' }));
+		// Tiny payload but a declared size over the cap: must be rejected on
+		// the declared byte length alone, before any parse.
+		const outcome = await controller.consumeShard(
+			'r1',
+			'a1',
+			'[]',
+			SHARD_MAX_BYTES + 1,
+		);
+		expect(outcome).toBe('rejected');
+		expect(posts).toContain('shard-consumed');
+	});
+
+	it('controller rejects a pre-serialized shard whose parsed document count exceeds 2,000', async () => {
+		const { createGlobalSearchWorkerController } = await import(
+			'../workers/global-search-worker'
+		);
+		const controller = createGlobalSearchWorkerController(() => {});
+		controller.start(request({ requestId: 'r1' }));
+		const { documentsJson, serialisedBytes } = payload(
+			needleShard('a1', SHARD_MAX_DOCUMENTS + 1),
+		);
+		const outcome = await controller.consumeShard(
+			'r1',
+			'a1',
+			documentsJson,
+			serialisedBytes,
+		);
+		expect(outcome).toBe('rejected');
+	});
+
+	it('controller rejects malformed pre-serialized JSON fail-closed', async () => {
+		const { createGlobalSearchWorkerController } = await import(
+			'../workers/global-search-worker'
+		);
+		const controller = createGlobalSearchWorkerController(() => {});
+		controller.start(request({ requestId: 'r1' }));
+		const outcome = await controller.consumeShard('r1', 'a1', '{not json', 10);
+		expect(outcome).toBe('rejected');
+	});
+
+	it('runner skips the redundant re-serialization when the byte length is declared', async () => {
+		const spy = vi.spyOn(shardModule, 'serializedShardBytes');
+		const runner = createGlobalSearchQueryRunner(request());
+		const docs = needleShard('a1', 100);
+		const { serialisedBytes } = payload(docs);
+		const outcome = await runner.consumeShard('a1', docs, {
+			declaredSerialisedBytes: serialisedBytes,
+		});
+		expect(outcome).toBe('accepted');
+		expect(spy).not.toHaveBeenCalled();
+		spy.mockRestore();
+	});
+
+	it('runner still re-serializes for byte validation when no declared length is given', async () => {
+		const spy = vi.spyOn(shardModule, 'serializedShardBytes');
+		const runner = createGlobalSearchQueryRunner(request());
+		await runner.consumeShard('a1', needleShard('a1', 10));
+		expect(spy).toHaveBeenCalled();
+		spy.mockRestore();
+	});
+});
 
 describe('GH-67 global streaming query contract', () => {
 	it('matches literal case-insensitive content and sender without accent folding', async () => {
@@ -203,9 +320,11 @@ describe('GH-67 global streaming query contract', () => {
 			if (message.type === 'progress') progress.push(message.progress);
 		});
 		controller.start(request({ query: 'n', corpusMessageCount: 100_001 }));
-		await controller.consumeShard('request-1', 'a1', [
-			document('a1', 0, { content: 'needle' }),
-		]);
+		await controller.consumeShard(
+			...shardArgs('request-1', 'a1', [
+				document('a1', 0, { content: 'needle' }),
+			]),
+		);
 		expect(progress).toEqual([
 			{ degraded: true, streaming: false, scannedDocuments: 1 },
 		]);
@@ -221,12 +340,12 @@ describe('GH-67 global streaming query contract', () => {
 		});
 		controller.start(request({ requestId: 'old' }));
 		controller.start(request({ requestId: 'new' }));
-		await controller.consumeShard('old', 'a1', [
-			document('a1', 0, { content: 'needle' }),
-		]);
-		await controller.consumeShard('new', 'a1', [
-			document('a1', 0, { content: 'needle' }),
-		]);
+		await controller.consumeShard(
+			...shardArgs('old', 'a1', [document('a1', 0, { content: 'needle' })]),
+		);
+		await controller.consumeShard(
+			...shardArgs('new', 'a1', [document('a1', 0, { content: 'needle' })]),
+		);
 		controller.complete('old');
 		controller.complete('new');
 		expect(published).toEqual(['new']);
@@ -238,14 +357,14 @@ describe('GH-67 global streaming query contract', () => {
 		);
 		const controller = createGlobalSearchWorkerController(() => {});
 		controller.start(request({ requestId: 'r1' }));
-		await controller.consumeShard('r1', 'a1', [
-			document('a1', 0, { content: 'needle' }),
-		]);
+		await controller.consumeShard(
+			...shardArgs('r1', 'a1', [document('a1', 0, { content: 'needle' })]),
+		);
 		controller.removeArchive('a1');
 		controller.start(request({ requestId: 'r2' }));
-		const outcome = await controller.consumeShard('r2', 'a1', [
-			document('a1', 1, { content: 'needle' }),
-		]);
+		const outcome = await controller.consumeShard(
+			...shardArgs('r2', 'a1', [document('a1', 1, { content: 'needle' })]),
+		);
 		expect(outcome).toBe('ignored');
 	});
 
@@ -263,9 +382,7 @@ describe('GH-67 global streaming query contract', () => {
 		// that external MessageEvents can interleave.
 		setTimeout(() => controller.cancel('r1'), 0);
 		const outcome = await controller.consumeShard(
-			'r1',
-			'a1',
-			needleShard('a1', 2_000),
+			...shardArgs('r1', 'a1', needleShard('a1', 2_000)),
 		);
 		expect(outcome).toBe('cancelled');
 		expect(posts).toContain('cancelled');
@@ -340,18 +457,18 @@ describe('GH-67 global streaming query contract', () => {
 		controller.start(request({ requestId: 'r1' }));
 		expect(
 			await controller.consumeShard(
-				'r1',
-				'a1',
-				needleShard('a1', SHARD_MAX_DOCUMENTS + 1),
+				...shardArgs('r1', 'a1', needleShard('a1', SHARD_MAX_DOCUMENTS + 1)),
 			),
 		).toBe('rejected');
 		// First shard is within budget but suspends at the checkpoint, keeping
 		// the controller's in-flight guard active while the second is sent.
-		const first = controller.consumeShard('r1', 'a1', needleShard('a1', 2_000));
+		const first = controller.consumeShard(
+			...shardArgs('r1', 'a1', needleShard('a1', 2_000)),
+		);
 		expect(
-			await controller.consumeShard('r1', 'a2', [
-				document('a2', 0, { content: 'needle' }),
-			]),
+			await controller.consumeShard(
+				...shardArgs('r1', 'a2', [document('a2', 0, { content: 'needle' })]),
+			),
 		).toBe('rejected');
 		await first;
 		expect(outcomes.filter((outcome) => outcome === 'rejected').length).toBe(2);

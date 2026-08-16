@@ -1,5 +1,17 @@
 import type { GlobalSearchDocument } from './manifest';
-import { SHARD_MAX_BYTES, SHARD_MAX_DOCUMENTS } from './shard';
+import {
+	SHARD_MAX_BYTES,
+	SHARD_MAX_DOCUMENTS,
+	serializedShardBytes,
+	yieldToMacrotask,
+} from './shard';
+
+/**
+ * Real macrotask yield so external MessageEvents (cancel/remove-archive) can
+ * interleave during a long shard scan. Shared with the main-thread async
+ * shard generator (see shard.ts).
+ */
+export const yieldToEventLoop = yieldToMacrotask;
 
 export const GLOBAL_SEARCH_PAGE_SIZE = 50;
 export const GLOBAL_SEARCH_MAX_NAVIGABLE_RESULTS = 1_000;
@@ -73,30 +85,20 @@ type QueryRunnerOptions = {
 };
 
 /**
- * Real macrotask yield so external MessageEvents (cancel/remove-archive) can
- * interleave during a long shard scan. MessageChannel is a macrotask in Node,
- * workers and browsers; setTimeout(0) is the universal fallback.
+ * Pre-serialized wire payload for a shard whose documents are only available
+ * as a plain array (e.g. a persisted shard read back from storage). The query
+ * path posts `documentsJson` + `serialisedBytes` instead of the object array,
+ * so one string crosses the structuredClone boundary and the worker validates
+ * the 1 MiB cap on the declared byte length in O(1) — never re-stringifying.
  */
-export function yieldToEventLoop(): Promise<void> {
-	if (typeof MessageChannel !== 'undefined') {
-		return new Promise<void>((resolve) => {
-			const channel = new MessageChannel();
-			channel.port1.onmessage = () => {
-				channel.port1.close();
-				channel.port2.close();
-				resolve();
-			};
-			channel.port2.postMessage(null);
-		});
-	}
-	return new Promise<void>((resolve) => setTimeout(resolve, 0));
-}
-
-/** UTF-8 byte length of the shard's JSON serialization (the 1 MiB budget). */
-export function serializedShardBytes(
+export function createSerializedShardPayload(
 	documents: readonly GlobalSearchDocument[],
-): number {
-	return new TextEncoder().encode(JSON.stringify(documents)).length;
+): { documentsJson: string; serialisedBytes: number } {
+	const documentsJson = JSON.stringify(documents);
+	return {
+		documentsJson,
+		serialisedBytes: new TextEncoder().encode(documentsJson).length,
+	};
 }
 
 function includesLiteral(value: string, query: string): boolean {
@@ -201,13 +203,21 @@ export function createGlobalSearchQueryRunner(
 	async function consumeShard(
 		archiveId: string,
 		documents: readonly GlobalSearchDocument[],
+		shardOptions: { declaredSerialisedBytes?: number } = {},
 	): Promise<GlobalSearchShardOutcome> {
 		if (completed || cancelled || removedArchiveIds.has(archiveId))
 			return 'ignored';
 		if (overLimit) return 'rejected';
 		if (shardInFlight) return 'rejected';
 		if (documents.length > SHARD_MAX_DOCUMENTS) return 'rejected';
-		if (serializedShardBytes(documents) > SHARD_MAX_BYTES) return 'rejected';
+		// The controller already validated the declared byte length O(1)
+		// against the 1 MiB cap on the pre-serialized wire payload, so the
+		// runner must NOT re-stringify here (that was the per-shard
+		// redundancy that dominated the 100k query). Direct callers without
+		// a declared length still get the fail-closed re-serialization.
+		const serialisedBytes =
+			shardOptions.declaredSerialisedBytes ?? serializedShardBytes(documents);
+		if (serialisedBytes > SHARD_MAX_BYTES) return 'rejected';
 		shardInFlight = true;
 		residentDocumentCount = documents.length;
 		try {

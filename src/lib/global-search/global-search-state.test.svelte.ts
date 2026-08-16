@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { ChatMessage } from '../parser/chat-parser';
 import { type ChatData, createAppState } from '../state.svelte';
 import type {
@@ -6,6 +6,8 @@ import type {
 	GlobalSearchWorkerOutput,
 } from '../workers/global-search-worker';
 import { createGlobalSearchWorkerController } from '../workers/global-search-worker';
+import * as documentsModule from './documents';
+import { buildSessionDocuments, searchableUtf8Bytes } from './documents';
 import { createGlobalSearchState } from './global-search-state.svelte';
 import type { GlobalSearchTransport } from './query-orchestrator';
 import { createInMemoryGlobalSearchStorage } from './storage';
@@ -23,6 +25,50 @@ function loopback(): () => GlobalSearchTransport {
 			handler = callback;
 		},
 	});
+}
+
+/**
+ * Transport that records every posted input and delivers a terminal
+ * `complete` after the client posts its own `complete` (so submitQuery
+ * settles without a real worker). Used to prove the objects crossing the
+ * post boundary are structured-cloneable — the real dedicated-worker
+ * transport runs `worker.postMessage(input)`, which uses the same
+ * serialization and rejects Svelte 5 `$state` deep proxies.
+ */
+function recordingTransport(): {
+	factory: () => GlobalSearchTransport;
+	posted: GlobalSearchWorkerInput[];
+} {
+	const posted: GlobalSearchWorkerInput[] = [];
+	let handler: ((output: GlobalSearchWorkerOutput) => void) | null = null;
+	return {
+		factory: () => ({
+			post(input: GlobalSearchWorkerInput) {
+				posted.push(input);
+				if (input.type === 'complete') {
+					setTimeout(() => {
+						handler?.({
+							type: 'complete',
+							result: {
+								requestId: input.requestId,
+								queryEmpty: false,
+								cancelled: false,
+								overLimit: false,
+								totalMatches: 0,
+								results: [],
+								pages: 0,
+								truncated: false,
+							},
+						});
+					}, 0);
+				}
+			},
+			onMessage(callback) {
+				handler = callback;
+			},
+		}),
+		posted,
+	};
 }
 
 function msg(
@@ -332,5 +378,304 @@ describe('GH-67 global search state — local-search shortcut isolation', () => 
 		expect(app.searchQuery).toBe('local-needle');
 		expect(app.searchResultIds).toEqual([]);
 		expect(state.query).toBe('global-needle');
+	});
+});
+
+describe('GH-67 global search state — structured-clone post boundary', () => {
+	it('posts a start request whose filters are plain data, not the live $state proxy', async () => {
+		const { factory, posted } = recordingTransport();
+		const state = createGlobalSearchState({
+			gate: true,
+			storage: createInMemoryGlobalSearchStorage(),
+			workerFactory: factory,
+			estimateProvider: async () => ({
+				usage: 0,
+				quota: Number.MAX_SAFE_INTEGER,
+			}),
+		});
+		await state.initialize();
+		state.setFilters({ archiveIds: ['a1'], senders: ['Ana'] });
+
+		await state.submitQuery('hello');
+		const start = posted.find((input) => input.type === 'start');
+		expect(start).toBeDefined();
+
+		// The real dedicated-worker transport runs worker.postMessage(input),
+		// which serializes the payload with the structured-clone algorithm
+		// and rejects Svelte 5 $state deep proxies with DataCloneError (seen
+		// in the harness build). The request must therefore carry a plain
+		// snapshot of filters, never the live reactive $state object.
+		expect(() => structuredClone(start)).not.toThrow();
+		if (start?.type === 'start') {
+			expect(start.request.filters).not.toBe(state.filters);
+			expect(() => structuredClone(start.request.filters)).not.toThrow();
+			expect(start.request.filters).toEqual({
+				archiveIds: ['a1'],
+				senders: ['Ana'],
+			});
+		}
+		expect(state.status).toBe('complete');
+	});
+});
+
+describe('GH-67 global search state — interleaved corpus prep', () => {
+	/**
+	 * Loopback transport that ALSO records every posted input, so a query
+	 * with loaded chats can settle (shard-consumed acks) while the posted
+	 * request envelope stays inspectable.
+	 */
+	function recordingLoopback(): {
+		factory: () => GlobalSearchTransport;
+		posted: GlobalSearchWorkerInput[];
+	} {
+		const posted: GlobalSearchWorkerInput[] = [];
+		const inner = loopback()();
+		return {
+			factory: () => ({
+				post(input: GlobalSearchWorkerInput) {
+					posted.push(input);
+					inner.post(input);
+				},
+				onMessage(handler) {
+					inner.onMessage(handler);
+				},
+			}),
+			posted,
+		};
+	}
+
+	it('reports the same searchable-byte envelope as the document-based computation', async () => {
+		const { factory, posted } = recordingLoopback();
+		const state = createGlobalSearchState({
+			gate: true,
+			storage: createInMemoryGlobalSearchStorage(),
+			workerFactory: factory,
+			estimateProvider: async () => ({
+				usage: 0,
+				quota: Number.MAX_SAFE_INTEGER,
+			}),
+		});
+		await state.initialize();
+		const chats = [
+			chat('a1', 'Family', [
+				msg('m1', 'olá mundo', 'Ana ação', 1),
+				msg('m2', 'café ☕ mañana', 'Zoë', 2),
+			]),
+			chat('a2', 'Work', [
+				msg('m3', '東京 こんにちは 🚀', '李雷', 3),
+				msg('m4', 'plain ascii', 'Noah', 4),
+			]),
+		];
+		state.setLoadedChats(chats);
+
+		await state.submitQuery('hello');
+		const start = posted.find((input) => input.type === 'start');
+		expect(start?.type).toBe('start');
+
+		// The interleaved slice-based byte pass must agree with the reference
+		// computation over the built documents (the pre-interleaving path).
+		const expectedBytes = chats.reduce(
+			(sum, loadedChat) =>
+				sum + searchableUtf8Bytes(buildSessionDocuments(loadedChat)),
+			0,
+		);
+		if (start?.type === 'start') {
+			expect(start.request.corpusSearchableBytes).toBe(expectedBytes);
+		}
+		expect(state.status).toBe('complete');
+	});
+});
+
+describe('GH-67 global search state — prepared-source cache', () => {
+	/**
+	 * Loopback transport that records every posted input, so a query with
+	 * loaded chats can settle (shard-consumed acks) while the posted shard
+	 * arrays stay inspectable. Shard arrays are compared BY REFERENCE: the
+	 * prepared-source cache replays the exact materialized arrays on repeat
+	 * queries, while a re-prep would allocate fresh ones.
+	 */
+	function recordingLoopback(): {
+		factory: () => GlobalSearchTransport;
+		posted: GlobalSearchWorkerInput[];
+	} {
+		const posted: GlobalSearchWorkerInput[] = [];
+		const inner = loopback()();
+		return {
+			factory: () => ({
+				post(input: GlobalSearchWorkerInput) {
+					posted.push(input);
+					inner.post(input);
+				},
+				onMessage(handler) {
+					inner.onMessage(handler);
+				},
+			}),
+			posted,
+		};
+	}
+
+	function shardInputs(posted: GlobalSearchWorkerInput[]) {
+		return posted.filter(
+			(input): input is Extract<GlobalSearchWorkerInput, { type: 'shard' }> =>
+				input.type === 'shard',
+		);
+	}
+
+	async function stateWithCorpus(recorded: {
+		factory: () => GlobalSearchTransport;
+		posted: GlobalSearchWorkerInput[];
+	}) {
+		const state = createGlobalSearchState({
+			gate: true,
+			storage: createInMemoryGlobalSearchStorage(),
+			workerFactory: recorded.factory,
+			estimateProvider: async () => ({
+				usage: 0,
+				quota: Number.MAX_SAFE_INTEGER,
+			}),
+		});
+		await state.initialize();
+		return state;
+	}
+
+	it('reuses the materialized shards on a repeat query over an unchanged corpus', async () => {
+		const recorded = recordingLoopback();
+		const state = await stateWithCorpus(recorded);
+		state.setLoadedChats([
+			chat('a1', 'Family', [
+				msg('m1', 'needle one', 'Ana', 1),
+				msg('m2', 'needle two', 'Ana', 2),
+			]),
+			chat('a2', 'Work', [msg('m3', 'needle three', 'Noah', 3)]),
+		]);
+
+		await state.submitQuery('needle');
+		await state.submitQuery('needle');
+
+		const shards = shardInputs(recorded.posted);
+		// Two runs over two chats → 2 shards per run (each chat packs into a
+		// single shard under the 2,000-doc cap).
+		expect(shards.length).toBe(4);
+		// Cached replay: run 2 posts the EXACT same pre-serialized payload
+		// strings as run 1 — re-preparing would have built fresh strings
+		// (RED before the cache).
+		expect(shards[2]?.documentsJson).toBe(shards[0]?.documentsJson);
+		expect(shards[3]?.documentsJson).toBe(shards[1]?.documentsJson);
+		expect(state.status).toBe('complete');
+	});
+
+	it('does not re-run the byte-envelope pass on a repeat query over an unchanged corpus', async () => {
+		// The shard cache is already proven above; the warm indexingMs cost
+		// is the searchable-byte envelope pass re-encoding every message on
+		// EVERY submit. A repeat query over identical chats must reuse the
+		// cached envelope instead of re-encoding the corpus.
+		const spy = vi.spyOn(documentsModule, 'searchableUtf8BytesOfMessages');
+		const recorded = recordingLoopback();
+		const state = await stateWithCorpus(recorded);
+		const messages = Array.from({ length: 50 }, (_, index) =>
+			msg(`m-${index}`, `needle ${index}`, 'Ana', index),
+		);
+		state.setLoadedChats([chat('a1', 'Family', messages)]);
+
+		await state.submitQuery('needle');
+		const callsAfterFirst = spy.mock.calls.length;
+		expect(callsAfterFirst).toBeGreaterThan(0);
+
+		await state.submitQuery('needle');
+		expect(spy.mock.calls.length).toBe(callsAfterFirst);
+		spy.mockRestore();
+	});
+
+	it('re-prepares only the mutated chat when loaded content changes', async () => {
+		const recorded = recordingLoopback();
+		const state = await stateWithCorpus(recorded);
+		state.setLoadedChats([
+			chat('a1', 'Family', [
+				msg('m1', 'needle one', 'Ana', 1),
+				msg('m2', 'needle two', 'Ana', 2),
+			]),
+			chat('a2', 'Work', [msg('m3', 'needle three', 'Noah', 3)]),
+		]);
+
+		await state.submitQuery('needle');
+		// Mutate chat a1: append a message (same archiveId, new content).
+		state.setLoadedChats([
+			chat('a1', 'Family', [
+				msg('m1', 'needle one', 'Ana', 1),
+				msg('m2', 'needle two', 'Ana', 2),
+				msg('m9', 'added message', 'Ana', 9),
+			]),
+			chat('a2', 'Work', [msg('m3', 'needle three', 'Noah', 3)]),
+		]);
+		await state.submitQuery('needle');
+
+		const shards = shardInputs(recorded.posted);
+		// Run 1: [a1-shard, a2-shard]; run 2: [a1-shard', a2-shard].
+		expect(shards.length).toBe(4);
+		// a1 changed → fresh prep (new payload strings).
+		expect(shards[2]?.documentsJson).not.toBe(shards[0]?.documentsJson);
+		// a2 unchanged → replayed from the cache (same payload strings).
+		expect(shards[3]?.documentsJson).toBe(shards[1]?.documentsJson);
+	});
+
+	it('re-prepares after the harness drop hook clears the prepared-source cache', async () => {
+		// The benchmark's cancellation sample needs a deterministic cold scan
+		// window: the harness bridge hook must force a full re-prep on the NEXT
+		// query even when the corpus is byte-identical (a cache replay would
+		// finish the scan before the mid-scan cancel click could land).
+		const spy = vi.spyOn(documentsModule, 'buildSessionDocumentsFromMessages');
+		const recorded = recordingLoopback();
+		const state = await stateWithCorpus(recorded);
+		state.setLoadedChats([
+			chat('a1', 'Family', [msg('m1', 'needle one', 'Ana', 1)]),
+			chat('a2', 'Work', [msg('m3', 'needle three', 'Noah', 3)]),
+		]);
+
+		await state.submitQuery('needle');
+		const prepCallsAfterRun1 = spy.mock.calls.length;
+		expect(prepCallsAfterRun1).toBeGreaterThan(0);
+
+		// Warm replay: an unchanged corpus must NOT re-prepare.
+		await state.submitQuery('needle');
+		expect(spy.mock.calls.length).toBe(prepCallsAfterRun1);
+
+		// Drop the cache through the harness hook: the SAME unchanged corpus
+		// must now go through document building again (cold window for the
+		// cancellation sample) instead of replaying the cached shards.
+		state.dropPreparedSourcesCache();
+		await state.submitQuery('needle');
+		expect(spy.mock.calls.length).toBeGreaterThan(prepCallsAfterRun1);
+		spy.mockRestore();
+	});
+
+	it('drops the prepared source when the archive is removed from the library', async () => {
+		// Pre-serialized payloads for identical content are byte-identical, so a
+		// fresh re-prep is observable only through the rebuild itself: the §5
+		// removal cascade must have dropped the cache entry, and the re-added
+		// chat goes through document building again instead of a cache replay.
+		const spy = vi.spyOn(documentsModule, 'buildSessionDocumentsFromMessages');
+		const recorded = recordingLoopback();
+		const state = await stateWithCorpus(recorded);
+		state.setLoadedChats([
+			chat('a1', 'Family', [msg('m1', 'needle one', 'Ana', 1)]),
+			chat('a2', 'Work', [msg('m3', 'needle three', 'Noah', 3)]),
+		]);
+
+		await state.submitQuery('needle');
+		const prepCallsAfterRun1 = spy.mock.calls.length;
+		await state.removeFromLibrary('a1');
+		// Re-add a1 with the SAME content (identical fingerprint): the §5
+		// removal cascade must have dropped the cache entry, so the query
+		// treats it as a fresh load and re-prepares instead of replaying.
+		state.setLoadedChats([
+			chat('a1', 'Family', [msg('m1', 'needle one', 'Ana', 1)]),
+			chat('a2', 'Work', [msg('m3', 'needle three', 'Noah', 3)]),
+		]);
+		await state.submitQuery('needle');
+
+		const shards = shardInputs(recorded.posted);
+		expect(shards.length).toBe(4);
+		expect(spy.mock.calls.length).toBeGreaterThan(prepCallsAfterRun1);
+		spy.mockRestore();
 	});
 });
