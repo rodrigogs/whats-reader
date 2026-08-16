@@ -188,6 +188,38 @@ describe('GH-67 §5/§10.6 unified removal — global-search state surface', () 
 		expect(state.isKeepingLocally('session-only')).toBe(false);
 	});
 
+	it('cascade rejection: rejection propagates AND in-session cleanup still runs (panel fail-closed visible)', async () => {
+		const persistedStore = createPersistedLibraryStore();
+		const { state } = createState(true, {
+			...persistedStore,
+			// idb rejection ("The database connection is closed", quota /
+			// private-mode / corrupt-DB) from the very first cascade read.
+			getPersistedChatMetadata: async () => {
+				throw new Error('database connection is closed');
+			},
+		});
+		state.setLoadedChats([
+			chat('a1', 'Family', [msg('m1', 'hello', 'Ana', 1)]),
+		]);
+		state.setRememberedArchives([{ archiveId: 'a1', chatTitle: 'Family' }]);
+		await state.setConsentChoice('a1', 'keep-locally');
+
+		// The panel surface's fail-closed catch (removalError = true) only
+		// fires when the rejection actually propagates — the state layer must
+		// not swallow it.
+		await expect(state.removeFromLibrary('a1')).rejects.toThrow(
+			'database connection is closed',
+		);
+
+		// §5 in-session cleanup runs even when the cascade throws: the
+		// archive must not linger in coverage/consent (data-safe but
+		// invisible today — the reviewer's note).
+		expect(state.isKeepingLocally('a1')).toBe(false);
+		expect(state.coverage.some((entry) => entry.archiveId === 'a1')).toBe(
+			false,
+		);
+	});
+
 	it('gate-false: cascade runs as persistence no-op yet still clears state and reports complete', async () => {
 		const { state, storage, persistedStore } = createState(false);
 		state.setLoadedChats([

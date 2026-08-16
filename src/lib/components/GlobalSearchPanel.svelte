@@ -177,10 +177,18 @@ function consentChoice(
 
 async function removeFromLibrary(archiveId: string): Promise<void> {
 	confirmingRemoveArchiveId = null;
-	// §5: await the cascade and never discard a `complete:false` readback —
-	// a survivor is a real failure and must be surfaced visibly.
-	const report = await searchState.removeFromLibrary(archiveId);
-	removalError = !report.complete;
+	try {
+		// §5: await the cascade and never discard a `complete:false` readback —
+		// a survivor is a real failure and must be surfaced visibly.
+		const report = await searchState.removeFromLibrary(archiveId);
+		removalError = !report.complete;
+	} catch {
+		// Fail-closed: an idb rejection ("The database connection is closed",
+		// quota / private-mode / corrupt-DB) must surface the visible error
+		// state instead of escaping unhandled — mirrors forgetChat's
+		// try/catch in +page.svelte.
+		removalError = true;
+	}
 }
 
 function deleteAllIndices(): void {

@@ -562,48 +562,53 @@ export function createGlobalSearchState(deps: GlobalSearchStateDeps = {}) {
 	async function removeFromLibrary(
 		archiveId: string,
 	): Promise<LibraryRemovalReadback> {
-		// ONE unified §5 cascade: persisted metadata + file-handle reference +
-		// every global-search key (shards/manifest/commit/consent), each half
-		// verified by readback and fail-closed on any survivor.
-		const report = await removeFromLibraryCascade(
-			archiveId,
-			persistedStore,
-			storage,
-			gate,
-		);
+		try {
+			// ONE unified §5 cascade: persisted metadata + file-handle reference +
+			// every global-search key (shards/manifest/commit/consent), each half
+			// verified by readback and fail-closed on any survivor.
+			const report = await removeFromLibraryCascade(
+				archiveId,
+				persistedStore,
+				storage,
+				gate,
+			);
+			return report;
+		} finally {
+			// In-session cleanup (spec §5: coverage drops the archive entirely,
+			// even when it was remembered or loaded). Runs even when the cascade
+			// throws (idb rejection): the archive must not linger in-session, and
+			// the rejection still propagates so the caller's fail-closed catch
+			// (panel removalError / forgetChat toast) fires.
+			loadedChats = loadedChats.filter((chat) => chat.archiveId !== archiveId);
+			const remembered = new Set(rememberedArchiveIds);
+			remembered.delete(archiveId);
+			rememberedArchiveIds = remembered;
+			const titles = new Map(rememberedTitles);
+			titles.delete(archiveId);
+			rememberedTitles = titles;
 
-		// In-session cleanup (spec §5: coverage drops the archive entirely,
-		// even when it was remembered or loaded).
-		loadedChats = loadedChats.filter((chat) => chat.archiveId !== archiveId);
-		const remembered = new Set(rememberedArchiveIds);
-		remembered.delete(archiveId);
-		rememberedArchiveIds = remembered;
-		const titles = new Map(rememberedTitles);
-		titles.delete(archiveId);
-		rememberedTitles = titles;
+			const consent = new Map(consentByArchive);
+			consent.delete(archiveId);
+			consentByArchive = consent;
 
-		const consent = new Map(consentByArchive);
-		consent.delete(archiveId);
-		consentByArchive = consent;
+			const ready = new Map(readyManifests);
+			ready.delete(archiveId);
+			readyManifests = ready;
 
-		const ready = new Map(readyManifests);
-		ready.delete(archiveId);
-		readyManifests = ready;
+			const stale = new Set(staleArchiveIds);
+			stale.delete(archiveId);
+			staleArchiveIds = stale;
 
-		const stale = new Set(staleArchiveIds);
-		stale.delete(archiveId);
-		staleArchiveIds = stale;
+			const failed = new Set(failedArchiveIds);
+			failed.delete(archiveId);
+			failedArchiveIds = failed;
 
-		const failed = new Set(failedArchiveIds);
-		failed.delete(archiveId);
-		failedArchiveIds = failed;
+			const indexing = new Set(indexingArchiveIds);
+			indexing.delete(archiveId);
+			indexingArchiveIds = indexing;
 
-		const indexing = new Set(indexingArchiveIds);
-		indexing.delete(archiveId);
-		indexingArchiveIds = indexing;
-
-		client?.removeArchive(archiveId);
-		return report;
+			client?.removeArchive(archiveId);
+		}
 	}
 
 	async function deleteAllLocalIndices(): Promise<DeleteAllReadback> {
