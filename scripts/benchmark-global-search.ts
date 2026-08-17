@@ -110,7 +110,7 @@ type HarnessWindow = {
 type GlobalSearchHarnessRunTiming = {
 	submitMs: number;
 	indexingMs: number;
-	firstPageMs: number;
+	firstPageMs: number | null;
 	totalMs: number;
 	cancelled: boolean;
 	cancellationMs: number | null;
@@ -501,7 +501,7 @@ async function runWebBenchmark(
 				cancellationMs: run.cancellationMs,
 			});
 			console.info(
-				`GH-67 benchmark: sample ${index}${cancelled ? ' (cancelled)' : ''} indexing=${run.indexingMs.toFixed(0)}ms firstPage=${run.firstPageMs.toFixed(0)}ms total=${run.totalMs.toFixed(0)}ms${run.cancelled ? ` cancel=${run.cancellationMs?.toFixed(0)}ms` : ''}`,
+				`GH-67 benchmark: sample ${index}${cancelled ? ' (cancelled)' : ''} indexing=${run.indexingMs.toFixed(0)}ms firstPage=${run.firstPageMs === null ? 'unmeasured' : run.firstPageMs.toFixed(0)}ms total=${run.totalMs.toFixed(0)}ms${run.cancelled ? ` cancel=${run.cancellationMs?.toFixed(0)}ms` : ''}`,
 			);
 		}
 
@@ -772,7 +772,7 @@ async function runElectronBenchmark(
 				cancellationMs: run.cancellationMs,
 			});
 			console.info(
-				`GH-67 benchmark: sample ${index}${cancelled ? ' (cancelled)' : ''} indexing=${run.indexingMs.toFixed(0)}ms firstPage=${run.firstPageMs.toFixed(0)}ms total=${run.totalMs.toFixed(0)}ms${run.cancelled ? ` cancel=${run.cancellationMs?.toFixed(0)}ms` : ''}`,
+				`GH-67 benchmark: sample ${index}${cancelled ? ' (cancelled)' : ''} indexing=${run.indexingMs.toFixed(0)}ms firstPage=${run.firstPageMs === null ? 'unmeasured' : run.firstPageMs.toFixed(0)}ms total=${run.totalMs.toFixed(0)}ms${run.cancelled ? ` cancel=${run.cancellationMs?.toFixed(0)}ms` : ''}`,
 			);
 		}
 

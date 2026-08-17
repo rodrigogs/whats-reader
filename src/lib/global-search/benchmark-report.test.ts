@@ -64,7 +64,10 @@ function executedReport(
 					'measureUserAgentSpecificMemory API absent — marked unavailable',
 			},
 			network: { requests: 42, nonLocalRequests: 0 },
-			worker: { used: true, url: 'global-search-worker.ts' },
+			worker: {
+				used: true,
+				url: 'http://127.0.0.1:4123/_app/immutable/workers/global-search-worker-test.js',
+			},
 			throttle: { cpuRate: 1, heapCapBytes: null },
 		}),
 		...overrides,
@@ -407,7 +410,10 @@ describe('GH-67 benchmark electron target (spec §10.11)', () => {
 							'measureUserAgentSpecificMemory API absent — marked unavailable',
 					},
 					network: { requests: 42, nonLocalRequests: 0 },
-					worker: { used: true, url: 'global-search-worker.ts' },
+					worker: {
+						used: true,
+						url: 'app://localhost/_app/immutable/workers/global-search-worker-test.js',
+					},
 					throttle: { cpuRate: 1, heapCapBytes: null },
 				},
 			),

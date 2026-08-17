@@ -44,9 +44,12 @@ export type GlobalSearchBenchmarkSample = {
 	indexingMs: number;
 	/**
 	 * Worker first response: first `shard` posted → first worker `progress`
-	 * message (the earliest moment any search feedback exists).
+	 * message (the earliest moment any search feedback exists). null when the
+	 * worker never produced a progress message — an unmeasured first page is
+	 * NEVER fabricated as a constant (0 or otherwise); the p95 becomes null
+	 * and the gate rejects it (§10.11 fail-closed).
 	 */
-	firstPageMs: number;
+	firstPageMs: number | null;
 	/**
 	 * Query phase only: first `shard` posted → terminal `complete` message
 	 * from the worker. The §10.11 "total" row gates this phase (300 ms
@@ -122,7 +125,11 @@ export type GlobalSearchBenchmarkExecutedReport = {
 	};
 	samples: GlobalSearchBenchmarkSample[];
 	p95: {
-		firstPageMs: number;
+		/**
+		 * null when ANY sample's first page was unmeasured — a partially
+		 * unmeasured p95 is never fabricated as a constant (0 or otherwise).
+		 */
+		firstPageMs: number | null;
 		totalMs: number;
 		indexingMs: number;
 	};
@@ -241,6 +248,27 @@ export function isGlobalSearchBenchmarkRealElectronVersion(
 	return typeof version === 'string' && /^\d+\.\d+\.\d+/.test(version);
 }
 
+/**
+ * A real dedicated-worker URL is INDEPENDENTLY OBSERVED via
+ * `page.on('worker')` (or `page.workers()` on Electron) by the runner — it is
+ * NOT the transport's self-declared `kind` marker, which a loopback can forge.
+ * The URL must be a real worker asset of the target's own origin: the web
+ * harness build is served from the loopback (`http://127.0.0.1:<port>/`), and
+ * Electron serves the same build through the custom `app://` scheme.
+ */
+export function isGlobalSearchBenchmarkRealWorkerUrl(
+	url: string | null,
+	target: GlobalSearchBenchmarkTarget,
+): boolean {
+	if (url === null) return false;
+	const isWorkerAsset =
+		url.includes('global-search-worker') && url.endsWith('.js');
+	if (target === 'electron') {
+		return url.startsWith('app://') && isWorkerAsset;
+	}
+	return url.startsWith('http://127.0.0.1:') && isWorkerAsset;
+}
+
 export function createUnavailableGlobalSearchBenchmarkReport(
 	options: GlobalSearchBenchmarkOptions,
 	environment: GlobalSearchBenchmarkEnvironment,
@@ -321,10 +349,12 @@ export function createExecutedGlobalSearchBenchmarkReport(
 		scenario: { status: 'executed' },
 		samples: measurements.samples,
 		p95: {
-			firstPageMs:
-				computeGlobalSearchBenchmarkP95(
-					measurements.samples.map((sample) => sample.firstPageMs),
-				) ?? 0,
+			// firstPageMs propagates null: a partially/fully unmeasured first
+			// page must never be fabricated as 0 (§10.11 fail-closed — the
+			// gate rejects the null, and the constant-0 mutation now fails).
+			firstPageMs: computeGlobalSearchBenchmarkP95(
+				measurements.samples.map((sample) => sample.firstPageMs),
+			),
 			totalMs:
 				computeGlobalSearchBenchmarkP95(
 					measurements.samples.map((sample) => sample.totalMs),
@@ -352,13 +382,18 @@ export function createExecutedGlobalSearchBenchmarkReport(
 
 /**
  * p95 over the sorted samples (nearest-rank, ceil(0.95·n) − 1). Returns null
- * when there are no samples: a report with no samples can never claim a p95.
+ * when there are no samples or when ANY sample is null (unmeasured): a p95
+ * over partially-unmeasured data would silently hide the missing measurement,
+ * so an unmeasured value poisons the whole percentile. Never fabricates a
+ * constant.
  */
 export function computeGlobalSearchBenchmarkP95(
-	values: readonly number[],
+	values: readonly (number | null)[],
 ): number | null {
 	if (values.length === 0) return null;
-	const sorted = [...values].sort((a, b) => a - b);
+	if (values.some((value) => value === null)) return null;
+	const sorted = [...values] as number[];
+	sorted.sort((a, b) => a - b);
 	const rank = Math.max(0, Math.ceil(0.95 * sorted.length) - 1);
 	return sorted[Math.min(rank, sorted.length - 1)];
 }
@@ -403,8 +438,14 @@ export function evaluateGlobalSearchBenchmarkGates(
 			`Exactly 10 measured samples after one warmup required; got ${executed.samples.length}.`,
 		),
 		firstPageP95: gate(
-			executed.p95.firstPageMs <= targets.firstPageP95Ms,
-			`first-page p95 ${executed.p95.firstPageMs}ms <= ${targets.firstPageP95Ms}ms (${executed.profile}).`,
+			executed.p95.firstPageMs !== null &&
+				executed.p95.firstPageMs > 0 &&
+				executed.p95.firstPageMs <= targets.firstPageP95Ms,
+			executed.p95.firstPageMs === null
+				? 'first-page p95 is unmeasured (no worker progress observed) — unmeasured required metrics never pass.'
+				: executed.p95.firstPageMs <= 0
+					? `first-page p95 ${executed.p95.firstPageMs}ms is not a real measurement (constant-0/unmeasured) — never passes.`
+					: `first-page p95 ${executed.p95.firstPageMs}ms <= ${targets.firstPageP95Ms}ms (${executed.profile}).`,
 		),
 		totalP95: gate(
 			executed.p95.totalMs <= targets.totalP95Ms,
@@ -444,10 +485,19 @@ export function evaluateGlobalSearchBenchmarkGates(
 			`${executed.network.nonLocalRequests} non-local request(s) observed out of ${executed.network.requests} total; only the local app origin is allowed.`,
 		),
 		realWorker: gate(
-			executed.worker.used,
-			executed.worker.used
-				? `Real dedicated worker observed${executed.worker.url ? ` (${executed.worker.url})` : ''}.`
-				: 'No dedicated Worker was observed — loopback/mock substitution detected.',
+			executed.worker.used &&
+				isGlobalSearchBenchmarkRealWorkerUrl(
+					executed.worker.url,
+					executed.target,
+				),
+			!executed.worker.used
+				? 'No dedicated Worker was observed — loopback/mock substitution detected.'
+				: isGlobalSearchBenchmarkRealWorkerUrl(
+							executed.worker.url,
+							executed.target,
+						)
+					? `Real dedicated worker observed (${executed.worker.url}).`
+					: `worker.used is self-reported but no real observed ${executed.target} worker URL was recorded (${executed.worker.url ?? 'none'}) — loopback/mock substitution detected.`,
 		),
 	};
 
@@ -508,7 +558,15 @@ export function validateGlobalSearchBenchmarkReport(
 	for (const key of ['firstPageMs', 'totalMs', 'indexingMs'] as const) {
 		const reported = executed.p95[key];
 		const expected = recomputed[key];
-		if (expected === null || Math.abs(reported - expected) > 0.001) {
+		if (expected === null || reported === null) {
+			// null==null (unmeasured) is internally consistent — the GATE
+			// rejects the unmeasured metric; a null/number mismatch is not.
+			if (expected !== reported) {
+				errors.push(
+					`p95.${key} (${reported}) does not match the measured samples (${expected})`,
+				);
+			}
+		} else if (Math.abs(reported - expected) > 0.001) {
 			errors.push(
 				`p95.${key} (${reported}) does not match the measured samples (${expected})`,
 			);
@@ -524,18 +582,30 @@ export function validateGlobalSearchBenchmarkReport(
 			errors.push(`sample ${index} totalMs is not a positive measurement`);
 		}
 		if (
-			!Number.isFinite(sample.firstPageMs) ||
+			(sample.firstPageMs !== null &&
+				(!Number.isFinite(sample.firstPageMs) || sample.firstPageMs < 0)) ||
 			!Number.isFinite(sample.indexingMs) ||
-			sample.firstPageMs < 0 ||
 			sample.indexingMs < 0
 		) {
 			errors.push(`sample ${index} has invalid phase timings`);
 			continue;
 		}
+		// Exactly 0 is never a real first-page latency (a real worker
+		// round-trip takes > 0 ms): the honest unmeasured marker is null
+		// (gate-rejected), so a constant 0 is a fabrication signature.
+		if (sample.firstPageMs === 0) {
+			errors.push(
+				`sample ${index} firstPageMs 0 is not a real measurement — fabricated constant`,
+			);
+		}
 		// The total row measures the query phase only (first shard → terminal).
 		// It must at least contain the first-page response; the indexing prep
-		// is a separate, independently-gated phase.
-		if (sample.totalMs < sample.firstPageMs - 1) {
+		// is a separate, independently-gated phase. A null firstPageMs is the
+		// honest unmeasured marker (gate-rejected), so it never orders here.
+		if (
+			sample.firstPageMs !== null &&
+			sample.totalMs < sample.firstPageMs - 1
+		) {
 			errors.push(
 				`sample ${index} totalMs ${sample.totalMs} is smaller than firstPageMs ${sample.firstPageMs} — fabricated`,
 			);
@@ -563,6 +633,19 @@ export function validateGlobalSearchBenchmarkReport(
 				'electron target requires a real recorded electronVersion (unavailable-or-fake is rejected)',
 			);
 		}
+	}
+
+	// worker.used is a SELF-REPORT (the transport's `kind` marker), which an
+	// in-process loopback can forge. A real report must also carry the
+	// independently observed worker URL (page.on('worker') / page.workers()),
+	// so used-without-a-real-URL is the loopback substitution signature.
+	if (
+		executed.worker.used &&
+		!isGlobalSearchBenchmarkRealWorkerUrl(executed.worker.url, executed.target)
+	) {
+		errors.push(
+			`worker.used is true but no observed ${executed.target} worker URL was recorded (${executed.worker.url ?? 'none'}) — loopback/mock substitution`,
+		);
 	}
 
 	if (executed.cancellation.observed) {

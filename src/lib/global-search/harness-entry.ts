@@ -121,8 +121,13 @@ export type GlobalSearchHarnessRunTiming = {
 	submitMs: number;
 	/** submit → first `shard` posted (main-thread corpus prep). */
 	indexingMs: number;
-	/** first `shard` posted → first worker `progress` (worker first response). */
-	firstPageMs: number;
+	/**
+	 * first `shard` posted → first worker `progress` (worker first response).
+	 * null when the worker never produced a progress message — an unmeasured
+	 * first page is NEVER fabricated as a constant; the report gate rejects
+	 * the unmeasured value instead (§10.11 fail-closed).
+	 */
+	firstPageMs: number | null;
 	/** submit → terminal `complete` (or `cancelled` for a cancelled run). */
 	totalMs: number;
 	cancelled: boolean;
@@ -381,7 +386,7 @@ export function installGlobalSearchHarnessWindowApi(
 				indexingMs: tap.firstShardMs - tap.submitMs,
 				firstPageMs:
 					tap.firstProgressMs === null
-						? 0
+						? null
 						: tap.firstProgressMs - tap.firstShardMs,
 				totalMs: terminalMs - tap.firstShardMs,
 				cancelled,
