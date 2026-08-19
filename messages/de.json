@@ -242,6 +242,7 @@
   "media_gallery_type_other": "Andere",
   "media_gallery_clear_filter": "Filter löschen",
   "media_gallery_participant_search_placeholder": "Suche nach Name oder Nummer...",
+  "media_gallery_participant_no_match": "Kein Teilnehmer stimmt mit \"{query}\" überein",
   "persistence_remember_conversation": "Unterhaltung Merken",
   "persistence_conversation_saved": "Die Unterhaltung wird gespeichert",
   "persistence_conversation_removed": "Unterhaltung aus gespeicherten Sitzungen entfernt",
