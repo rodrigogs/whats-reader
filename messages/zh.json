@@ -22,6 +22,7 @@
   "messages_no_display": "无消息可显示",
   "messages_loading_older": "正在加载旧消息...",
   "messages_scroll_older": "向上滚动查看旧消息",
+  "messages_list_navigation_label": "消息列表。使用方向键进行导航。",
   "search_placeholder": "在聊天中搜索...",
   "search_no_results": "无结果",
   "search_result_of": "{current} / {total}",

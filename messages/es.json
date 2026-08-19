@@ -22,6 +22,7 @@
   "messages_no_display": "No hay mensajes para mostrar",
   "messages_loading_older": "Cargando mensajes anteriores...",
   "messages_scroll_older": "Desplázate hacia arriba para mensajes más antiguos",
+  "messages_list_navigation_label": "Lista de mensajes. Usa las flechas para navegar.",
   "search_placeholder": "Buscar en el chat...",
   "search_no_results": "Sin resultados",
   "search_result_of": "{current} de {total}",

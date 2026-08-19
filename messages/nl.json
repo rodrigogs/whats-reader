@@ -22,6 +22,7 @@
   "messages_no_display": "Geen berichten om weer te geven",
   "messages_loading_older": "Oudere berichten laden...",
   "messages_scroll_older": "Scroll omhoog voor oudere berichten",
+  "messages_list_navigation_label": "Berichtenlijst. Gebruik de pijltjestoetsen om te navigeren.",
   "search_placeholder": "Zoeken in chat...",
   "search_no_results": "Geen resultaten",
   "search_result_of": "{current} van {total}",

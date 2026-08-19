@@ -22,6 +22,7 @@
   "messages_no_display": "Нет сообщений для отображения",
   "messages_loading_older": "Загрузка старых сообщений...",
   "messages_scroll_older": "Прокрутите вверх для старых сообщений",
+  "messages_list_navigation_label": "Список сообщений. Используйте стрелки для навигации.",
   "search_placeholder": "Поиск в чате...",
   "search_no_results": "Нет результатов",
   "search_result_of": "{current} из {total}",

@@ -22,6 +22,7 @@
   "messages_no_display": "表示するメッセージがありません",
   "messages_loading_older": "古いメッセージを読み込み中...",
   "messages_scroll_older": "上にスクロールして古いメッセージを表示",
+  "messages_list_navigation_label": "メッセージ一覧。矢印キーで移動できます。",
   "search_placeholder": "チャットを検索...",
   "search_no_results": "結果なし",
   "search_result_of": "{current} / {total}",

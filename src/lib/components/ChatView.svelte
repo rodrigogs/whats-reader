@@ -1,6 +1,7 @@
 <script lang="ts">
 import { onDestroy, onMount, tick } from 'svelte';
 import { bookmarksState } from '$lib/bookmarks.svelte';
+import { getNextMessageIndex } from '$lib/helpers/message-list-navigation';
 import * as m from '$lib/paraglide/messages';
 import { getLocale } from '$lib/paraglide/runtime';
 import type { ChatMessage } from '$lib/parser';
@@ -299,6 +300,7 @@ $effect(() => {
 	if (previousArchiveId !== null && previousArchiveId !== archiveId) {
 		loadedChunksFromEnd = INITIAL_CHUNKS;
 		hasScrolledToBottom = false;
+		focusedMessageId = null; // Reset keyboard navigation on chat switch (GH-79)
 		// DON'T clear messageRefs here - let the destroy() callbacks handle cleanup
 		// and the new elements will register themselves
 		lastProcessedScrollId = null; // Reset so bookmarks work after chat switch
@@ -547,6 +549,76 @@ function handleScrollEnd() {
 let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
 let isNavigationScroll = $state(false);
 
+// Keyboard navigation state (GH-79): id of the message the user last moved to
+// with the arrow keys. The container is an ARIA feed whose articles carry a
+// roving tabindex, so arrow keys move DOM focus between messages while date
+// separators are skipped.
+let focusedMessageId = $state<string | null>(null);
+
+// Roving tabindex (GH-79): exactly one message is reachable with Tab. Until the
+// user picks one -- or when the focused message is no longer rendered by the
+// windowing logic -- the first rendered message is the tab stop.
+const tabStopMessageId = $derived.by(() => {
+	const items = renderedItems.items;
+	if (
+		focusedMessageId !== null &&
+		items.some(
+			(item) => item.type === 'message' && item.message.id === focusedMessageId,
+		)
+	) {
+		return focusedMessageId;
+	}
+	const first = items.find((item) => item.type === 'message');
+	return first?.type === 'message' ? first.message.id : null;
+});
+
+// Find the rendered item index for a message id (or -1 when not rendered yet).
+function findRenderedMessageIndex(messageId: string): number {
+	return renderedItems.items.findIndex(
+		(item) => item.type === 'message' && item.message.id === messageId,
+	);
+}
+
+// Arrow-key navigation over the message list (GH-79). ArrowDown moves to the
+// next message, ArrowUp to the previous one. The focused message is scrolled
+// into view so the keyboard cursor is always visible.
+function handleMessageListKeydown(event: KeyboardEvent) {
+	const key = event.key;
+	if (key !== 'ArrowDown' && key !== 'ArrowUp') return;
+	// Don't hijack arrow keys used by interactive controls inside messages
+	// (audio/video players, links, buttons).
+	const target = event.target as HTMLElement | null;
+	if (
+		target?.closest(
+			'a, button, audio, video, input, textarea, select, [contenteditable]',
+		)
+	) {
+		return;
+	}
+
+	const items = renderedItems.items;
+	if (items.length === 0) return;
+
+	const currentIndex =
+		focusedMessageId !== null ? findRenderedMessageIndex(focusedMessageId) : -1;
+	const direction = key === 'ArrowDown' ? 'down' : 'up';
+	const nextIndex = getNextMessageIndex(items, currentIndex, direction);
+
+	if (nextIndex === -1) return;
+
+	const item = items[nextIndex];
+	if (item.type !== 'message') return;
+
+	event.preventDefault();
+	focusedMessageId = item.message.id;
+
+	const element = messageRefs.get(item.message.id);
+	// Move real DOM focus to the message (roving tabindex) so screen readers
+	// announce the newly focused message; the list scrolls to keep it visible.
+	element?.focus({ preventScroll: true });
+	element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 function handleScroll() {
 	if (!isNavigationScroll && persistentHighlightId && !pendingHighlightId) {
 		persistentHighlightId = null;
@@ -563,9 +635,13 @@ function handleScroll() {
 }
 </script>
 
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
 	bind:this={chatContainer}
 	class="flex-1 overflow-y-auto p-4 chat-bg"
+	role="feed"
+	aria-label={m.messages_list_navigation_label()}
+	onkeydown={handleMessageListKeydown}
 	onscrollend={handleScrollEnd}
 	onscroll={handleScroll}
 >
@@ -601,8 +677,18 @@ function handleScroll() {
 			<!-- Message -->
 			{@const message = item.message}
 			{@const matchResult = isSearchMatch(message.id)}
+			<!--
+				WAI-ARIA feed pattern (GH-79): every article in a feed must be focusable
+				so arrow-key navigation can move DOM focus onto it. svelte-check treats
+				`article` as non-interactive and flags the required tabindex.
+			-->
+			<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 			<div
 				use:registerMessageRef={message.id}
+				role="article"
+				tabindex={message.id === tabStopMessageId ? 0 : -1}
+				aria-current={message.id === focusedMessageId ? 'true' : undefined}
+				class={message.id === focusedMessageId ? 'outline-2 outline-[var(--color-whatsapp-teal)] outline-offset-2 rounded-lg' : ''}
 			>
 				<MessageBubble
 					{message}

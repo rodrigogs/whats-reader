@@ -22,6 +22,7 @@
   "messages_no_display": "Nenhuma mensagem para exibir",
   "messages_loading_older": "Carregando mensagens antigas...",
   "messages_scroll_older": "Role para cima para ver mensagens antigas",
+  "messages_list_navigation_label": "Lista de mensagens. Use as setas para navegar.",
   "search_placeholder": "Buscar na conversa...",
   "search_no_results": "Sem resultados",
   "search_result_of": "{current} de {total}",
