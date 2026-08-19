@@ -90,6 +90,10 @@ describe('GH-67 benchmark harness entry contract', () => {
 		}
 	});
 
+	// Builds the full 10k/100k/250k/1M synthetic corpora in one test. Vitest's
+	// default 5s timeout leaves almost no headroom: measured ~2.8s when this
+	// file runs alone and ~4.6s inside the full global-search suite, so a
+	// slower CI runner (ubuntu-latest) would flake. Pin an explicit budget.
 	it('supports every documented synthetic size and rejects invalid ones', () => {
 		const sizes = [10_000, 100_000, 250_000, 1_000_000] as const;
 		for (const size of sizes) {
@@ -100,7 +104,7 @@ describe('GH-67 benchmark harness entry contract', () => {
 		expect(() =>
 			buildGlobalSearchHarnessChats(42 as (typeof sizes)[number]),
 		).toThrow(/size/i);
-	});
+	}, 30_000);
 });
 
 function summarizeChats(
