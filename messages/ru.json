@@ -242,6 +242,7 @@
   "media_gallery_type_other": "Другой",
   "media_gallery_clear_filter": "Очистить фильтр",
   "media_gallery_participant_search_placeholder": "Поиск по имени или номеру...",
+  "media_gallery_participant_no_match": "Нет участников, соответствующих \"{query}\"",
   "persistence_remember_conversation": "Запомнить Разговор",
   "persistence_conversation_saved": "Разговор будет сохранён",
   "persistence_conversation_removed": "Разговор удалён из сохранённых сессий",

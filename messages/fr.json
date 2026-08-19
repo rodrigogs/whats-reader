@@ -242,6 +242,7 @@
   "media_gallery_type_other": "Autre",
   "media_gallery_clear_filter": "Effacer le filtre",
   "media_gallery_participant_search_placeholder": "Recherche par nom ou numéro...",
+  "media_gallery_participant_no_match": "Aucun participant ne correspond à \"{query}\"",
   "persistence_remember_conversation": "Mémoriser la Conversation",
   "persistence_conversation_saved": "La conversation sera mémorisée",
   "persistence_conversation_removed": "Conversation supprimée des sessions enregistrées",

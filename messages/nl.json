@@ -242,6 +242,7 @@
   "media_gallery_type_other": "Ander",
   "media_gallery_clear_filter": "Filter wissen",
   "media_gallery_participant_search_placeholder": "Zoeken op naam of nummer...",
+  "media_gallery_participant_no_match": "Geen deelnemer komt overeen met \"{query}\"",
   "persistence_remember_conversation": "Gesprek Onthouden",
   "persistence_conversation_saved": "Het gesprek wordt onthouden",
   "persistence_conversation_removed": "Gesprek verwijderd uit opgeslagen sessies",
