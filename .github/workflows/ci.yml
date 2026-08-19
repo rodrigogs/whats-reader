@@ -159,11 +159,7 @@ jobs:
           ELECTRON_BUILDER_CACHE: ~/cache/electron-builder
           ONNXRUNTIME_NODE_INSTALL_CUDA: skip
 
-      # tests/ imports plain .ts modules from src/lib, but tsconfig.json extends
-      # .svelte-kit/tsconfig.json, which npm install already generates via the
-      # prepare script (svelte-kit sync). Kept explicit so the job is order-proof.
-      - name: Sync SvelteKit types
-        run: npx svelte-kit sync
-
+      # npm test runs svelte-kit sync first: tsconfig.json extends
+      # .svelte-kit/tsconfig.json and vite needs it to transform the .ts imports.
       - name: Run regression suite (GH-74/78/79/87)
         run: npm test

@@ -36,7 +36,7 @@
 		"electron:build:win": "npm run build && electron-builder --win",
 		"electron:build:linux": "npm run build && electron-builder --linux",
 		"machine-translate": "inlang machine translate --project project.inlang",
-		"test": "vitest run",
+		"test": "svelte-kit sync && vitest run",
 		"test:global-search:unit": "vitest run --config vitest.global-search.config.ts",
 		"test:global-search:privacy": "playwright test --config playwright.global-search.config.ts",
 		"test:global-search:e2e-port-collision": "tsx scripts/test-global-search-e2e-port-collision.ts",
