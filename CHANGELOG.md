@@ -1,3 +1,10 @@
+## [1.30.5](https://github.com/rodrigogs/whats-reader/compare/v1.30.4...v1.30.5) (2026-08-19)
+
+
+### Bug Fixes
+
+* **i18n:** traduz media_gallery_participant_no_match nos 9 locales [NOVO-B3] ([da3c0d7](https://github.com/rodrigogs/whats-reader/commit/da3c0d736e8571696bbb5fcea9cbbf9e16145219)), closes [#67](https://github.com/rodrigogs/whats-reader/issues/67)
+
 ## [1.30.4](https://github.com/rodrigogs/whats-reader/compare/v1.30.3...v1.30.4) (2026-04-03)
 
 
