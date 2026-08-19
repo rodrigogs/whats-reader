@@ -199,12 +199,21 @@ const pageState = createArchivePageState();
 const globalSearchHarness = GLOBAL_SEARCH_HARNESS_ENABLED
 	? createGlobalSearchHarnessTransport()
 	: null;
+// Build-time surface gate for GH-67. Both operands are build-time
+// constants, so in normal and distributed builds this collapses to false
+// and the whole global-search surface (entry points + panel) never
+// renders — the fail-closed contract documented above. The harness build
+// (VITE_GLOBAL_SEARCH_HARNESS=1) keeps the surface so the §9 benchmark can
+// drive the real UI.
+const globalSearchSurfaceEnabled =
+	GLOBAL_SEARCH_V1_ENABLED || GLOBAL_SEARCH_HARNESS_ENABLED;
+
 const globalSearchState = createGlobalSearchState({
 	// The harness build (VITE_GLOBAL_SEARCH_HARNESS=1) enables the real
 	// search path so the benchmark executes the actual UI/worker flow;
 	// GLOBAL_SEARCH_V1_ENABLED itself stays false (fail-closed) and normal
 	// and distributed builds keep the gate off.
-	gate: GLOBAL_SEARCH_V1_ENABLED || GLOBAL_SEARCH_HARNESS_ENABLED,
+	gate: globalSearchSurfaceEnabled,
 	storage: idbGlobalSearchStorage,
 	workerFactory: () =>
 		globalSearchHarness?.transport ?? createWorkerTransport(),
@@ -1252,17 +1261,19 @@ function handleGlobalSearchReselectSource(_archiveId: string) {
 
 						<!-- Large screens: Individual buttons -->
 						<div class="hidden md:flex items-center gap-2">
-							<!-- Global search -->
-							<IconButton
-								theme="dark"
-								size="md"
-								active={showGlobalSearch}
-								onclick={toggleGlobalSearch}
-								title={m.global_search_toggle()}
-								aria-label={m.global_search_toggle()}
-							>
-								<Icon name="search" size="md" />
-							</IconButton>
+							{#if globalSearchSurfaceEnabled}
+								<!-- Global search -->
+								<IconButton
+									theme="dark"
+									size="md"
+									active={showGlobalSearch}
+									onclick={toggleGlobalSearch}
+									title={m.global_search_toggle()}
+									aria-label={m.global_search_toggle()}
+								>
+									<Icon name="search" size="md" />
+								</IconButton>
+							{/if}
 
 							<!-- Perspective selector -->
 							<div class="relative">
@@ -1354,19 +1365,21 @@ function handleGlobalSearchReselectSource(_archiveId: string) {
 						{/if}
 					</IconButton>
 
-					<!-- Global search (available without a selected chat) -->
-					<div class="ml-auto">
-						<IconButton
-							theme="dark"
-							size="md"
-							active={showGlobalSearch}
-							onclick={toggleGlobalSearch}
-							title={m.global_search_toggle()}
-							aria-label={m.global_search_toggle()}
-						>
-							<Icon name="search" size="md" />
-						</IconButton>
-					</div>
+					{#if globalSearchSurfaceEnabled}
+						<!-- Global search (available without a selected chat) -->
+						<div class="ml-auto">
+							<IconButton
+								theme="dark"
+								size="md"
+								active={showGlobalSearch}
+								onclick={toggleGlobalSearch}
+								title={m.global_search_toggle()}
+								aria-label={m.global_search_toggle()}
+							>
+								<Icon name="search" size="md" />
+							</IconButton>
+						</div>
+					{/if}
 				</div>
 			{/if}
 
@@ -1617,18 +1630,20 @@ function handleGlobalSearchReselectSource(_archiveId: string) {
 				</div>
 			{/if}
 
-			<!-- Global search panel (slide from right; works with no chat selected) -->
-			<div
-				class="global-search-slot flex-shrink-0 flex {showGlobalSearch ? 'global-search-open' : 'global-search-closed'}"
-			>
-				<GlobalSearchPanel
-					searchState={globalSearchState}
-					senders={globalSearchSenders}
-					onNavigate={handleGlobalSearchNavigate}
-					onReselectSource={handleGlobalSearchReselectSource}
-					onClose={() => (showGlobalSearch = false)}
-				/>
-			</div>
+			{#if globalSearchSurfaceEnabled}
+				<!-- Global search panel (slide from right; works with no chat selected) -->
+				<div
+					class="global-search-slot flex-shrink-0 flex {showGlobalSearch ? 'global-search-open' : 'global-search-closed'}"
+				>
+					<GlobalSearchPanel
+						searchState={globalSearchState}
+						senders={globalSearchSenders}
+						onNavigate={handleGlobalSearchNavigate}
+						onReselectSource={handleGlobalSearchReselectSource}
+						onClose={() => (showGlobalSearch = false)}
+					/>
+				</div>
+			{/if}
 		</div>
 	</div>
 {/if}
