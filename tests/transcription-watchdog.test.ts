@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { afterEach, describe, it, mock } from 'node:test';
+import { afterEach, describe, it, vi } from 'vitest';
 import {
 	postIfTranscriptionRequestAccepted,
 	TranscriptionRequestManager,
@@ -7,12 +7,12 @@ import {
 } from '../src/lib/transcription-request-manager.ts';
 
 afterEach(() => {
-	mock.timers.reset();
+	vi.useRealTimers();
 });
 
 describe('TranscriptionRequestManager', () => {
 	it('rejects a concurrent duplicate without replacing the original request', async () => {
-		mock.timers.enable({ apis: ['setTimeout'] });
+		vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
 		const manager = new TranscriptionRequestManager(100);
 		let workerPosts = 0;
 		let firstResolved = false;
@@ -31,7 +31,7 @@ describe('TranscriptionRequestManager', () => {
 			});
 		});
 
-		mock.timers.tick(50);
+		vi.advanceTimersByTime(50);
 		const duplicate = new Promise<string>((resolve, reject) => {
 			const accepted = manager.add('message-1', resolve, reject);
 			assert.equal(accepted, false);
@@ -45,14 +45,14 @@ describe('TranscriptionRequestManager', () => {
 		assert.equal(manager.size, 1);
 		assert.equal(firstResolved, false);
 
-		mock.timers.tick(50);
+		vi.advanceTimersByTime(50);
 		await assert.rejects(first, { code: 'TRANSCRIPTION_TIMEOUT' });
 		assert.equal(firstResolved, false);
 		assert.equal(manager.size, 0);
 	});
 
 	it('expires a silent request after the inactivity timeout and removes it', async () => {
-		mock.timers.enable({ apis: ['setTimeout'] });
+		vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
 		let timedOut = false;
 		const manager = new TranscriptionRequestManager(90_000);
 		const rejection = new Promise<unknown>((_resolve, reject) => {
@@ -61,7 +61,7 @@ describe('TranscriptionRequestManager', () => {
 			});
 		});
 
-		mock.timers.tick(90_000);
+		vi.advanceTimersByTime(90_000);
 
 		await assert.rejects(rejection, (error: unknown) => {
 			assert.ok(error instanceof TranscriptionServiceError);
@@ -73,17 +73,17 @@ describe('TranscriptionRequestManager', () => {
 	});
 
 	it('renews pending watchdogs when the worker reports progress', async () => {
-		mock.timers.enable({ apis: ['setTimeout'] });
+		vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
 		const manager = new TranscriptionRequestManager(90_000);
 		const rejection = new Promise<unknown>((_resolve, reject) => {
 			manager.add('message-1', () => undefined, reject, () => undefined);
 		});
 
-		mock.timers.tick(89_000);
+		vi.advanceTimersByTime(89_000);
 		manager.renewAll();
-		mock.timers.tick(89_000);
+		vi.advanceTimersByTime(89_000);
 		assert.equal(manager.size, 1);
-		mock.timers.tick(1_000);
+		vi.advanceTimersByTime(1_000);
 
 		await assert.rejects(rejection, { code: 'TRANSCRIPTION_TIMEOUT' });
 	});

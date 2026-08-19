@@ -132,3 +132,38 @@ jobs:
 
       - name: Run global search harness
         run: npm run test:global-search
+  regression:
+    name: Regression Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      # Cache Electron binaries to avoid download failures
+      - name: Cache Electron
+        uses: actions/cache@v5
+        with:
+          path: ~/cache/electron
+          key: electron-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm install
+        env:
+          ELECTRON_CACHE: ~/cache/electron
+          ELECTRON_BUILDER_CACHE: ~/cache/electron-builder
+          ONNXRUNTIME_NODE_INSTALL_CUDA: skip
+
+      # tests/ imports plain .ts modules from src/lib, but tsconfig.json extends
+      # .svelte-kit/tsconfig.json, which npm install already generates via the
+      # prepare script (svelte-kit sync). Kept explicit so the job is order-proof.
+      - name: Sync SvelteKit types
+        run: npx svelte-kit sync
+
+      - name: Run regression suite (GH-74/78/79/87)
+        run: npm test
