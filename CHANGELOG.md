@@ -1,3 +1,33 @@
+# [1.31.0](https://github.com/rodrigogs/whats-reader/compare/v1.30.5...v1.31.0) (2026-08-24)
+
+
+### Bug Fixes
+
+* catch panel remove-from-library cascade rejection fail-closed ([821aab5](https://github.com/rodrigogs/whats-reader/commit/821aab5b2de0d9584e302169c5f71a0790e03e8a))
+* fail closed on unmeasured firstPage and unobserved worker URL (§10.11) ([961e252](https://github.com/rodrigogs/whats-reader/commit/961e2526ee7fd1e438e62ca5377da9f89e793b30))
+* honrar o gate GLOBAL_SEARCH_V1_ENABLED na UI (t_87a69422 / NOVO-B2a) ([2c810bb](https://github.com/rodrigogs/whats-reader/commit/2c810bbc953053f2a792caa87b27d286cfb1ac3d)), closes [#67](https://github.com/rodrigogs/whats-reader/issues/67)
+* normalize iOS media attachment names ([2ed6134](https://github.com/rodrigogs/whats-reader/commit/2ed6134f62e5ea79e60a51c49e93e2ac56da7a3d))
+* **parser:** route localized AM/PM tokens to day-first dates (GH-78) ([0b29b32](https://github.com/rodrigogs/whats-reader/commit/0b29b327e65373b4128f9cc0e5940eff912534ba)), closes [#78](https://github.com/rodrigogs/whats-reader/issues/78) [#78](https://github.com/rodrigogs/whats-reader/issues/78)
+* preserve delimiter-colliding bookmark identities ([48279c1](https://github.com/rodrigogs/whats-reader/commit/48279c189502a62f4952b8cf3d079c35be29ed18))
+* prevent stalled audio transcriptions ([37d018e](https://github.com/rodrigogs/whats-reader/commit/37d018e6a400385c02ffc3e5e5468a7c4ce6f7f9))
+* reject duplicate transcription requests ([2fce144](https://github.com/rodrigogs/whats-reader/commit/2fce14431401ceb2e5ee038d67006e12ecc0cad2))
+* support localized WhatsApp exports ([f451749](https://github.com/rodrigogs/whats-reader/commit/f451749c91412609840c65fae752b7ebe0f2d2aa))
+* unify §5 remove-from-library cascade across sidebar and panel ([a178976](https://github.com/rodrigogs/whats-reader/commit/a178976c44c8395e5f73ef8762e8e896e6db3cce))
+
+
+### Features
+
+* add accessible global-search UI after worker/controller integration ([eb4e1de](https://github.com/rodrigogs/whats-reader/commit/eb4e1de1181cc7681782b207a545743adc3b1d32)), closes [#67](https://github.com/rodrigogs/whats-reader/issues/67)
+* add archive runtime identity ([22d765a](https://github.com/rodrigogs/whats-reader/commit/22d765a3f967d2eafbd56b12c28e032543f65138))
+* add arrow-key navigation to the message list (GH-79) ([162a154](https://github.com/rodrigogs/whats-reader/commit/162a154d616fb99a3a50911df9d745e8cf36867a)), closes [#79](https://github.com/rodrigogs/whats-reader/issues/79)
+* add Electron benchmark target to global-search runner (§10.11) ([0e4a9d8](https://github.com/rodrigogs/whats-reader/commit/0e4a9d88ec97af1a0e938f487845a364e9632ac6))
+* add end-to-end global query worker with streaming protocol ([3055fb1](https://github.com/rodrigogs/whats-reader/commit/3055fb17b470a7a2fa302fcc55648278ee5271e9))
+* add executable global-search benchmark runner (§10.11) ([e9541f0](https://github.com/rodrigogs/whats-reader/commit/e9541f03cf672e652adb86b51a08b01ffcac1758))
+* add global search persistence with atomic generations ([ba2f898](https://github.com/rodrigogs/whats-reader/commit/ba2f8988f2afef53c3f5ebcc4179404c128d2762))
+* namespace bookmarks by archiveId ([74023f5](https://github.com/rodrigogs/whats-reader/commit/74023f5c84cdda68976996a39574569e8fb6fb27))
+* namespace transcriptions by archive ([56127ce](https://github.com/rodrigogs/whats-reader/commit/56127ce3a2e1eab87d3b6ec9c814de9bf522ac7e))
+* scope persistence and page state by archiveId ([c81723f](https://github.com/rodrigogs/whats-reader/commit/c81723f10d8a3ee27a5423263d7afc9f352bab25))
+
 ## [1.30.5](https://github.com/rodrigogs/whats-reader/compare/v1.30.4...v1.30.5) (2026-08-19)
 
 
