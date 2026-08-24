@@ -180,6 +180,13 @@ describe('GH-78 localized WhatsApp exports', () => {
 	});
 
 	describe('US vs day-first discrimination', () => {
+		it('falls back to day-first when the US interpretation is invalid', () => {
+			const parsed = parseChat('13/12/24 3:00 PM - John: hey');
+
+			assert.equal(parsed.messageCount, 1);
+			assertTimestamp(parsed.messages[0].timestamp, 2024, 12, 13, 15, 0, 0);
+		});
+
 		it('keeps US MM/DD priority when both interpretations are valid', () => {
 			const parsed = parseChat('03/04/24 9:30 PM - John: hey');
 
@@ -187,11 +194,27 @@ describe('GH-78 localized WhatsApp exports', () => {
 			assertTimestamp(parsed.messages[0].timestamp, 2024, 3, 4, 21, 30, 0);
 		});
 
-		it('falls back to day-first when the US interpretation is invalid', () => {
-			const parsed = parseChat('13/12/24 3:00 PM - John: hey');
+		it('routes localized AM/PM tokens on ambiguous day<=12 dates to day-first (GH-78 regression)', () => {
+			// Before the fix the tolerant [AP][\s.]*M\.? token in the US MM/DD
+			// pattern hijacked these into a US reading: 06/07/2018 -> June 7.
+			const parsed = parseChat('06/07/2018 1:55 p. m. - Sara: hola');
 
 			assert.equal(parsed.messageCount, 1);
-			assertTimestamp(parsed.messages[0].timestamp, 2024, 12, 13, 15, 0, 0);
+			assertTimestamp(parsed.messages[0].timestamp, 2018, 7, 6, 13, 55, 0);
+		});
+
+		it('routes dotted p.m. on ambiguous day<=12 dates to day-first (GH-78 regression)', () => {
+			const parsed = parseChat('05/11/2019 10:05 p.m. - Ana: bueno');
+
+			assert.equal(parsed.messageCount, 1);
+			assertTimestamp(parsed.messages[0].timestamp, 2019, 11, 5, 22, 5, 0);
+		});
+
+		it('keeps tight PM on ambiguous day<=12 dates as US MM/DD (priority unchanged)', () => {
+			const parsed = parseChat('06/07/2018 1:55 PM - John: hey');
+
+			assert.equal(parsed.messageCount, 1);
+			assertTimestamp(parsed.messages[0].timestamp, 2018, 6, 7, 13, 55, 0);
 		});
 
 		it('parses existing European AM/PM variants without rollover', () => {

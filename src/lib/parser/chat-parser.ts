@@ -218,17 +218,24 @@ function normalizeForMediaMatching(value: string): string {
  * US format (with AM/PM) is checked first, then European/Brazilian (24h),
  * then day-first 12h, then year-first formats.
  *
- * AM/PM tokens are matched tolerantly ([AP][\s.]*M\.?) so localized variants
- * ("p. m.", "p.m.", "PM") and Unicode whitespace (U+00A0, U+202F) are
- * recognized by the same pattern. Date parts are validated at parse time
- * (see isValidDateTimeParts) so an invalid US interpretation falls through
- * to the day-first pattern instead of rolling over.
+ * AM/PM tokens are matched tolerantly ([AP][\s.]*M\.?) by the day-first and
+ * year-first patterns so localized variants ("p. m.", "p.m.", "PM") and
+ * Unicode whitespace (U+00A0, U+202F) are recognized. The US MM/DD pattern
+ * only accepts the tight [AP]M form: localized tokens ("p. m.", "p.m.")
+ * belong to day-first exports, so they are routed to the day-first pattern
+ * instead of hijacking ambiguous day<=12 dates into a US reading. Date parts
+ * are validated at parse time (see isValidDateTimeParts) so an invalid US
+ * interpretation falls through to the day-first pattern instead of rolling
+ * over.
  */
 const DATE_PATTERNS = [
-	// MM/DD/YY, HH:MM AM/PM - US format (12h) - MUST have AM/PM to be identified as US
+	// MM/DD/YY, HH:MM AM/PM - US format (12h) - MUST have tight AM/PM (no
+	// internal dots/spaces: "PM", "pm") to be identified as US. Localized
+	// tokens ("p. m.", "p.m.") indicate a day-first export and are matched
+	// by the day-first pattern below.
 	{
 		regex:
-			/^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP][\s.]*M\.?)\s*-\s*/i,
+			/^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M\.?)\s*-\s*/i,
 		parse: (match: RegExpMatchArray) => {
 			const [, month, day, year, hours, minutes, seconds, ampm] = match;
 			return parseDateTime(
