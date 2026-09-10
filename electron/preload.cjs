@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
@@ -15,6 +15,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 	// Persistence file operations
 	readFileFromPath: (filePath) =>
 		ipcRenderer.invoke('file:readFromPath', filePath),
+
+	// Resolve the absolute path of a dropped/selected File (Electron 32+ removed
+	// the non-standard File#path; webUtils.getPathForFile is the replacement).
+	getPathForFile: (file) => webUtils.getPathForFile(file),
 
 	// External links
 	openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
