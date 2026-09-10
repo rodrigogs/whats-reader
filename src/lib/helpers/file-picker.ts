@@ -11,7 +11,7 @@
  * Returns null if the API is not supported or the user cancelled.
  */
 export async function openZipFilePicker(multiple = false): Promise<{
-	files: FileList;
+	files: File[];
 	handles?: FileSystemFileHandle[];
 } | null> {
 	if (!('showOpenFilePicker' in window)) return null;
@@ -28,11 +28,11 @@ export async function openZipFilePicker(multiple = false): Promise<{
 		});
 		if (!handles?.length) return null;
 
-		const dt = new DataTransfer();
+		const files: File[] = [];
 		for (const h of handles) {
-			dt.items.add(await h.getFile());
+			files.push(await h.getFile());
 		}
-		return { files: dt.files, handles };
+		return { files, handles };
 	} catch {
 		// User cancelled or API failed
 		return null;
