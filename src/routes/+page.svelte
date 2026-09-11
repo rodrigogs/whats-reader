@@ -27,6 +27,7 @@ import IconButton from '$lib/components/IconButton.svelte';
 import ListItemButton from '$lib/components/ListItemButton.svelte';
 import LocaleSwitcher from '$lib/components/LocaleSwitcher.svelte';
 import MediaGallery from '$lib/components/MediaGallery.svelte';
+import MediaLightbox from '$lib/components/MediaLightbox.svelte';
 import Modal from '$lib/components/Modal.svelte';
 import ModalContent from '$lib/components/ModalContent.svelte';
 import ModalHeader from '$lib/components/ModalHeader.svelte';
@@ -1532,7 +1533,6 @@ function handleGlobalSearchReselectSource(_archiveId: string) {
 				>
 					<div class="flex-1 overflow-hidden">
 						<MediaGallery
-							onNavigateToMessage={handleNavigateToMediaMessage}
 							onClose={() => (showMediaGallery = false)}
 						/>
 					</div>
@@ -1648,6 +1648,15 @@ function handleGlobalSearchReselectSource(_archiveId: string) {
 	</div>
 {/if}
 </div>
+
+<!-- Media lightbox: rendered once at the app root (sibling of the main
+     layout, outside .gallery-panel) so it is visible whether or not the
+     Media Gallery panel is open — a bubble click must still show the
+     viewer while the gallery panel is closed (GH-92). -->
+<MediaLightbox
+	onNavigateToMessage={handleNavigateToMediaMessage}
+	onCloseGallery={() => (showMediaGallery = false)}
+/>
 
 <!-- Auto-update toast notification (Electron only) -->
 {#if isElectron && autoUpdaterState.isElectron}
