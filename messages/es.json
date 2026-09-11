@@ -116,6 +116,7 @@
   "media_load_audio": "Haz clic para cargar audio",
   "media_load_sticker": "Haz clic para cargar sticker",
   "media_load_file": "Haz clic para cargar archivo",
+  "message_open_media": "Abrir contenido multimedia",
   "media_loading": "Cargando...",
   "media_failed": "Error al cargar",
   "media_download": "Descargar",

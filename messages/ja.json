@@ -129,6 +129,7 @@
   "media_load_audio": "クリックして音声を読み込む",
   "media_load_sticker": "クリックしてステッカーを読み込む",
   "media_load_file": "クリックしてファイルを読み込む",
+  "message_open_media": "メディアを開く",
   "media_loading": "読み込み中...",
   "media_failed": "読み込みに失敗しました",
   "media_download": "ダウンロード",

@@ -129,6 +129,7 @@
   "media_load_audio": "Нажмите для загрузки аудио",
   "media_load_sticker": "Нажмите для загрузки стикера",
   "media_load_file": "Нажмите для загрузки файла",
+  "message_open_media": "Открыть медиафайл",
   "media_loading": "Загрузка...",
   "media_failed": "Ошибка загрузки",
   "media_download": "Скачать",
