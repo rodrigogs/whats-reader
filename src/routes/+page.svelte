@@ -34,6 +34,7 @@ import ModalHeader from '$lib/components/ModalHeader.svelte';
 import ReselectFileModal from '$lib/components/ReselectFileModal.svelte';
 import RestoreSessionModal from '$lib/components/RestoreSessionModal.svelte';
 import Toast from '$lib/components/Toast.svelte';
+import { galleryState } from '$lib/gallery.svelte';
 import { findArchiveIndex } from '$lib/global-search/archive-navigation';
 import { createArchivePageState } from '$lib/global-search/archive-page-state.svelte';
 import { createGlobalSearchState } from '$lib/global-search/global-search-state.svelte';
@@ -1523,6 +1524,7 @@ function handleGlobalSearchReselectSource(_archiveId: string) {
 						precomputedMessageIndex={appState.selectedChat.messageIndex}
 						precomputedFlatItems={appState.selectedChat.flatItems}
 						precomputedMessagesById={appState.selectedChat.messagesById}
+						onOpenMedia={(path) => galleryState.setLightbox(path)}
 					/>
 				</div>
 

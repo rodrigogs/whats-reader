@@ -129,6 +129,7 @@
   "media_load_audio": "Click to load audio",
   "media_load_sticker": "Click to load sticker",
   "media_load_file": "Click to load file",
+  "message_open_media": "Open media",
   "media_loading": "Loading...",
   "media_failed": "Failed to load",
   "media_download": "Download",

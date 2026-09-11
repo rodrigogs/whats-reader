@@ -36,6 +36,8 @@ interface Props {
 	precomputedMessageIndex?: Map<string, number>;
 	precomputedFlatItems?: FlatItem[];
 	precomputedMessagesById?: Map<string, ChatMessage>;
+	/** Opens the shared media lightbox for the media file at this path (GH-92). */
+	onOpenMedia?: (path: string) => void;
 }
 
 // Default no-op function for isSearchMatch
@@ -54,6 +56,7 @@ let {
 	precomputedMessageIndex,
 	precomputedFlatItems,
 	precomputedMessagesById,
+	onOpenMedia,
 }: Props = $props();
 
 // Performance optimization: chunk messages for progressive rendering
@@ -703,6 +706,7 @@ function handleScroll() {
 					triggerHighlight={highlightReady && message.id === highlightedId}
 					isHighlighted={message.id === persistentHighlightId}
 					{autoLoadMedia}
+					{onOpenMedia}
 				/>
 			</div>
 		{/if}
