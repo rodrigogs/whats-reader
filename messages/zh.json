@@ -129,6 +129,7 @@
   "media_load_audio": "点击加载音频",
   "media_load_sticker": "点击加载贴纸",
   "media_load_file": "点击加载文件",
+  "message_open_media": "打开媒体",
   "media_loading": "加载中...",
   "media_failed": "加载失败",
   "media_download": "下载",

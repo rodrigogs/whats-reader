@@ -129,6 +129,7 @@
   "media_load_audio": "Cliquer pour charger l'audio",
   "media_load_sticker": "Cliquer pour charger l'autocollant",
   "media_load_file": "Cliquer pour charger le fichier",
+  "message_open_media": "Ouvrir le média",
   "media_loading": "Chargement...",
   "media_failed": "Échec du chargement",
   "media_download": "Télécharger",

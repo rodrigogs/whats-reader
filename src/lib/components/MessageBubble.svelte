@@ -36,6 +36,8 @@ interface Props {
 	triggerHighlight?: boolean;
 	isHighlighted?: boolean;
 	autoLoadMedia?: boolean;
+	/** Opens the shared media lightbox for the media file at this path (GH-92). */
+	onOpenMedia?: (path: string) => void;
 }
 
 let {
@@ -51,6 +53,7 @@ let {
 	triggerHighlight = false,
 	isHighlighted = false,
 	autoLoadMedia = false,
+	onOpenMedia,
 }: Props = $props();
 
 let containerRef = $state<HTMLDivElement | null>(null);
@@ -155,6 +158,12 @@ function handleBookmarkClick(e: MouseEvent) {
 	e.stopPropagation();
 	// Open modal - the modal handles both create and edit modes
 	showBookmarkModal = true;
+}
+
+function handleOpenMedia() {
+	if (message.mediaFile) {
+		onOpenMedia?.(message.mediaFile.path);
+	}
 }
 
 // Trigger animation when triggerHighlight becomes true
@@ -419,23 +428,41 @@ async function transcribeVoiceMessage() {
 					{#if mediaUrl}
 						<!-- Media loaded -->
 						{#if message.mediaType === 'image' || message.mediaType === 'sticker'}
-							<img 
-								src={mediaUrl} 
-								alt="{message.mediaFile?.name || 'Media attachment'}" 
-								class="max-w-full rounded-lg mb-1 cursor-pointer"
-								style="max-height: 300px;"
-								loading="lazy"
-							/>
-						{:else if message.mediaType === 'video'}
-							<video 
-								src={mediaUrl} 
-								controls 
-								class="max-w-full rounded-lg mb-1"
-								style="max-height: 300px;"
-								preload="metadata"
+							<button
+								type="button"
+								class="block w-full p-0 border-0 bg-transparent text-left cursor-pointer"
+								onclick={handleOpenMedia}
+								aria-label={m.message_open_media()}
 							>
-								<track kind="captions" />
-							</video>
+								<img 
+									src={mediaUrl} 
+									alt="{message.mediaFile?.name || 'Media attachment'}" 
+									class="max-w-full rounded-lg mb-1"
+									style="max-height: 300px;"
+									loading="lazy"
+								/>
+							</button>
+						{:else if message.mediaType === 'video'}
+							<div class="relative">
+								<video 
+									src={mediaUrl} 
+									controls 
+									class="max-w-full rounded-lg mb-1"
+									style="max-height: 300px;"
+									preload="metadata"
+								>
+									<track kind="captions" />
+								</video>
+								<button
+									type="button"
+									class="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors cursor-pointer"
+									onclick={handleOpenMedia}
+									aria-label={m.message_open_media()}
+									title={m.message_open_media()}
+								>
+									<Icon name="expand" size="sm" />
+								</button>
+							</div>
 						{:else if message.mediaType === 'audio'}
 							<div class="audio-message-container">
 								<audio src={mediaUrl} controls class="w-full mb-1" preload="metadata">

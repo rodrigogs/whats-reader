@@ -1,5 +1,6 @@
 <script lang="ts">
 import { type Bookmark, bookmarksState } from '$lib/bookmarks.svelte';
+import { galleryState } from '$lib/gallery.svelte';
 import * as m from '$lib/paraglide/messages';
 import { getLocale } from '$lib/paraglide/runtime';
 import BookmarkModal from './BookmarkModal.svelte';
@@ -147,7 +148,17 @@ async function handleImport(e: Event) {
 }
 
 function handleKeydown(e: KeyboardEvent) {
-	if (e.key === 'Escape' && !editingBookmark) {
+	// Skip while the shared media lightbox is open (GH-92): the lightbox is a
+	// non-blocking side panel's sibling — unlike BookmarkModal's full-screen
+	// backdrop, a chat bubble stays clickable while this panel is open, so a
+	// bubble click can now open the lightbox without first closing Bookmarks.
+	// MediaLightbox owns Escape for itself; this mirrors its own
+	// `!editingBookmark` guard so one press closes exactly one thing.
+	if (
+		e.key === 'Escape' &&
+		!editingBookmark &&
+		!galleryState.lightboxMediaPath
+	) {
 		onClose();
 	}
 }
