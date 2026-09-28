@@ -39,6 +39,7 @@ interface ElectronAPI {
 	readDir: (dirPath: string) => Promise<ReadDirResult>;
 	fileExists: (filePath: string) => Promise<boolean>;
 	readFileFromPath: (filePath: string) => Promise<FileReadResult>;
+	getPathForFile: (file: File) => string;
 	openExternal: (url: string) => Promise<void>;
 	platform: string;
 	isElectron: boolean;

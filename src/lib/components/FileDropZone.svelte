@@ -1,11 +1,12 @@
 <script lang="ts">
+import { snapshotDroppedFiles } from '$lib/helpers/drop-files';
 import { openElectronFile, openZipFilePicker } from '$lib/helpers/file-picker';
 import * as m from '$lib/paraglide/messages';
 import Icon from './Icon.svelte';
 
 interface Props {
 	onFilesSelected: (
-		files: FileList,
+		files: readonly File[],
 		handles?: FileSystemFileHandle[],
 		paths?: string[],
 	) => void;
@@ -39,35 +40,27 @@ async function handleDrop(e: DragEvent) {
 	isDragOver = false;
 
 	if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-		// Capture FileSystemFileHandles for persistence (Chrome 86+)
-		// IMPORTANT: Start ALL promises synchronously before any await,
-		// because DataTransferItems become invalid after the first async yield
+		// Snapshot files and handle promises SYNCHRONOUSLY before any await
+		// DataTransferItems become invalid after the first async yield
+		const { files, handlePromises } = snapshotDroppedFiles(e.dataTransfer);
+
 		let handles: FileSystemFileHandle[] | undefined;
-		if (
-			e.dataTransfer.items &&
-			'getAsFileSystemHandle' in DataTransferItem.prototype
-		) {
-			const promises = Array.from(e.dataTransfer.items).map((item) => {
-				try {
-					return item.getAsFileSystemHandle();
-				} catch {
-					return Promise.resolve(null);
-				}
-			});
-			const resolved = await Promise.all(promises);
+		if (handlePromises.length > 0) {
+			const resolved = await Promise.all(handlePromises);
 			const fileHandles = resolved.filter(
 				(h): h is FileSystemFileHandle => h?.kind === 'file',
 			);
 			if (fileHandles.length > 0) handles = fileHandles;
 		}
-		onFilesSelected(e.dataTransfer.files, handles);
+
+		onFilesSelected(files, handles);
 	}
 }
 
 function handleFileSelect(e: Event) {
 	const input = e.target as HTMLInputElement;
 	if (input.files && input.files.length > 0) {
-		onFilesSelected(input.files);
+		onFilesSelected(Array.from(input.files));
 	}
 }
 
@@ -87,10 +80,8 @@ async function openElectronFilePicker() {
 	if (window.electronAPI) {
 		const result = await openElectronFile();
 		if (result) {
-			const dataTransfer = new DataTransfer();
-			dataTransfer.items.add(result.file);
 			onFilesSelected(
-				dataTransfer.files,
+				[result.file],
 				undefined,
 				result.path ? [result.path] : undefined,
 			);

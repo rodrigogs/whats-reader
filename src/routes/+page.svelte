@@ -375,10 +375,8 @@ async function handleSidebarImport() {
 	if (window.electronAPI) {
 		const result = await openElectronFile();
 		if (result) {
-			const dt = new DataTransfer();
-			dt.items.add(result.file);
 			handleFilesSelected(
-				dt.files,
+				[result.file],
 				undefined,
 				result.path ? [result.path] : undefined,
 			);
@@ -386,7 +384,7 @@ async function handleSidebarImport() {
 	} else {
 		const result = await openZipFilePicker(true);
 		if (result) {
-			handleFilesSelected(result.files, result.handles);
+			handleFilesSelected(Array.from(result.files), result.handles);
 		} else if (!('showOpenFilePicker' in window)) {
 			sidebarFileInput?.click();
 		}
@@ -394,7 +392,7 @@ async function handleSidebarImport() {
 }
 
 async function handleFilesSelected(
-	files: FileList,
+	files: readonly File[],
 	handles?: FileSystemFileHandle[],
 	paths?: string[],
 ) {
@@ -1410,7 +1408,7 @@ function handleGlobalSearchReselectSource(_archiveId: string) {
 						class="hidden"
 						onchange={(e) => {
 							const input = e.target as HTMLInputElement;
-							if (input.files) handleFilesSelected(input.files);
+							if (input.files) handleFilesSelected(Array.from(input.files));
 						}}
 						multiple
 					/>

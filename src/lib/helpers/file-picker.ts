@@ -11,7 +11,7 @@
  * Returns null if the API is not supported or the user cancelled.
  */
 export async function openZipFilePicker(multiple = false): Promise<{
-	files: FileList;
+	files: File[];
 	handles?: FileSystemFileHandle[];
 } | null> {
 	if (!('showOpenFilePicker' in window)) return null;
@@ -28,11 +28,11 @@ export async function openZipFilePicker(multiple = false): Promise<{
 		});
 		if (!handles?.length) return null;
 
-		const dt = new DataTransfer();
+		const files: File[] = [];
 		for (const h of handles) {
-			dt.items.add(await h.getFile());
+			files.push(await h.getFile());
 		}
-		return { files: dt.files, handles };
+		return { files, handles };
 	} catch {
 		// User cancelled or API failed
 		return null;
@@ -59,8 +59,16 @@ export async function openElectronFile(): Promise<{
 
 /**
  * Extract the absolute file path that Electron attaches to drag-dropped files.
- * Returns undefined when not running in Electron or the property is absent.
+ * Returns undefined when not running in Electron or the path cannot be resolved.
+ *
+ * Electron 32 removed the non-standard `File#path` property; `webUtils.getPathForFile`
+ * (exposed via the preload script) is the supported replacement — it returns an empty
+ * string (not undefined) for a File not backed by a real path, so that's normalized
+ * here too. The `'path' in file` check is kept as a fallback for older Electron builds.
  */
 export function getElectronFilePath(file: File): string | undefined {
-	return 'path' in file ? (file as File & { path: string }).path : undefined;
+	return (
+		window.electronAPI?.getPathForFile?.(file) ||
+		('path' in file ? (file as File & { path: string }).path : undefined)
+	);
 }
