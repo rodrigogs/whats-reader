@@ -575,7 +575,54 @@ function isSystemMessage(content: string): boolean {
 	);
 }
 
-function parseLine(line: string): {
+const SLASH_DATE_PREFIX = /^(\[?)(\d{1,2})\/(\d{1,2})\/(\d{2,4})/;
+const SLASH_24H_PREFIX =
+	/^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*-\s*/;
+const BRACKETED_SLASH_24H_PREFIX =
+	/^\[(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2}):(\d{2})\]\s*/;
+
+/**
+ * Infer the numeric slash-date order of 24-hour lines in a whole export.
+ * Day/month ordering is ambiguous per line (01/12/2020), but a line with a
+ * first component > 12 proves day-first and one with a second component > 12
+ * proves month-first (US, GH-95). Localized AM/PM lines deliberately do not
+ * participate: their day-first interpretation is governed by the format
+ * patterns below. Ambiguous chats keep the existing day-first default.
+ */
+function detectMonthFirst(lines: string[]): boolean {
+	let dayFirst = false;
+	let monthFirst = false;
+	for (const line of lines) {
+		const normalized = normalizeTimestampView(line);
+		const m =
+			normalized.match(SLASH_24H_PREFIX) ??
+			normalized.match(BRACKETED_SLASH_24H_PREFIX);
+		if (!m) continue;
+		const first = parseInt(m[1], 10);
+		const second = parseInt(m[2], 10);
+		const year = normalizeYear(parseInt(m[3], 10));
+		const hours = parseInt(m[4], 10);
+		const minutes = parseInt(m[5], 10);
+		const seconds = m[6] ? parseInt(m[6], 10) : 0;
+		if (
+			(first > 12 &&
+				!isValidDateTimeParts(first, second, year, hours, minutes, seconds)) ||
+			(second > 12 &&
+				!isValidDateTimeParts(second, first, year, hours, minutes, seconds))
+		) {
+			continue;
+		}
+		if (first > 12) dayFirst = true;
+		if (second > 12) monthFirst = true;
+		if (dayFirst && monthFirst) break;
+	}
+	return monthFirst && !dayFirst;
+}
+
+function parseLine(
+	line: string,
+	monthFirst = false,
+): {
 	timestamp: Date;
 	sender: string;
 	content: string;
@@ -587,8 +634,22 @@ function parseLine(line: string): {
 	const matchView = normalizeTimestampView(line);
 	const strippedPrefix = line.length - matchView.length;
 
+	// Only swap bare/bracketed 24-hour slash dates. Localized AM/PM lines
+	// retain their day-first parsing even when the same export has US 24-hour
+	// evidence (GH-78).
+	const slash24HourMatch = monthFirst
+		? (matchView.match(SLASH_24H_PREFIX) ??
+			matchView.match(BRACKETED_SLASH_24H_PREFIX))
+		: null;
+	const swappedView = slash24HourMatch
+		? matchView.replace(
+				SLASH_DATE_PREFIX,
+				(_m, br, a, b, y) => `${br}${b}/${a}/${y}`,
+			)
+		: matchView;
+
 	for (const { regex, parse } of DATE_PATTERNS) {
-		const match = matchView.match(regex);
+		const match = swappedView.match(regex);
 		if (match) {
 			const timestamp = parse(match);
 			// Invalid date/time parts (e.g. 32/13/99) must not roll over:
@@ -688,10 +749,12 @@ export function parseChat(
 		}
 	};
 
+	const monthFirst = detectMonthFirst(lines);
+
 	for (const line of lines) {
 		if (!line.trim()) continue;
 
-		const parsed = parseLine(line);
+		const parsed = parseLine(line, monthFirst);
 
 		if (parsed) {
 			// This is a new message - push previous one first
