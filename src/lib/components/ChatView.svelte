@@ -690,6 +690,7 @@ function handleScroll() {
 				use:registerMessageRef={message.id}
 				role="article"
 				tabindex={message.id === tabStopMessageId ? 0 : -1}
+				onfocus={() => (focusedMessageId = message.id)}
 				aria-current={message.id === focusedMessageId ? 'true' : undefined}
 				class={message.id === focusedMessageId ? 'outline-2 outline-[var(--color-whatsapp-teal)] outline-offset-2 rounded-lg' : ''}
 			>

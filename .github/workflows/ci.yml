@@ -132,6 +132,9 @@ jobs:
 
       - name: Run global search harness
         run: npm run test:global-search
+
+      - name: Run keyboard navigation E2E regression (GH-79)
+        run: npm run test:navigation:e2e
   regression:
     name: Regression Suite
     runs-on: ubuntu-latest
