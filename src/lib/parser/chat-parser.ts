@@ -28,6 +28,19 @@ export interface ChatMessage {
 	};
 }
 
+export interface ChatValidationAlias {
+	messageCount: number;
+	firstMessageTimestamp: string;
+	lastMessageTimestamp: string;
+	firstMessageIds: string[];
+	/** True when every current message starts inside source text parsed previously. */
+	sourceCoverageComplete: boolean;
+	/** All older-parser IDs, used to prove the saved metadata covers the archive. */
+	legacyMessageIds: string[];
+	/** Maps message IDs produced by the older parser to their current IDs. */
+	messageIdAliases: Record<string, string>;
+}
+
 export interface ParsedChat {
 	messages: ChatMessage[];
 	participants: string[];
@@ -36,6 +49,8 @@ export interface ParsedChat {
 	title: string;
 	messageCount: number;
 	mediaCount: number;
+	/** Validation snapshots for parser migrations of the exact same source text. */
+	validationAliases?: ChatValidationAlias[];
 }
 
 // Media indicators used by WhatsApp
@@ -575,7 +590,54 @@ function isSystemMessage(content: string): boolean {
 	);
 }
 
-function parseLine(line: string): {
+const SLASH_DATE_PREFIX = /^(\[?)(\d{1,2})\/(\d{1,2})\/(\d{2,4})/;
+const SLASH_24H_PREFIX =
+	/^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*-\s*/;
+const BRACKETED_SLASH_24H_PREFIX =
+	/^\[(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2}):(\d{2})\]\s*/;
+
+/**
+ * Infer the numeric slash-date order of 24-hour lines in a whole export.
+ * Day/month ordering is ambiguous per line (01/12/2020), but a line with a
+ * first component > 12 proves day-first and one with a second component > 12
+ * proves month-first (US, GH-95). Localized AM/PM lines deliberately do not
+ * participate: their day-first interpretation is governed by the format
+ * patterns below. Ambiguous chats keep the existing day-first default.
+ */
+function detectMonthFirst(lines: string[]): boolean {
+	let dayFirst = false;
+	let monthFirst = false;
+	for (const line of lines) {
+		const normalized = normalizeTimestampView(line);
+		const m =
+			normalized.match(SLASH_24H_PREFIX) ??
+			normalized.match(BRACKETED_SLASH_24H_PREFIX);
+		if (!m) continue;
+		const first = parseInt(m[1], 10);
+		const second = parseInt(m[2], 10);
+		const year = normalizeYear(parseInt(m[3], 10));
+		const hours = parseInt(m[4], 10);
+		const minutes = parseInt(m[5], 10);
+		const seconds = m[6] ? parseInt(m[6], 10) : 0;
+		if (
+			(first > 12 &&
+				!isValidDateTimeParts(first, second, year, hours, minutes, seconds)) ||
+			(second > 12 &&
+				!isValidDateTimeParts(second, first, year, hours, minutes, seconds))
+		) {
+			continue;
+		}
+		if (first > 12) dayFirst = true;
+		if (second > 12) monthFirst = true;
+		if (dayFirst && monthFirst) break;
+	}
+	return monthFirst && !dayFirst;
+}
+
+function parseLine(
+	line: string,
+	monthFirst = false,
+): {
 	timestamp: Date;
 	sender: string;
 	content: string;
@@ -587,8 +649,22 @@ function parseLine(line: string): {
 	const matchView = normalizeTimestampView(line);
 	const strippedPrefix = line.length - matchView.length;
 
+	// Only swap bare/bracketed 24-hour slash dates. Localized AM/PM lines
+	// retain their day-first parsing even when the same export has US 24-hour
+	// evidence (GH-78).
+	const slash24HourMatch = monthFirst
+		? (matchView.match(SLASH_24H_PREFIX) ??
+			matchView.match(BRACKETED_SLASH_24H_PREFIX))
+		: null;
+	const swappedView = slash24HourMatch
+		? matchView.replace(
+				SLASH_DATE_PREFIX,
+				(_m, br, a, b, y) => `${br}${b}/${a}/${y}`,
+			)
+		: matchView;
+
 	for (const { regex, parse } of DATE_PATTERNS) {
-		const match = matchView.match(regex);
+		const match = swappedView.match(regex);
 		if (match) {
 			const timestamp = parse(match);
 			// Invalid date/time parts (e.g. 32/13/99) must not roll over:
@@ -661,16 +737,31 @@ function generateDeterministicId(
 /**
  * Parse a WhatsApp chat export text content
  */
-export function parseChat(
+interface ParsedChatInternal extends ParsedChat {
+	messageSourceLines: number[];
+	messageSourceEndLines: number[];
+}
+
+interface ParseChatOptions {
+	/** Build v1.31.0 compatibility metadata only while restoring remembered chats. */
+	includeValidationAliases?: boolean;
+}
+
+function parseChatWithDateOrder(
 	content: string,
-	filename: string = 'WhatsApp Chat',
-): ParsedChat {
+	filename: string,
+	monthFirst: boolean,
+): ParsedChatInternal {
 	const lines = content.split(/\r?\n/);
 	const messages: ChatMessage[] = [];
+	const messageSourceLines: number[] = [];
+	const messageSourceEndLines: number[] = [];
 	const participantsSet = new Set<string>();
 	const usedIds = new Set<string>(); // Track used IDs to handle collisions
 
 	let currentMessage: ChatMessage | null = null;
+	let currentMessageSourceLine = -1;
+	let currentMessageSourceEndLine = -1;
 
 	// Helper to finalize and push current message with deterministic ID
 	const pushCurrentMessage = () => {
@@ -685,13 +776,16 @@ export function parseChat(
 			);
 			usedIds.add(currentMessage.id);
 			messages.push(currentMessage);
+			messageSourceLines.push(currentMessageSourceLine);
+			messageSourceEndLines.push(currentMessageSourceEndLine);
 		}
 	};
 
-	for (const line of lines) {
+	for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+		const line = lines[lineIndex];
 		if (!line.trim()) continue;
 
-		const parsed = parseLine(line);
+		const parsed = parseLine(line, monthFirst);
 
 		if (parsed) {
 			// This is a new message - push previous one first
@@ -700,6 +794,8 @@ export function parseChat(
 			const isMedia = isMediaMessage(parsed.content);
 			const isSystem = !parsed.sender || isSystemMessage(parsed.content);
 
+			currentMessageSourceLine = lineIndex;
+			currentMessageSourceEndLine = lineIndex;
 			currentMessage = {
 				id: '', // Will be set when pushed
 				timestamp: parsed.timestamp,
@@ -716,6 +812,7 @@ export function parseChat(
 			}
 		} else if (currentMessage) {
 			// This is a continuation of the previous message (multiline)
+			currentMessageSourceEndLine = lineIndex;
 			currentMessage.content += `\n${line}`;
 			currentMessage.rawLine += `\n${line}`;
 		}
@@ -746,6 +843,8 @@ export function parseChat(
 
 	return {
 		messages,
+		messageSourceLines,
+		messageSourceEndLines,
 		participants,
 		startDate: messages.length > 0 ? messages[0].timestamp : null,
 		endDate:
@@ -754,6 +853,92 @@ export function parseChat(
 		messageCount: messages.length,
 		mediaCount,
 	};
+}
+
+const VALIDATION_MESSAGE_ID_COUNT = 5;
+
+function hasCompleteLegacySourceCoverage(
+	legacy: ParsedChatInternal,
+	current: ParsedChatInternal,
+): boolean {
+	let legacyIndex = 0;
+	for (const currentStartLine of current.messageSourceLines) {
+		while (
+			legacyIndex < legacy.messageSourceLines.length &&
+			legacy.messageSourceEndLines[legacyIndex] < currentStartLine
+		) {
+			legacyIndex++;
+		}
+		const legacyStartLine = legacy.messageSourceLines[legacyIndex];
+		if (legacyStartLine === undefined || currentStartLine < legacyStartLine) {
+			return false;
+		}
+	}
+	return true;
+}
+
+function createValidationAlias(
+	legacy: ParsedChatInternal,
+	current: ParsedChatInternal,
+): ChatValidationAlias | null {
+	const first = legacy.messages[0];
+	const last = legacy.messages[legacy.messages.length - 1];
+	if (!first || !last) return null;
+
+	const currentIdBySourceLine = new Map<number, string>();
+	for (let i = 0; i < current.messages.length; i++) {
+		currentIdBySourceLine.set(
+			current.messageSourceLines[i],
+			current.messages[i].id,
+		);
+	}
+	const messageIdAliases: Record<string, string> = {};
+	for (let i = 0; i < legacy.messages.length; i++) {
+		const currentId = currentIdBySourceLine.get(legacy.messageSourceLines[i]);
+		if (currentId) messageIdAliases[legacy.messages[i].id] = currentId;
+	}
+
+	return {
+		messageCount: legacy.messages.length,
+		firstMessageTimestamp: first.timestamp.toISOString(),
+		lastMessageTimestamp: last.timestamp.toISOString(),
+		firstMessageIds: legacy.messages
+			.slice(0, VALIDATION_MESSAGE_ID_COUNT)
+			.map((message) => message.id),
+		sourceCoverageComplete: hasCompleteLegacySourceCoverage(legacy, current),
+		legacyMessageIds: legacy.messages.map((message) => message.id),
+		messageIdAliases,
+	};
+}
+
+function publicParsedChat(parsed: ParsedChatInternal): ParsedChat {
+	const {
+		messageSourceLines: _messageSourceLines,
+		messageSourceEndLines: _messageSourceEndLines,
+		...result
+	} = parsed;
+	return result;
+}
+
+/** Parse a WhatsApp chat export, inferring slash-date order for the export. */
+export function parseChat(
+	content: string,
+	filename: string = 'WhatsApp Chat',
+	options: ParseChatOptions = {},
+): ParsedChat {
+	const monthFirst = detectMonthFirst(content.split(/\r?\n/));
+	const parsed = parseChatWithDateOrder(content, filename, monthFirst);
+	if (!monthFirst || !options.includeValidationAliases) {
+		return publicParsedChat(parsed);
+	}
+
+	// v1.31.0 parsed US 24-hour slash exports as day-first. Build this snapshot
+	// only during remembered-chat restore; fresh imports keep no duplicate state.
+	const legacy = parseChatWithDateOrder(content, filename, false);
+	const alias = createValidationAlias(legacy, parsed);
+	const result = publicParsedChat(parsed);
+	if (alias) result.validationAliases = [alias];
+	return result;
 }
 
 /**

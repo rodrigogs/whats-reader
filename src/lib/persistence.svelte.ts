@@ -316,74 +316,166 @@ export async function updatePersistedChat(
 	}
 }
 
-/**
- * Validate a restored file against saved metadata
- */
-export function validateRestoredFile(
-	parsed: ChatData,
+interface ValidationSnapshot {
+	messageCount: number;
+	firstMessageTimestamp: string;
+	lastMessageTimestamp: string;
+	firstMessageIds: string[];
+}
+
+function currentValidationSnapshot(parsed: ChatData): ValidationSnapshot {
+	return {
+		messageCount: parsed.messages.length,
+		firstMessageTimestamp: parsed.messages[0]?.timestamp.toISOString() ?? '',
+		lastMessageTimestamp:
+			parsed.messages[parsed.messages.length - 1]?.timestamp.toISOString() ??
+			'',
+		firstMessageIds: parsed.messages
+			.slice(0, VALIDATION_MESSAGE_ID_COUNT)
+			.map((message) => message.id)
+			.filter(Boolean),
+	};
+}
+
+function validateSnapshot(
+	snapshot: ValidationSnapshot,
 	saved: PersistedChatMetadata,
 ): ValidationResult {
 	const reasons: string[] = [];
 	let matchCount = 0;
 
-	// Check message count
-	const messageCountMatch = parsed.messages.length === saved.messageCount;
-	if (messageCountMatch) {
-		matchCount++;
-	} else {
+	const messageCountMatch = snapshot.messageCount === saved.messageCount;
+	if (messageCountMatch) matchCount++;
+	else {
 		reasons.push(
-			`Message count mismatch: expected ${saved.messageCount}, got ${parsed.messages.length}`,
+			`Message count mismatch: expected ${saved.messageCount}, got ${snapshot.messageCount}`,
 		);
 	}
 
-	// Check first message timestamp
 	const firstMessageMatch =
-		parsed.messages[0]?.timestamp.toISOString() === saved.firstMessageTimestamp;
-	if (firstMessageMatch) {
-		matchCount++;
-	} else {
-		reasons.push('First message timestamp mismatch');
-	}
+		snapshot.firstMessageTimestamp === saved.firstMessageTimestamp;
+	if (firstMessageMatch) matchCount++;
+	else reasons.push('First message timestamp mismatch');
 
-	// Check last message timestamp
 	const lastMessageMatch =
-		parsed.messages[parsed.messages.length - 1]?.timestamp.toISOString() ===
-		saved.lastMessageTimestamp;
-	if (lastMessageMatch) {
-		matchCount++;
-	} else {
-		reasons.push('Last message timestamp mismatch');
-	}
+		snapshot.lastMessageTimestamp === saved.lastMessageTimestamp;
+	if (lastMessageMatch) matchCount++;
+	else reasons.push('Last message timestamp mismatch');
 
-	// Check first message IDs
-	const parsedFirstIds = parsed.messages
-		.slice(0, VALIDATION_MESSAGE_ID_COUNT)
-		.map((msg) => msg.id)
-		.filter(Boolean);
 	const firstIdsMatch =
-		parsedFirstIds.length === saved.firstMessageIds.length &&
-		parsedFirstIds.every((id, idx) => id === saved.firstMessageIds[idx]);
-	if (firstIdsMatch) {
-		matchCount++;
-	} else {
-		reasons.push('First message IDs mismatch');
-	}
+		snapshot.firstMessageIds.length === saved.firstMessageIds.length &&
+		snapshot.firstMessageIds.every(
+			(id, index) => id === saved.firstMessageIds[index],
+		);
+	if (firstIdsMatch) matchCount++;
+	else reasons.push('First message IDs mismatch');
 
-	// Determine confidence level
 	let confidence: 'high' | 'medium' | 'low';
-	if (messageCountMatch && firstMessageMatch && lastMessageMatch) {
+	if (messageCountMatch && firstMessageMatch && lastMessageMatch)
 		confidence = 'high';
-	} else if (matchCount >= 2) {
-		confidence = 'medium';
-	} else {
-		confidence = 'low';
+	else if (matchCount >= 2) confidence = 'medium';
+	else confidence = 'low';
+
+	return { valid: matchCount >= 2, confidence, reasons };
+}
+
+function persistedMessageIds(saved: PersistedChatMetadata): string[] {
+	return [
+		...saved.bookmarks.map((bookmark) => bookmark.messageId),
+		...Object.keys(saved.transcriptions),
+	];
+}
+
+function currentMessageIds(parsed: ChatData): Set<string> {
+	return new Set(parsed.messages.map((message) => message.id));
+}
+
+function matchingValidationAlias(
+	parsed: ChatData,
+	saved: PersistedChatMetadata,
+) {
+	const currentIds = currentMessageIds(parsed);
+	const referencedIds = persistedMessageIds(saved);
+	const authenticatedLegacyIds = new Set([
+		...saved.firstMessageIds,
+		...referencedIds,
+	]);
+
+	return parsed.validationAliases?.find((alias) => {
+		const validation = validateSnapshot(alias, saved);
+		if (validation.reasons.length > 0) return false;
+		if (!alias.sourceCoverageComplete) return false;
+		// Released metadata stores only the first five IDs plus IDs referenced by
+		// bookmarks/transcriptions. If those do not cover every legacy message,
+		// content outside the sample cannot be distinguished from another archive.
+		if (
+			!alias.legacyMessageIds.every((messageId) =>
+				authenticatedLegacyIds.has(messageId),
+			) ||
+			!alias.legacyMessageIds.every((messageId) => {
+				const currentId = alias.messageIdAliases[messageId];
+				return currentId !== undefined && currentIds.has(currentId);
+			})
+		) {
+			return false;
+		}
+		return referencedIds.every(
+			(messageId) =>
+				currentIds.has(messageId) || alias.messageIdAliases[messageId],
+		);
+	});
+}
+
+function restoreValidationDecision(
+	parsed: ChatData,
+	saved: PersistedChatMetadata,
+) {
+	const current = validateSnapshot(currentValidationSnapshot(parsed), saved);
+	const migrationAlias = matchingValidationAlias(parsed, saved);
+	if (migrationAlias) {
+		return {
+			validation: validateSnapshot(migrationAlias, saved),
+			migrationAlias,
+		};
 	}
 
-	return {
-		valid: matchCount >= 2, // At least 2 signals must match
-		confidence,
-		reasons,
-	};
+	if (parsed.validationAliases && parsed.validationAliases.length > 0) {
+		const currentIds = currentMessageIds(parsed);
+		const unresolvedCurrentReferences = persistedMessageIds(saved).filter(
+			(messageId) => !currentIds.has(messageId),
+		);
+		// A month-first restore can represent either current metadata or a legacy
+		// interpretation that requires remapping. Without an exact legacy alias,
+		// accept only an exact current snapshot whose references already resolve.
+		if (current.reasons.length > 0 || unresolvedCurrentReferences.length > 0) {
+			return {
+				validation: {
+					valid: false,
+					confidence: 'low' as const,
+					reasons: [
+						...current.reasons,
+						...(unresolvedCurrentReferences.length > 0
+							? ['Persisted message references do not resolve']
+							: []),
+						'Parser migration snapshot did not match exactly',
+					],
+				},
+			};
+		}
+	}
+
+	return { validation: current };
+}
+
+/**
+ * Validate a restored file against saved metadata. Parser migrations can carry
+ * a snapshot of the previous interpretation of the exact same source text.
+ */
+export function validateRestoredFile(
+	parsed: ChatData,
+	saved: PersistedChatMetadata,
+): ValidationResult {
+	return restoreValidationDecision(parsed, saved).validation;
 }
 
 /**
@@ -409,6 +501,51 @@ export interface ValidatedRestoreCallbacks {
 	startIndex: (chat: ChatData) => void;
 }
 
+function migratePersistedMessageReferences(
+	chat: ChatData,
+	bookmarks: PersistedBookmark[],
+	transcriptions: Record<string, string>,
+	messageIdAliases: Record<string, string>,
+): {
+	bookmarks: PersistedBookmark[];
+	transcriptions: Record<string, string>;
+} | null {
+	const messagesById = new Map(
+		chat.messages.map((message) => [message.id, message]),
+	);
+	const bookmarkTargetIds = bookmarks.map(
+		(bookmark) => messageIdAliases[bookmark.messageId] ?? bookmark.messageId,
+	);
+	if (new Set(bookmarkTargetIds).size !== bookmarkTargetIds.length) return null;
+	const migratedBookmarks = bookmarks.map((bookmark, index) => {
+		const messageId = bookmarkTargetIds[index];
+		const message = messagesById.get(messageId);
+		if (!message || messageId === bookmark.messageId) return bookmark;
+		const preview =
+			message.content.length <= 100
+				? message.content
+				: `${message.content.substring(0, 100).trim()}...`;
+		return {
+			...bookmark,
+			messageId,
+			messagePreview: preview,
+			sender: message.sender,
+			messageTimestamp: message.timestamp.toISOString(),
+		};
+	});
+	const migratedTranscriptions: Record<string, string> = {};
+	for (const [messageId, text] of Object.entries(transcriptions)) {
+		const currentId = messageIdAliases[messageId] ?? messageId;
+		const existing = migratedTranscriptions[currentId];
+		if (existing !== undefined && existing !== text) return null;
+		migratedTranscriptions[currentId] = text;
+	}
+	return {
+		bookmarks: migratedBookmarks,
+		transcriptions: migratedTranscriptions,
+	};
+}
+
 /**
  * Gate restoration side effects behind archive validation.
  *
@@ -424,18 +561,32 @@ export function acceptValidatedRestore(
 	restoredMetadata: PersistedChatMetadata,
 	callbacks: ValidatedRestoreCallbacks,
 ): boolean {
-	if (!shouldLoadRestoredChat(chat, restoredMetadata)) {
-		return false;
-	}
+	const decision = restoreValidationDecision(chat, restoredMetadata);
+	if (!decision.validation.valid) return false;
+	const migrationAlias = decision.migrationAlias;
 
-	if (restoredMetadata.bookmarks.length > 0) {
-		callbacks.applyBookmarks(
-			restoredMetadata.bookmarks,
-			restoredMetadata.savedAt,
-		);
+	const migrated = migrationAlias
+		? migratePersistedMessageReferences(
+				chat,
+				restoredMetadata.bookmarks,
+				restoredMetadata.transcriptions,
+				migrationAlias.messageIdAliases,
+			)
+		: {
+				bookmarks: restoredMetadata.bookmarks,
+				transcriptions: restoredMetadata.transcriptions,
+			};
+	if (!migrated) return false;
+
+	// Aliases exist only to cross the restore boundary. Drop the potentially
+	// archive-sized map before the chat enters runtime state or indexing.
+	chat.validationAliases = undefined;
+
+	if (migrated.bookmarks.length > 0) {
+		callbacks.applyBookmarks(migrated.bookmarks, restoredMetadata.savedAt);
 	}
-	if (Object.keys(restoredMetadata.transcriptions).length > 0) {
-		callbacks.applyTranscriptions(restoredMetadata.transcriptions);
+	if (Object.keys(migrated.transcriptions).length > 0) {
+		callbacks.applyTranscriptions(migrated.transcriptions);
 	}
 	callbacks.applySettings(restoredMetadata.settings);
 	callbacks.addChat(chat);
