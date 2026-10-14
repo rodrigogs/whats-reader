@@ -28,8 +28,10 @@ examples/chats/*.zip
 
 .bkp
 
-# Playwright MCP screenshots
+# Playwright local output
 .playwright-mcp/
+/test-results/
+/playwright-report/
 
 # Local GitHub Actions secrets
 .act/secrets
