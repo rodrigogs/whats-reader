@@ -383,7 +383,9 @@ export async function parseZipFile(
 			}
 		}
 
-		parsedChat = parseChat(chatContent, titleHint);
+		parsedChat = parseChat(chatContent, titleHint, {
+			includeValidationAliases: archiveId !== undefined,
+		});
 	} catch {
 		throw new Error(
 			`Failed to parse chat file: ${chatFilename}\n\n` +

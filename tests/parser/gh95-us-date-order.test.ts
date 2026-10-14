@@ -49,6 +49,40 @@ describe('GH-95 US month-first 24h exports', () => {
 		assert.deepEqual(ymd(chat.messages[1].timestamp), [2020, 1, 13]);
 	});
 
+	it('exposes a legacy validation alias only when a remembered chat is restored', () => {
+		const source =
+			'01/12/2020, 14:30 - Alex: first\n01/13/2020, 09:00 - Sara: second';
+		const freshChat = parseChat(source, 'US Chat');
+		const chat = parseChat(source, 'US Chat', {
+			includeValidationAliases: true,
+		});
+		const alias = chat.validationAliases?.[0];
+
+		assert.equal(freshChat.validationAliases, undefined);
+		assert.ok(alias);
+		assert.equal(alias.messageCount, 1);
+		assert.equal(alias.sourceCoverageComplete, true);
+		assert.equal(alias.firstMessageIds.length, 1);
+		assert.equal(alias.messageIdAliases[alias.firstMessageIds[0]], chat.messages[0].id);
+	});
+
+	it('aligns a legacy message after a leading line the old parser skipped', () => {
+		const chat = parseChat(
+			'01/13/2020, 09:00 - Sara: new first\n01/12/2020, 14:30 - Alex: legacy first',
+			'US Chat',
+			{ includeValidationAliases: true },
+		);
+		const alias = chat.validationAliases?.[0];
+
+		assert.ok(alias);
+		assert.equal(alias.messageCount, 1);
+		assert.equal(alias.sourceCoverageComplete, false);
+		assert.equal(
+			alias.messageIdAliases[alias.firstMessageIds[0]],
+			chat.messages[1].id,
+		);
+	});
+
 	it('keeps day-first default for fully ambiguous chats', () => {
 		const chat = parseChat('01/12/2020, 14:30 - A: x');
 		assert.deepEqual(ymd(chat.messages[0].timestamp), [2020, 12, 1]);
